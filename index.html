@@ -1,0 +1,2982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAJESHWAR POOJA SAMAGRI | Sacred Pooja Accessories & Spiritual Store</title>
+    <meta id="dynamicMetaDesc" name="description" content="Official Store of Rajeshwar Pooja Samagri.">
+    <meta id="dynamicMetaKeywords" name="keywords" content="Rajeshwar Pooja Samagri, Pooja Accessories, Brass Idols, Shankh, Dhoop Dani">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Razorpay Checkout SDK (Used dynamically if Razorpay Key is configured in Admin) -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <!-- Google Fonts: Cinzel & Plus Jakarta Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Dynamic JSON-LD Schema Container -->
+    <script id="dynamicJsonLd" type="application/ld+json">{}</script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cream: '#FDF8F0',
+                        parchment: '#F7EFE1',
+                        maroon: '#5E0F12',
+                        maroonDark: '#3E0709',
+                        saffron: '#E66A1F',
+                        saffronHover: '#CC5812',
+                        gold: '#C89B3C',
+                        goldLight: '#E8D292'
+                    },
+                    fontFamily: {
+                        serif: ['Cinzel', 'serif'],
+                        sans: ['Plus Jakarta Sans', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #FDF8F0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #2D1E17;
+            overflow-x: hidden;
+        }
+        .font-spiritual {
+            font-family: 'Cinzel', serif;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F7EFE1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #C59B27;
+            border-radius: 9999px;
+        }
+        .gold-border-gradient {
+            border-image: linear-gradient(to right, transparent, #C59B27, transparent) 1;
+        }
+        .shimmer-badge {
+            background: linear-gradient(90deg, #5E0F12 0%, #9E2424 50%, #5E0F12 100%);
+            background-size: 200% 100%;
+            animation: shimmer 3s infinite;
+        }
+        .bento-card {
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .bento-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 35px -10px rgba(94, 15, 18, 0.14);
+        }
+        .glass-pill {
+            background: rgba(253, 248, 240, 0.88);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        /* Barcode font simulation */
+        .barcode-bars {
+            background: repeating-linear-gradient(
+                90deg,
+                #000,
+                #000 2px,
+                #fff 2px,
+                #fff 4px,
+                #000 4px,
+                #000 5px,
+                #fff 5px,
+                #fff 8px,
+                #000 8px,
+                #000 11px,
+                #fff 11px,
+                #fff 13px
+            );
+        }
+        @media print {
+            body * { visibility: hidden; }
+            #printableDocArea, #printableDocArea * { visibility: visible; }
+            #printableDocArea { position: absolute; left: 0; top: 0; width: 100%; max-height: none !important; overflow: visible !important; background: #fff !important; padding: 0 !important; }
+        }
+    </style>
+</head>
+<body class="pb-16 md:pb-0">
+
+    <!-- ==================== TOP ADMIN & SETUP CONTROL BAR ==================== -->
+    <div class="sticky top-0 z-50 bg-stone-900 text-white px-3 py-2 shadow-lg border-b border-gold/40 flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm">
+        <div class="flex items-center gap-2">
+            <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="font-medium text-amber-200">100% Dynamic Engine:</span>
+            <span id="activeModeLabel" class="bg-amber-500/20 border border-amber-400/40 text-amber-300 px-2 py-0.5 rounded font-semibold">Customer Storefront</span>
+            <span id="readinessBadgeTop" onclick="openAdminWithAuth('checklist')" class="cursor-pointer bg-stone-800 hover:bg-stone-700 border border-gold/40 text-amber-200 px-2 py-0.5 rounded text-[11px] hidden sm:inline-flex items-center gap-1">
+                <i class="fa-solid fa-list-check text-gold"></i> <span id="readinessProgressText">Setup: 0/7</span>
+            </span>
+            <span id="storageMeterBadge" class="hidden md:inline-flex items-center gap-1 bg-stone-800/90 border border-stone-700 text-stone-300 px-2 py-0.5 rounded text-[10px]" title="LocalStorage Memory Usage (Auto-Compresses Uploaded Photos)">
+                <i class="fa-solid fa-hard-drive text-emerald-400"></i> <span id="storageUsageText">0 KB / 5 MB</span>
+            </span>
+        </div>
+        <div class="flex items-center gap-2">
+            <!-- Admin Notification Bell -->
+            <button onclick="openAdminWithAuth('orders'); markAllNotificationsRead();" class="relative bg-stone-800 hover:bg-stone-700 border border-stone-600 text-amber-200 px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1.5 transition" title="Order Notifications">
+                <i class="fa-solid fa-bell text-gold"></i>
+                <span id="unreadNotifBadge" class="hidden bg-red-600 text-white text-[10px] font-extrabold px-1.5 rounded-full">0</span>
+            </button>
+            <button onclick="openTrackOrderModal()" class="bg-stone-800 hover:bg-stone-700 border border-stone-600 text-amber-200 px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1.5 transition">
+                <i class="fa-solid fa-location-crosshairs text-saffron"></i>
+                <span>Track Order</span>
+            </button>
+            <button id="toggleViewBtn" onclick="handleAdminAccessClick()" class="bg-saffron hover:bg-saffronHover text-white px-3 py-1 rounded-lg font-bold flex items-center gap-1.5 transition shadow-md">
+                <i class="fa-solid fa-lock"></i>
+                <span>Admin Panel</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ==================== GLOBAL TOAST NOTIFICATION CONTAINER ==================== -->
+    <div id="toastContainer" class="fixed top-14 right-4 z-[100] flex flex-col gap-2 max-w-sm w-full pointer-events-none px-2 sm:px-0"></div>
+
+    <!-- ========================================================================================= -->
+    <!--                              1. CUSTOMER STOREFRONT VIEW                                  -->
+    <!-- ========================================================================================= -->
+    <div id="storefrontView" class="block">
+
+        <!-- Top Maroon Announcement Bar (100% Dynamic) -->
+        <div class="bg-maroon text-amber-100 text-[11px] sm:text-xs py-1.5 px-3 text-center font-medium tracking-wide border-b border-gold/30">
+            <span id="storefrontAnnouncementText">🙏 Welcome to Rajeshwar Pooja Samagri — Authentic Pooja Accessories & Spiritual Essentials</span>
+        </div>
+
+        <!-- Floating Luxury Glassmorphic Header -->
+        <header class="sticky top-[40px] z-40 px-2 sm:px-6 pt-2 pb-1">
+            <div class="max-w-7xl mx-auto glass-pill border border-gold/40 rounded-2xl shadow-lg px-3 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-3">
+                <!-- Left: Mobile Menu & Classic Religious Brand Logo -->
+                <div class="flex items-center gap-2.5 sm:gap-3">
+                    <button onclick="scrollToSection('categorySection')" class="p-2 text-maroon hover:bg-parchment rounded-xl lg:hidden" title="Categories">
+                        <i class="fa-solid fa-bars text-lg"></i>
+                    </button>
+                    <a href="#" onclick="resetCategoryFilter(); return false;" class="flex items-center gap-2.5 sm:gap-3 group">
+                        <!-- Custom Classic Religious Crest SVG Logo (Mandala + Lotus + Kalash/Diya + Sacred Om) -->
+                        <div class="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 drop-shadow-md group-hover:scale-105 transition-transform duration-300">
+                            <svg viewBox="0 0 120 120" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                                <defs>
+                                    <linearGradient id="rpsGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="#FFF2B2"/>
+                                        <stop offset="45%" stop-color="#D4AF37"/>
+                                        <stop offset="100%" stop-color="#9A7418"/>
+                                    </linearGradient>
+                                    <radialGradient id="rpsMaroonGrad" cx="50%" cy="50%" r="50%">
+                                        <stop offset="0%" stop-color="#8C1D1D"/>
+                                        <stop offset="75%" stop-color="#5C0E0E"/>
+                                        <stop offset="100%" stop-color="#380606"/>
+                                    </radialGradient>
+                                </defs>
+                                <g fill="url(#rpsGoldGrad)">
+                                    <circle cx="60" cy="60" r="56" opacity="0.25"/>
+                                    <path d="M60 2 L67 11 L77 6 L81 17 L92 15 L93 27 L105 28 L102 39 L113 44 L107 54 L116 62 L107 70 L113 80 L102 85 L105 96 L93 97 L92 109 L81 107 L77 118 L67 113 L60 118 L53 113 L43 118 L39 107 L28 109 L27 97 L15 96 L18 85 L7 80 L13 70 L4 62 L13 54 L7 44 L18 39 L15 28 L27 27 L28 15 L39 17 L43 6 L53 11 Z"/>
+                                </g>
+                                <circle cx="60" cy="60" r="47" fill="url(#rpsMaroonGrad)" stroke="url(#rpsGoldGrad)" stroke-width="3"/>
+                                <circle cx="60" cy="60" r="41" fill="none" stroke="#FFF2B2" stroke-width="1" stroke-dasharray="2.5 3.5" opacity="0.8"/>
+                                <path d="M60 15 C55 23, 54 28, 60 32 C66 28, 65 23, 60 15 Z" fill="#FF9933"/>
+                                <path d="M60 19 C58 24, 58 27, 60 30 C62 27, 62 24, 60 19 Z" fill="#FFF7D6"/>
+                                <path d="M27 56 C27 33, 93 33, 93 56" fill="none" stroke="url(#rpsGoldGrad)" stroke-width="1.8" opacity="0.85"/>
+                                <text x="60" y="69" text-anchor="middle" fill="url(#rpsGoldGrad)" font-size="38" font-weight="bold" font-family="serif">ॐ</text>
+                                <path d="M60 99 C53 91, 47 85, 60 77 C73 85, 67 91, 60 99 Z" fill="url(#rpsGoldGrad)"/>
+                                <path d="M58 97 C45 95, 36 88, 42 79 C49 84, 54 90, 58 97 Z" fill="#E66A1F" stroke="url(#rpsGoldGrad)" stroke-width="1"/>
+                                <path d="M62 97 C75 95, 84 88, 78 79 C71 84, 66 90, 62 97 Z" fill="#E66A1F" stroke="url(#rpsGoldGrad)" stroke-width="1"/>
+                                <path d="M38 97 Q60 105 82 97" fill="none" stroke="url(#rpsGoldGrad)" stroke-width="2.5" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <div class="text-left">
+                            <span id="headerBrandTitle" class="font-spiritual text-lg sm:text-2xl font-extrabold tracking-wider text-maroon block leading-none">RAJESHWAR</span>
+                            <span id="headerBrandSubtitle" class="text-[10px] sm:text-[11px] tracking-[0.22em] text-amber-800 uppercase font-bold block mt-0.5">POOJA SAMAGRI</span>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Center: Live Search Bar with Instant Suggestions Dropdown -->
+                <div class="hidden md:flex flex-1 max-w-md mx-4 relative">
+                    <div class="relative w-full">
+                        <input id="searchInput" oninput="handleSearch(this.value)" onfocus="handleSearch(this.value)" type="text" placeholder="Search Pooja Samagri, Shankh, Brass Idols, Dhoop..." class="w-full bg-parchment/90 border border-gold/50 focus:border-maroon rounded-full py-2 pl-4 pr-10 text-sm focus:outline-none shadow-inner">
+                        <i class="fa-solid fa-magnifying-glass absolute right-3.5 top-2.5 text-maroon/70"></i>
+                    </div>
+                    <div id="searchSuggestionsDropdown" class="hidden absolute top-11 left-0 right-0 bg-white border border-gold/50 rounded-2xl shadow-2xl z-50 max-h-72 overflow-y-auto divide-y divide-stone-100"></div>
+                </div>
+
+                <!-- Right: Pincode Check, Track, Instagram & Cart -->
+                <div class="flex items-center gap-2 sm:gap-2.5">
+                    <button onclick="scrollToSection('pincodeEstimatorBar')" class="hidden lg:inline-flex text-xs font-semibold text-stone-700 bg-parchment hover:bg-gold/20 border border-gold/40 px-3 py-1.5 rounded-full items-center gap-1.5 transition" title="Check Delivery Pincode">
+                        <i class="fa-solid fa-map-pin text-maroon"></i>
+                        <span id="headerPincodeLabel">Check Pincode</span>
+                    </button>
+
+                    <button onclick="openTrackOrderModal()" class="text-xs sm:text-sm font-semibold text-maroon bg-parchment hover:bg-gold/20 border border-gold/40 px-3 py-1.5 rounded-full flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-truck-fast text-saffron"></i>
+                        <span class="hidden sm:inline">Track Order</span>
+                    </button>
+
+                    <button onclick="handleInstagramClick()" class="w-9 h-9 rounded-full bg-parchment hover:bg-pink-100 text-pink-700 flex items-center justify-center border border-gold/30 transition" title="Instagram">
+                        <i class="fa-brands fa-instagram text-lg"></i>
+                    </button>
+
+                    <button onclick="toggleCartDrawer(true)" class="relative w-10 h-10 rounded-full bg-maroon text-white hover:bg-maroonDark flex items-center justify-center shadow-md transition" title="Shopping Cart">
+                        <i class="fa-solid fa-bag-shopping"></i>
+                        <span id="cartCountBadge" class="absolute -top-1 -right-1 bg-saffron text-white text-[11px] font-bold w-5 h-5 rounded-full flex items-center justify-center border border-white">0</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Search Bar -->
+            <div class="md:hidden max-w-7xl mx-auto mt-1.5 px-1">
+                <div class="relative w-full">
+                    <input id="mobileSearchInput" oninput="handleSearch(this.value)" type="text" placeholder="Search Pooja items, Shankh, Brass Idols..." class="w-full bg-white/95 border border-gold/40 rounded-full py-2 pl-4 pr-9 text-xs shadow-sm focus:outline-none">
+                    <i class="fa-solid fa-magnifying-glass absolute right-3.5 top-2.5 text-maroon/70 text-xs"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- ==================== HERO BANNER (ROYAL ARCH & TRUST PILLS) ==================== -->
+        <section class="relative bg-stone-950 text-white overflow-hidden mt-1">
+            <div class="absolute inset-0 opacity-45">
+                <img id="heroBgImage" src="https://images.unsplash.com/photo-1604608672516-f1b9b1d37076?auto=format&fit=crop&w=1600&q=80" alt="Pooja Brass Lamp" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/1600x700/2a0808/C59B27?text=RAJESHWAR+POOJA+SAMAGRI'">
+            </div>
+            <div class="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/75 to-stone-950/40"></div>
+
+            <div class="relative max-w-5xl mx-auto px-4 py-12 sm:py-20 text-center flex flex-col items-center">
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gold/20 border border-gold text-goldLight text-xs uppercase tracking-widest mb-4 shadow-lg">
+                    <i class="fa-solid fa-dharmachakra animate-spin" style="animation-duration: 12s;"></i>
+                    <span id="heroBadgeText">Rajeshwar Pooja Samagri • Authentic Vedic Store</span>
+                </div>
+
+                <h1 class="font-spiritual text-3xl sm:5xl md:text-6xl font-extrabold tracking-tight text-white leading-tight max-w-3xl drop-shadow">
+                    <span id="heroHeadlineLine1">INDIA'S LARGEST</span> <br>
+                    <span id="heroHeadlineLine2" class="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-gold to-amber-400">POOJA ACCESSORIES BRAND</span>
+                </h1>
+
+                <p id="heroSubtext" class="mt-3 sm:mt-4 text-stone-300 text-xs sm:text-base max-w-xl leading-relaxed">
+                    Bring divine vibrations home with handcrafted Pure Brass Murtis, Sacred Shankh, Dhoop Burners & Authentic Pooja Samagri.
+                </p>
+
+                <div class="mt-6 flex flex-wrap justify-center gap-3">
+                    <button onclick="scrollToSection('allProductsSection')" class="bg-saffron hover:bg-saffronHover text-white font-bold px-7 py-3.5 rounded-full text-sm shadow-xl shadow-saffron/30 flex items-center gap-2 transition transform hover:-translate-y-0.5">
+                        <span>Explore Sacred Collection</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                    <button onclick="openTrackOrderModal()" class="bg-white/10 hover:bg-white/20 backdrop-blur border border-gold/50 text-amber-100 font-semibold px-6 py-3.5 rounded-full text-sm transition">
+                        <i class="fa-solid fa-location-dot mr-1.5 text-gold"></i> Track Your Order
+                    </button>
+                </div>
+
+                <!-- Luxury Trust Badges Pill Strip -->
+                <div class="mt-8 grid grid-cols-3 gap-2 sm:gap-6 bg-white/5 backdrop-blur-md border border-gold/30 rounded-2xl px-4 py-3 text-[11px] sm:text-xs text-amber-100 max-w-2xl w-full">
+                    <div class="flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-certificate text-gold"></i>
+                        <span>100% Pure Brass & Vedic</span>
+                    </div>
+                    <div class="flex items-center justify-center gap-1.5 border-x border-white/15 px-2">
+                        <i class="fa-solid fa-truck-fast text-saffron"></i>
+                        <span>Pan-India Doorstep Delivery</span>
+                    </div>
+                    <div class="flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-shield-heart text-emerald-400"></i>
+                        <span>COD & Instant UPI Available</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== LIVE PINCODE SERVICEABILITY & DELIVERY ESTIMATOR BAR ==================== -->
+        <section id="pincodeEstimatorBar" class="max-w-5xl mx-auto px-3 sm:px-6 -mt-5 relative z-20">
+            <div class="bg-white rounded-2xl border-2 border-gold/50 shadow-xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="flex items-center gap-3 text-left">
+                    <div class="w-10 h-10 rounded-xl bg-maroon/10 text-maroon flex items-center justify-center flex-shrink-0 text-lg">
+                        <i class="fa-solid fa-truck-ramp-box"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-xs sm:text-sm text-maroon">Check Doorstep Delivery & COD Availability</h3>
+                        <p id="pincodeStatusSubtext" class="text-[11px] text-stone-500">Enter your 6-digit Pincode for instant dispatch & delivery estimate</p>
+                    </div>
+                </div>
+                <form onsubmit="checkStorefrontPincode(event)" class="flex items-center gap-2 w-full sm:w-auto">
+                    <input id="storefrontPincodeInput" type="text" pattern="[0-9]{6}" maxlength="6" required placeholder="Enter 6-Digit Pincode" class="flex-1 sm:w-44 bg-parchment border border-gold/60 rounded-xl px-3.5 py-2 text-xs font-mono font-bold focus:outline-none focus:border-maroon">
+                    <button type="submit" class="bg-maroon hover:bg-maroonDark text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow transition whitespace-nowrap">
+                        Check Now
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- ==================== SHOP BY CATEGORY ==================== -->
+        <section id="categorySection" class="py-10 px-3 sm:px-6 max-w-7xl mx-auto text-center">
+            <h2 class="font-spiritual text-2xl sm:text-3xl font-bold text-maroon">Shop By Category</h2>
+            <p class="text-xs sm:text-sm text-stone-600 mt-1">Explore our range of sacred spiritual essentials</p>
+
+            <div id="dynamicCategoriesGrid" class="mt-7 grid grid-cols-3 sm:grid-cols-6 gap-4 sm:gap-6 items-start">
+                <!-- Populated dynamically from state.categories -->
+            </div>
+        </section>
+
+        <!-- ==================== COMPLETE SPIRITUAL ECOSYSTEM ==================== -->
+        <section class="py-10 bg-parchment/90 border-y border-gold/30">
+            <div class="max-w-7xl mx-auto px-3 sm:px-6">
+                <div class="text-center mb-7">
+                    <span class="text-[11px] font-bold uppercase tracking-widest text-saffron">Sacred Heritage & Purity</span>
+                    <h2 class="font-spiritual text-xl sm:text-3xl font-bold text-maroon mt-0.5">Complete Spiritual Ecosystem</h2>
+                    <p class="text-xs sm:text-sm text-stone-600 max-w-xl mx-auto mt-1">
+                        From sacred samagri to handcrafted brass artefacts, everything is curated under strict Vedic authenticity.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div onclick="filterByCategory('Daily Pooja Essentials')" class="bento-card md:col-span-2 cursor-pointer bg-gradient-to-br from-maroon to-maroonDark text-white p-5 sm:p-6 rounded-3xl border border-gold/40 shadow-md flex flex-col sm:flex-row items-center gap-4 relative overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1604608672516-f1b9b1d37076?auto=format&fit=crop&w=400&q=80" class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover border-2 border-gold flex-shrink-0" alt="Puja Accessories">
+                        <div class="text-left">
+                            <span class="bg-gold/20 text-goldLight text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase">Temple Craftsmanship</span>
+                            <h3 class="font-spiritual font-bold text-amber-200 text-lg sm:text-xl mt-1.5">Handcrafted Puja Accessories</h3>
+                            <p class="text-xs text-stone-200 mt-1 leading-relaxed">Authentic Kalash, Pital Thali sets, Achmani, Ghanti & temple lamps crafted by hereditary Indian artisans.</p>
+                        </div>
+                    </div>
+
+                    <div onclick="filterByCategory('Daily Pooja Essentials')" class="bento-card cursor-pointer bg-cream hover:bg-white p-5 rounded-3xl border border-gold/40 shadow-sm flex flex-col justify-between text-left">
+                        <div class="flex items-center justify-between">
+                            <span class="w-10 h-10 rounded-2xl bg-saffron/15 text-saffron flex items-center justify-center font-bold text-lg"><i class="fa-solid fa-fire-flame-simple"></i></span>
+                            <img src="https://images.unsplash.com/photo-1576487248805-cf45f6bcc67f?auto=format&fit=crop&w=200&q=80" class="w-12 h-12 rounded-xl object-cover border border-gold/30" alt="Vedic Samagri">
+                        </div>
+                        <div class="mt-4">
+                            <h3 class="font-spiritual font-bold text-maroon text-base">Energized Vedic Samagri</h3>
+                            <p class="text-xs text-stone-600 mt-1">100% pure havan samagri, cow-dung dhoop cones, guggal, loban & bhimseni camphor.</p>
+                        </div>
+                    </div>
+
+                    <div onclick="filterByCategory('Shop By Zodiac')" class="bento-card cursor-pointer bg-cream hover:bg-white p-5 rounded-3xl border border-gold/40 shadow-sm flex flex-col justify-between text-left">
+                        <div class="flex items-center justify-between">
+                            <span class="w-10 h-10 rounded-2xl bg-amber-500/15 text-amber-700 flex items-center justify-center font-bold text-lg"><i class="fa-solid fa-om"></i></span>
+                            <img src="https://images.unsplash.com/photo-1611591472159-259f7ce81187?auto=format&fit=crop&w=200&q=80" class="w-12 h-12 rounded-xl object-cover border border-gold/30" alt="Siddha Rudraksha">
+                        </div>
+                        <div class="mt-4">
+                            <h3 class="font-spiritual font-bold text-maroon text-base">Siddha Rudraksha & Rashi</h3>
+                            <p class="text-xs text-stone-600 mt-1">Lab-certified Nepali Rudraksha, Sphatik malas, Karungali & Rashi crystal bracelets.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== DYNAMIC FEATURED SPOTLIGHT ==================== -->
+        <section id="featuredSpotlightSection" class="py-10 px-3 sm:px-6 max-w-5xl mx-auto"></section>
+
+        <!-- ==================== MAIN FILTERABLE PRODUCT CATALOG ==================== -->
+        <section id="allProductsSection" class="py-6 px-3 sm:px-6 max-w-7xl mx-auto">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-gold/30">
+                <div>
+                    <h2 id="activeCategoryTitle" class="font-spiritual text-2xl sm:text-3xl font-bold text-maroon">All Sacred Collections</h2>
+                    <p class="text-xs sm:text-sm text-stone-600">100% live inventory managed from your Rajeshwar Pooja Samagri Admin Panel</p>
+                </div>
+
+                <div id="dynamicCategoryPills" class="flex items-center gap-1.5 overflow-x-auto pb-1"></div>
+            </div>
+
+            <div id="storeProductGrid" class="mt-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-6"></div>
+        </section>
+
+        <!-- ==================== SCREENSHOT HOMEPAGE SECTIONS ==================== -->
+        <div id="dynamicHomepageSectionsContainer" class="space-y-8 py-4"></div>
+
+        <!-- ==================== EK DIYA RAM KE NAAM BANNER ==================== -->
+        <section class="py-8 px-3 sm:px-6 max-w-5xl mx-auto">
+            <div class="rounded-3xl bg-stone-900 text-white overflow-hidden shadow-xl border border-gold/40">
+                <div class="relative h-48 sm:h-64">
+                    <img src="https://images.unsplash.com/photo-1514222134-b57cbb8ce073?auto=format&fit=crop&w=1400&q=80" class="w-full h-full object-cover opacity-55" alt="Ayodhya Ram Mandir Diya">
+                    <div class="absolute inset-0 bg-gradient-to-t from-stone-900 via-stone-900/40 to-transparent flex flex-col justify-end p-6 text-center items-center">
+                        <span class="bg-saffron/90 text-white text-[11px] font-bold px-3 py-0.5 rounded-full uppercase tracking-widest">Sacred Ayodhya Edition</span>
+                        <h2 class="font-spiritual text-2xl sm:text-4xl font-bold text-amber-300 mt-2">EK DIYA, RAM KE NAAM 🪔</h2>
+                    </div>
+                </div>
+                <div class="p-6 sm:p-8 text-center bg-cream text-stone-800">
+                    <p class="text-xs sm:text-sm max-w-2xl mx-auto leading-relaxed">
+                        Celebrate eternal devotion with our handcrafted Ayodhya Ram Darbar Murtis and Akhand Jyoti Brass Diyas. Light a sacred lamp of peace, prosperity, and devotion in your home mandir.
+                    </p>
+                    <button onclick="filterByCategory('Murti Sangrah')" class="mt-4 bg-saffron hover:bg-saffronHover text-white font-bold px-6 py-2.5 rounded-full text-xs sm:text-sm shadow transition">
+                        Explore Ram Darbar & Diyas
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== CUSTOMER REVIEWS & RATINGS SECTION ==================== -->
+        <section class="py-10 bg-parchment border-t border-gold/30 px-3 sm:px-6">
+            <div class="max-w-6xl mx-auto">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h2 class="font-spiritual text-2xl sm:text-3xl font-bold text-maroon">Customer Reviews & Ratings</h2>
+                        <div id="reviewsSummaryHeader" class="flex items-center gap-2 mt-1"></div>
+                    </div>
+                    <button onclick="openWriteReviewModal()" class="bg-maroon hover:bg-maroonDark text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl flex items-center gap-2 self-start sm:self-auto shadow">
+                        <i class="fa-solid fa-pen-to-square"></i> Write a Customer Review
+                    </button>
+                </div>
+
+                <div id="reviewsGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+            </div>
+        </section>
+
+        <!-- ==================== FOOTER ==================== -->
+        <footer class="bg-stone-950 text-stone-300 pt-12 pb-24 md:pb-12 border-t-4 border-gold">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 flex-shrink-0">
+                            <svg viewBox="0 0 120 120" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M60 2 L67 11 L77 6 L81 17 L92 15 L93 27 L105 28 L102 39 L113 44 L107 54 L116 62 L107 70 L113 80 L102 85 L105 96 L93 97 L92 109 L81 107 L77 118 L67 113 L60 118 L53 113 L43 118 L39 107 L28 109 L27 97 L15 96 L18 85 L7 80 L13 70 L4 62 L13 54 L7 44 L18 39 L15 28 L27 27 L28 15 L39 17 L43 6 L53 11 Z" fill="#D4AF37"/>
+                                <circle cx="60" cy="60" r="47" fill="#5C0E0E" stroke="#FFF2B2" stroke-width="2.5"/>
+                                <path d="M60 15 C55 23, 54 28, 60 32 C66 28, 65 23, 60 15 Z" fill="#FF9933"/>
+                                <text x="60" y="69" text-anchor="middle" fill="#FFF2B2" font-size="38" font-weight="bold" font-family="serif">ॐ</text>
+                                <path d="M60 99 C53 91, 47 85, 60 77 C73 85, 67 91, 60 99 Z" fill="#D4AF37"/>
+                                <path d="M38 97 Q60 105 82 97" fill="none" stroke="#D4AF37" stroke-width="2.5" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <span id="footerBrandTitle" class="font-spiritual text-lg font-bold text-white tracking-wider block leading-none">RAJESHWAR</span>
+                            <span id="footerBrandSubtitle" class="text-[10px] tracking-[0.22em] text-gold uppercase font-bold block mt-1">POOJA SAMAGRI</span>
+                        </div>
+                    </div>
+                    <p id="footerBrandDescription" class="text-xs text-stone-400 mt-3 leading-relaxed">
+                        Authentic Pooja Samagri, Pure Brass Idols, Sacred Shankh & Spiritual Artifacts delivered across India.
+                    </p>
+                    <div class="flex items-center gap-3 mt-4">
+                        <button onclick="handleInstagramClick()" class="w-9 h-9 rounded-full bg-white/10 hover:bg-pink-600 text-white flex items-center justify-center transition" title="Instagram">
+                            <i class="fa-brands fa-instagram"></i>
+                        </button>
+                        <button onclick="handleWhatsAppClick()" class="w-9 h-9 rounded-full bg-white/10 hover:bg-emerald-600 text-white flex items-center justify-center transition" title="WhatsApp">
+                            <i class="fa-brands fa-whatsapp"></i>
+                        </button>
+                        <button onclick="scrollToSection('allProductsSection')" class="w-9 h-9 rounded-full bg-white/10 hover:bg-saffron text-white flex items-center justify-center transition" title="Shop">
+                            <i class="fa-solid fa-store"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="font-spiritual text-amber-300 font-bold text-sm uppercase tracking-wider mb-3">Legal & Policies</h4>
+                    <ul class="space-y-2 text-xs">
+                        <li><button onclick="openPolicyModal('privacy')" class="hover:text-gold transition flex items-center gap-1.5"><i class="fa-solid fa-shield-halved text-gold/70"></i> Privacy Policy</button></li>
+                        <li><button onclick="openPolicyModal('terms')" class="hover:text-gold transition flex items-center gap-1.5"><i class="fa-solid fa-file-contract text-gold/70"></i> Terms & Conditions</button></li>
+                        <li><button onclick="openPolicyModal('refund')" class="hover:text-gold transition flex items-center gap-1.5"><i class="fa-solid fa-rotate-left text-gold/70"></i> Return, Refund & Shipping Policy</button></li>
+                        <li><button onclick="openTrackOrderModal()" class="hover:text-gold transition flex items-center gap-1.5"><i class="fa-solid fa-truck-fast text-gold/70"></i> Live Order & AWB Tracking</button></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="font-spiritual text-amber-300 font-bold text-sm uppercase tracking-wider mb-3">Sacred Collections</h4>
+                    <ul id="footerCategoriesList" class="space-y-2 text-xs"></ul>
+                </div>
+
+                <div>
+                    <h4 class="font-spiritual text-amber-300 font-bold text-sm uppercase tracking-wider mb-3">Contact & Dispatch Hub</h4>
+                    <div id="footerDynamicContactBlock" class="text-xs text-stone-400 space-y-1.5 leading-relaxed"></div>
+
+                    <div class="mt-4 p-3 rounded-xl bg-stone-900 border border-stone-800 text-[11px] space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-stone-400">SEO Schema & Meta:</span>
+                            <span id="footerSeoStatus" class="text-emerald-400 font-semibold">Dynamic</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-stone-400">Google Analytics 4:</span>
+                            <span id="footerGaBadge" class="text-amber-300 font-mono">Not Set</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-stone-400">Primary Courier:</span>
+                            <span id="footerCourierBadge" class="text-emerald-400 font-semibold">Shiprocket</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 mt-8 pt-6 border-t border-stone-800 flex flex-col sm:flex-row items-center justify-between text-xs text-stone-500 gap-2">
+                <p>© <span id="footerYear">2026</span> <span id="footerCopyrightName">Rajeshwar Pooja Samagri</span>. All Rights Reserved.</p>
+                <p id="footerPaymentMethodsText">Configure Payment & Delivery options in Admin Panel</p>
+            </div>
+        </footer>
+
+        <!-- FLOATING WHATSAPP BUTTON -->
+        <button onclick="handleWhatsAppClick()" class="fixed bottom-20 md:bottom-6 right-4 z-40 flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white pl-3.5 pr-4 py-2.5 rounded-full shadow-xl border-2 border-white transition transform hover:scale-105">
+            <i class="fa-brands fa-whatsapp text-2xl"></i>
+            <div class="text-left leading-tight hidden sm:block">
+                <span class="text-[10px] block text-emerald-100">Rajeshwar Pooja Samagri</span>
+                <span class="text-xs font-bold">Chat on WhatsApp</span>
+            </div>
+        </button>
+
+        <!-- MOBILE FLOATING DOCK -->
+        <nav class="md:hidden fixed bottom-2.5 inset-x-3 z-40 glass-pill border border-gold/50 rounded-2xl shadow-2xl grid grid-cols-6 py-1.5 px-1 text-[10px] font-bold text-stone-700">
+            <button onclick="window.scrollTo({top:0, behavior:'smooth'})" class="flex flex-col items-center justify-center py-1 text-maroon">
+                <i class="fa-solid fa-house text-sm mb-0.5"></i>
+                <span>Home</span>
+            </button>
+            <button onclick="scrollToSection('categorySection')" class="flex flex-col items-center justify-center py-1 hover:text-maroon">
+                <i class="fa-solid fa-compass text-sm mb-0.5"></i>
+                <span>Categories</span>
+            </button>
+            <button onclick="openTrackOrderModal()" class="flex flex-col items-center justify-center py-1 hover:text-maroon">
+                <i class="fa-solid fa-truck-fast text-sm mb-0.5 text-saffron"></i>
+                <span>Track</span>
+            </button>
+            <button onclick="scrollToSection('reviewsGrid')" class="flex flex-col items-center justify-center py-1 hover:text-maroon">
+                <i class="fa-solid fa-star text-sm mb-0.5 text-amber-500"></i>
+                <span>Reviews</span>
+            </button>
+            <button onclick="toggleCartDrawer(true)" class="flex flex-col items-center justify-center py-1 text-maroon relative">
+                <i class="fa-solid fa-bag-shopping text-sm mb-0.5"></i>
+                <span>Cart</span>
+            </button>
+            <button onclick="handleAdminAccessClick()" class="flex flex-col items-center justify-center py-1 text-amber-900">
+                <i class="fa-solid fa-user-shield text-sm mb-0.5"></i>
+                <span>Admin</span>
+            </button>
+        </nav>
+
+    </div>
+
+    <!-- ========================================================================================= -->
+    <!--                              2. FULL MERCHANT ADMIN PANEL VIEW                            -->
+    <!-- ========================================================================================= -->
+    <div id="adminView" class="hidden min-h-screen bg-stone-100 text-stone-800 pb-20">
+        <!-- Admin Header -->
+        <div class="bg-maroonDark text-white px-4 sm:px-8 py-4 shadow flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 flex-shrink-0">
+                    <svg viewBox="0 0 120 120" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="60" cy="60" r="47" fill="#5C0E0E" stroke="#FFF2B2" stroke-width="2.5"/>
+                        <text x="60" y="69" text-anchor="middle" fill="#FFF2B2" font-size="38" font-weight="bold" font-family="serif">ॐ</text>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="font-spiritual text-lg sm:text-xl font-bold tracking-wide">RAJESHWAR POOJA SAMAGRI — MASTER ADMIN</h1>
+                    <p class="text-xs text-amber-200/80">100% Dynamic Store Control • Zero Assumed Data • Shiprocket & Delhivery API Vault</p>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+                <button onclick="exportStoreJson()" class="bg-stone-800 hover:bg-stone-700 text-amber-200 text-xs font-semibold px-3 py-2 rounded-lg border border-gold/30 flex items-center gap-1.5" title="Download full backup JSON">
+                    <i class="fa-solid fa-download"></i> Backup JSON
+                </button>
+                <label class="bg-stone-800 hover:bg-stone-700 text-emerald-300 text-xs font-semibold px-3 py-2 rounded-lg border border-emerald-500/30 flex items-center gap-1.5 cursor-pointer" title="Restore store from JSON file">
+                    <i class="fa-solid fa-upload"></i> Import JSON
+                    <input type="file" accept=".json" onchange="importStoreJson(event)" class="hidden">
+                </label>
+                <button onclick="exitAdminToStorefront()" class="bg-saffron hover:bg-saffronHover text-white text-xs font-bold px-3.5 py-2 rounded-lg shadow">
+                    <i class="fa-solid fa-store mr-1"></i> View Live Storefront
+                </button>
+            </div>
+        </div>
+
+        <!-- Admin Navigation Tabs -->
+        <div class="bg-white border-b border-stone-200 sticky top-[42px] z-30 shadow-xs">
+            <div class="max-w-7xl mx-auto px-4 flex items-center gap-1.5 overflow-x-auto py-2.5 text-xs font-bold">
+                <button onclick="switchAdminTab('checklist')" id="tabBtn-checklist" class="admin-tab-btn bg-maroon text-white px-3.5 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
+                    <i class="fa-solid fa-list-check"></i> 1. Setup Checklist
+                </button>
+                <button onclick="switchAdminTab('storeContact')" id="tabBtn-storeContact" class="admin-tab-btn bg-stone-100 hover:bg-stone-200 text-stone-700 px-3.5 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
+                    <i class="fa-solid fa-address-card"></i> 2. Contact & Pickup Address
+                </button>
+                <button onclick="switchAdminTab('courierApi')" id="tabBtn-courierApi" class="admin-tab-btn bg-stone-100 hover:bg-stone-200 text-stone-700 px-3.5 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
+                    <i class="fa-solid fa-truck-fast"></i> 3. Shiprocket & Delhivery API
+                </button>
+                <button onclick="switchAdminTab('products')" id="tabBtn-products" class="admin-tab-btn bg-stone-100 hover:bg-stone-200 text-stone-700 px-3.5 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
+                    <i class="fa-solid fa-cubes"></i> 4. Products, Stock & Categories
+                    <span id="adminProdCountBadge" class="bg-stone-300 text-stone-800 text-[10px] px-1.5 py-0.2 rounded-full">0</span>
+                </button>
+                <button onclick="switchAdminTab('paymentsShipping')" id="tabBtn-paymentsShipping" class="admin-tab-btn bg-stone-100 hover:bg-stone-200 text-stone-700 px-3.5 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
+                    <i class="fa-solid fa-indian-rupee-sign"></i> 5. Payments, Delivery & Coupons
+                </button>
+                <button onclick="switchAdminTab('orders')" id="tabBtn-orders" class="admin-tab-btn bg-stone-100 hover:bg-stone-200 text-stone-700 px-3.5 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
+                    <i class="fa-solid fa-boxes-packing"></i> 6. Orders, Courier Booking & COD
+                    <span id="adminOrderBadge" class="bg-saffron text-white text-[10px] px-1.5 py-0.2 rounded-full">0</span>
+                </button>
+                <button onclick="switchAdminTab('reports')" id="tabBtn-reports" class="admin-tab-btn bg-stone-100 hover:bg-stone-200 text-stone-700 px-3.5 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
+                    <i class="fa-solid fa-chart-line"></i> 7. Sales, Profit & Customers
+                </button>
+                <button onclick="switchAdminTab('policiesSeo')" id="tabBtn-policiesSeo" class="admin-tab-btn bg-stone-100 hover:bg-stone-200 text-stone-700 px-3.5 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
+                    <i class="fa-solid fa-shield-halved"></i> 8. Policies, Reviews, SEO & GA4
+                </button>
+            </div>
+        </div>
+
+        <!-- Admin Tab Contents Container -->
+        <div class="max-w-7xl mx-auto p-4 sm:p-6">
+
+            <!-- TAB 1: CHECKLIST -->
+            <div id="adminTab-checklist" class="admin-tab-pane space-y-6">
+                <div class="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-100">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-widest text-maroon">Zero-Assumed-Data Architecture</span>
+                            <h2 class="text-xl font-bold text-stone-900 mt-0.5">Store Setup Readiness Checklist</h2>
+                            <p class="text-xs text-stone-500 mt-1">Complete these steps to launch your live store.</p>
+                        </div>
+                        <div class="text-right">
+                            <div id="checklistScoreBig" class="text-2xl font-extrabold text-maroon">0 / 7 Completed</div>
+                            <div class="text-[11px] text-stone-500">Auto-saves to browser & JSON backup</div>
+                        </div>
+                    </div>
+                    <div id="readinessChecklistContainer" class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-3.5"></div>
+                </div>
+            </div>
+
+            <!-- TAB 2: STORE CONTACT -->
+            <div id="adminTab-storeContact" class="admin-tab-pane hidden space-y-6">
+                <form onsubmit="saveStoreContactAndPickup(event)" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white p-5 rounded-2xl border border-stone-200 shadow-sm space-y-4">
+                        <div class="flex items-center gap-2 text-maroon font-bold border-b border-stone-100 pb-2.5">
+                            <i class="fa-brands fa-whatsapp text-emerald-600 text-lg"></i>
+                            <h3>1. Brand Identity, WhatsApp & Instagram Links</h3>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
+                            <div>
+                                <label class="block font-semibold text-stone-700 mb-1">Store Main Title *</label>
+                                <input id="cfgStoreName" type="text" required placeholder="Rajeshwar Pooja Samagri" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-stone-700 mb-1">Top Announcement Bar Text</label>
+                                <input id="cfgAnnouncement" type="text" placeholder="🙏 Free Shipping Above ₹499 | COD Available" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-stone-700 mb-1">WhatsApp Number (with 91) *</label>
+                                <input id="cfgWhatsapp" type="text" placeholder="e.g. 919876543210" class="w-full border border-stone-300 rounded-lg px-3 py-2 font-mono">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-stone-700 mb-1">Support Phone Number</label>
+                                <input id="cfgSupportPhone" type="text" placeholder="e.g. +91 98765 43210" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-stone-700 mb-1">Support Email Address</label>
+                                <input id="cfgSupportEmail" type="email" placeholder="support@rajeshwarpooja.com" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-stone-700 mb-1">Instagram Profile URL</label>
+                                <input id="cfgInstagramUrl" type="url" placeholder="https://instagram.com/yourhandle" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="block font-semibold text-stone-700 mb-1">Pre-filled WhatsApp Greeting Message</label>
+                                <input id="cfgWhatsappGreeting" type="text" placeholder="Namaste Rajeshwar Pooja Samagri! I want to enquire about Pooja Accessories." class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                            </div>
+                        </div>
+                        <div class="pt-3 border-t border-stone-100">
+                            <label class="block font-semibold text-stone-700 mb-1">Admin Access PIN / Password (Optional)</label>
+                            <input id="cfgAdminPasscode" type="password" placeholder="Set password to lock Admin" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-xs">
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl border border-stone-200 shadow-sm space-y-4">
+                        <div class="flex items-center gap-2 text-maroon font-bold border-b border-stone-100 pb-2.5">
+                            <i class="fa-solid fa-truck-ramp-box text-saffron text-lg"></i>
+                            <h3>2. Courier Pickup Address & GST Invoice Setup</h3>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
+                            <div class="sm:col-span-2">
+                                <label class="block font-semibold text-stone-700 mb-1">Pickup Contact Person / Shop Name *</label>
+                                <input id="cfgPickupContactName" type="text" placeholder="e.g. Rajeshwar Pooja Samagri" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="block font-semibold text-stone-700 mb-1">Street Address *</label>
+                                <input id="cfgPickupStreet" type="text" placeholder="Enter shop or warehouse address" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-stone-700 mb-1">Landmark</label>
+                                <input id="cfgPickupLandmark" type="text" placeholder="Near Temple" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-stone-700 mb-1">City *</label>
+                                <input id="cfgPickupCity" type="text" placeholder="City" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-stone-700 mb-1">State *</label>
+                                <input id="cfgPickupState" type="text" placeholder="State" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-stone-700 mb-1">6-Digit Pincode *</label>
+                                <input id="cfgPickupPincode" type="text" maxlength="6" placeholder="000000" class="w-full border border-stone-300 rounded-lg px-3 py-2 font-mono">
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="block font-semibold text-stone-700 mb-1">Invoice Type</label>
+                                <select id="cfgBillingType" onchange="toggleGstFields()" class="w-full border border-stone-300 rounded-lg px-3 py-2 font-semibold">
+                                    <option value="NONGST">Non-GST Bill of Supply</option>
+                                    <option value="GST">GST Tax Invoice</option>
+                                </select>
+                            </div>
+                            <div id="gstNumberFieldWrap" class="hidden">
+                                <label class="block font-semibold text-stone-700 mb-1">Merchant GSTIN</label>
+                                <input id="cfgGstin" type="text" placeholder="09XXXXX1234X1Z5" class="w-full border border-stone-300 rounded-lg px-3 py-2 font-mono uppercase">
+                            </div>
+                            <div id="panNumberFieldWrap" class="hidden">
+                                <label class="block font-semibold text-stone-700 mb-1">Business PAN</label>
+                                <input id="cfgPan" type="text" placeholder="ABCDE1234F" class="w-full border border-stone-300 rounded-lg px-3 py-2 font-mono uppercase">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-maroon hover:bg-maroonDark text-white font-bold py-3 rounded-xl shadow transition">
+                            Save Store Contact & Pickup Address
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- TAB 3: COURIER API -->
+            <div id="adminTab-courierApi" class="admin-tab-pane hidden space-y-6">
+                <form onsubmit="saveCourierApiSettings(event)" class="bg-white p-5 rounded-2xl border border-stone-200 shadow-sm space-y-4">
+                    <div class="flex items-center gap-2 text-maroon font-bold border-b border-stone-100 pb-2.5">
+                        <i class="fa-solid fa-truck-fast text-saffron text-lg"></i>
+                        <h3>Shiprocket & Delhivery Configuration</h3>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
+                        <div>
+                            <label class="block font-semibold mb-1">Default Partner</label>
+                            <select id="cfgPrimaryCourier" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                                <option value="Shiprocket">Shiprocket (Primary)</option>
+                                <option value="Delhivery">Delhivery Direct</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-semibold mb-1">Execution Mode</label>
+                            <select id="cfgCourierExecMode" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                                <option value="LIVE_API">Live REST API</option>
+                                <option value="INSTANT_MANIFEST">Instant Manifest & AWB Generator</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-semibold mb-1">Shiprocket Email</label>
+                            <input id="cfgSrEmail" type="email" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block font-semibold mb-1">Shiprocket Password</label>
+                            <input id="cfgSrPassword" type="password" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block font-semibold mb-1">Pickup Location Name</label>
+                            <input id="cfgSrPickupLocation" type="text" placeholder="Primary" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block font-semibold mb-1">CORS Proxy (Optional)</label>
+                            <input id="cfgCorsProxy" type="text" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block font-semibold mb-1">Active Shiprocket Bearer Token</label>
+                            <input id="cfgSrToken" type="text" class="w-full border border-stone-300 rounded-lg px-3 py-2 font-mono text-xs">
+                        </div>
+                        <div>
+                            <label class="block font-semibold mb-1">Delhivery Token</label>
+                            <input id="cfgDlToken" type="password" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block font-semibold mb-1">Delhivery Warehouse</label>
+                            <input id="cfgDlWarehouse" type="text" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block font-semibold mb-1">Default Weight (kg)</label>
+                            <input id="cfgPkgWeight" type="number" step="0.05" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block font-semibold mb-1">Dimensions L x B x H (cm)</label>
+                            <div class="grid grid-cols-3 gap-1">
+                                <input id="cfgPkgLength" type="number" placeholder="L" class="w-full border border-stone-300 rounded px-2 py-2">
+                                <input id="cfgPkgBreadth" type="number" placeholder="B" class="w-full border border-stone-300 rounded px-2 py-2">
+                                <input id="cfgPkgHeight" type="number" placeholder="H" class="w-full border border-stone-300 rounded px-2 py-2">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="submit" class="bg-maroon hover:bg-maroonDark text-white font-bold py-2.5 px-4 rounded-xl shadow">Save Courier Settings</button>
+                        <button type="button" onclick="authenticateShiprocketLive()" class="bg-stone-800 hover:bg-stone-900 text-amber-200 font-bold py-2.5 px-4 rounded-xl text-xs">Test / Auth Shiprocket</button>
+                    </div>
+                    <pre id="shiprocketApiConsole" class="bg-stone-900 text-emerald-400 p-3 rounded-xl text-xs h-40 overflow-y-auto whitespace-pre-wrap mt-3"></pre>
+                </form>
+            </div>
+
+            <!-- TAB 4: PRODUCTS -->
+            <div id="adminTab-products" class="admin-tab-pane hidden space-y-6">
+                <div class="bg-white p-5 rounded-2xl border border-stone-200 shadow-sm">
+                    <h3 class="font-bold text-stone-800 text-base mb-2"><i class="fa-solid fa-layer-group text-maroon mr-1"></i> Store Categories</h3>
+                    <form onsubmit="saveCategoryFromAdmin(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs mb-3">
+                        <input id="catNameInput" type="text" required placeholder="Category Name" class="border border-stone-300 rounded-lg px-3 py-2">
+                        <input id="catImgInput" type="text" placeholder="Image URL" class="border border-stone-300 rounded-lg px-3 py-2">
+                        <input type="file" accept="image/*" onchange="handleCategoryPhotoUpload(event)" class="border border-stone-300 rounded-lg px-2 py-1.5 text-[11px]">
+                        <button type="submit" class="bg-stone-800 text-white font-bold rounded-lg px-4 py-2">+ Add Category</button>
+                    </form>
+                    <div id="adminCategoriesPillsList" class="flex flex-wrap gap-2"></div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-stone-200 shadow-sm">
+                    <h3 id="productFormHeading" class="text-base font-bold text-maroon mb-3"><i class="fa-solid fa-plus-circle mr-1"></i> Add / Edit Product</h3>
+                    <form id="adminProductForm" onsubmit="saveProductFromAdmin(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 text-xs sm:text-sm">
+                        <input type="hidden" id="editProdId">
+                        <div class="sm:col-span-2">
+                            <label class="block font-semibold mb-1">Product Title *</label>
+                            <input id="prodName" type="text" required placeholder="Traditional Brass Dhoop Dani" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block font-semibold mb-1">Category *</label>
+                            <select id="prodCategory" class="w-full border border-stone-300 rounded-lg px-3 py-2"></select>
+                        </div>
+                        <div>
+                            <label class="block font-semibold mb-1">Placement *</label>
+                            <select id="prodSection" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                                <option value="General Catalog">Main Catalog Grid</option>
+                                <option value="Featured Spotlight">#1 Bestseller Spotlight Card</option>
+                                <option value="Shop By Zodiac">Shop By Zodiac Section</option>
+                                <option value="Divine Shankh Collection">Divine Shankh Collection</option>
+                                <option value="Mangalavar Deepam Collection">Mangalavar Deepam</option>
+                                <option value="Murti Sangrah">Murti Sangrah</option>
+                                <option value="Timeless Brass Urlis">Timeless Brass Urlis</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-semibold mb-1">Selling Price (₹) *</label>
+                            <input id="prodPrice" type="number" required min="1" placeholder="520" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block font-semibold mb-1">MRP (₹) *</label>
+                            <input id="prodMrp" type="number" required min="1" placeholder="899" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block font-semibold mb-1">Cost Price (₹) *</label>
+                            <input id="prodCost" type="number" required min="0" placeholder="280" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block font-semibold mb-1">Available Stock Qty *</label>
+                            <input id="prodStock" type="number" required min="0" placeholder="25" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block font-semibold mb-1">SKU</label>
+                            <input id="prodSku" type="text" placeholder="RPS-001" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block font-semibold mb-1">Weight (kg)</label>
+                            <input id="prodWeight" type="number" step="0.05" placeholder="0.5" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block font-semibold mb-1">Upload Photo</label>
+                            <input type="file" accept="image/*" onchange="handleProductPhotoUpload(event)" class="w-full border border-stone-300 rounded-lg px-2 py-1.5 text-xs">
+                        </div>
+                        <div>
+                            <label class="block font-semibold mb-1">Photo URL *</label>
+                            <input id="prodImage" type="text" required placeholder="https://..." class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                        </div>
+                        <div class="sm:col-span-4">
+                            <label class="block font-semibold mb-1">Description</label>
+                            <textarea id="prodDesc" rows="2" class="w-full border border-stone-300 rounded-lg px-3 py-2"></textarea>
+                        </div>
+                        <div class="sm:col-span-4 flex gap-3">
+                            <button type="submit" class="bg-maroon hover:bg-maroonDark text-white font-bold px-6 py-2.5 rounded-xl shadow">Save Product</button>
+                            <button type="button" onclick="resetProductForm()" class="bg-stone-200 text-stone-700 font-semibold px-4 py-2.5 rounded-xl">Clear</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-stone-200 flex items-center justify-between">
+                        <h3 class="font-bold text-stone-800">Inventory (<span id="inventoryTotalCount">0</span> Items)</h3>
+                    </div>
+                    <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                        <thead>
+                            <tr class="bg-stone-50 border-b border-stone-200">
+                                <th class="p-3">Product</th>
+                                <th class="p-3">Category</th>
+                                <th class="p-3">Price / Cost</th>
+                                <th class="p-3">Stock</th>
+                                <th class="p-3 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminProductsTableBody" class="divide-y divide-stone-200"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 5: PAYMENTS & SHIPPING -->
+            <div id="adminTab-paymentsShipping" class="admin-tab-pane hidden space-y-6">
+                <form onsubmit="savePaymentAndDeliveryConfig(event)" class="bg-white p-5 rounded-2xl border border-stone-200 shadow-sm space-y-4">
+                    <div class="flex items-center gap-2 text-maroon font-bold border-b border-stone-100 pb-2.5">
+                        <i class="fa-solid fa-credit-card text-saffron text-lg"></i>
+                        <h3>Payment & Shipping Options</h3>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
+                        <label class="flex items-center gap-2.5 p-3 rounded-xl border bg-stone-50 cursor-pointer font-bold">
+                            <input id="cfgEnableCod" type="checkbox" class="w-4 h-4 accent-maroon">
+                            <span>Enable Cash on Delivery (COD)</span>
+                        </label>
+                        <label class="flex items-center gap-2.5 p-3 rounded-xl border bg-stone-50 cursor-pointer font-bold">
+                            <input id="cfgEnablePrepaid" type="checkbox" class="w-4 h-4 accent-maroon">
+                            <span>Enable Online Prepaid</span>
+                        </label>
+                        <div>
+                            <label class="block font-semibold mb-1">Merchant UPI ID</label>
+                            <input id="cfgMerchantUpi" type="text" placeholder="name@upi" class="w-full border border-stone-300 rounded-lg px-3 py-2 font-mono">
+                        </div>
+                        <div>
+                            <label class="block font-semibold mb-1">Razorpay Key ID</label>
+                            <input id="cfgRazorpayKey" type="text" placeholder="rzp_live_..." class="w-full border border-stone-300 rounded-lg px-3 py-2 font-mono">
+                        </div>
+                        <div>
+                            <label class="block font-semibold mb-1">Standard Delivery Fee (₹)</label>
+                            <input id="cfgDeliveryCharge" type="number" min="0" placeholder="60" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block font-semibold mb-1">Free Delivery Above (₹)</label>
+                            <input id="cfgFreeDeliveryAbove" type="number" min="0" placeholder="499" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block font-semibold mb-1">Extra COD Fee (₹)</label>
+                            <input id="cfgCodFee" type="number" min="0" placeholder="0" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                        </div>
+                    </div>
+                    <button type="submit" class="bg-maroon hover:bg-maroonDark text-white font-bold py-2.5 px-5 rounded-xl shadow">Save Payment & Delivery Rules</button>
+                </form>
+
+                <div class="bg-white p-5 rounded-2xl border border-stone-200 shadow-sm space-y-4">
+                    <h3 class="font-bold text-stone-800 text-sm"><i class="fa-solid fa-ticket text-saffron mr-1"></i> Promo Coupons</h3>
+                    <form onsubmit="addCouponFromAdmin(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                        <input id="couponCodeInput" type="text" required placeholder="Coupon Code (e.g. FESTIVE10)" class="border border-stone-300 rounded-lg px-3 py-2 uppercase font-mono">
+                        <div class="flex">
+                            <select id="couponTypeInput" class="border rounded-l-lg px-2 py-2 bg-stone-50 font-bold">
+                                <option value="PERCENT">% OFF</option>
+                                <option value="FLAT">₹ FLAT</option>
+                            </select>
+                            <input id="couponValInput" type="number" required min="1" placeholder="10" class="w-full border rounded-r-lg px-2.5 py-2">
+                        </div>
+                        <input id="couponMinInput" type="number" required min="0" placeholder="Min. Order (₹)" class="border border-stone-300 rounded-lg px-3 py-2">
+                        <div class="sm:col-span-3">
+                            <button type="submit" class="bg-saffron text-white font-bold py-2 px-4 rounded-xl shadow">+ Add Coupon</button>
+                        </div>
+                    </form>
+                    <div id="adminCouponsList" class="space-y-2"></div>
+                </div>
+            </div>
+
+            <!-- TAB 6: ORDERS -->
+            <div id="adminTab-orders" class="admin-tab-pane hidden space-y-5">
+                <div class="bg-white p-4 rounded-2xl border border-stone-200 shadow-sm flex items-center justify-between">
+                    <h2 class="text-base font-bold text-stone-900">Order Fulfillment & Booking</h2>
+                    <select id="adminOrderStatusFilter" onchange="renderAdminOrders()" class="border border-stone-300 rounded-lg px-3 py-1.5 text-xs font-semibold">
+                        <option value="ALL">All Orders</option>
+                        <option value="New Order">New Order</option>
+                        <option value="Processing">Processing</option>
+                        <option value="Shipped">Shipped</option>
+                        <option value="Delivered">Delivered</option>
+                        <option value="Cancelled">Cancelled</option>
+                        <option value="Refunded">Refunded</option>
+                    </select>
+                </div>
+                <div id="adminOrdersContainer" class="space-y-4"></div>
+            </div>
+
+            <!-- TAB 7: REPORTS -->
+            <div id="adminTab-reports" class="admin-tab-pane hidden space-y-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white p-5 rounded-2xl border border-stone-200 shadow-sm">
+                        <div class="text-stone-500 text-xs font-semibold uppercase">Gross Sales Revenue</div>
+                        <div id="kpiTotalSales" class="text-2xl font-extrabold text-stone-900 mt-2">₹0</div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-stone-200 shadow-sm">
+                        <div class="text-stone-500 text-xs font-semibold uppercase">Net Realized Profit</div>
+                        <div id="kpiTotalProfit" class="text-2xl font-extrabold text-emerald-700 mt-2">₹0</div>
+                        <p id="kpiCogsSub" class="text-[11px] text-stone-500 mt-1"></p>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-stone-200 shadow-sm">
+                        <div class="text-stone-500 text-xs font-semibold uppercase">Orders Split</div>
+                        <div id="kpiTotalOrders" class="text-2xl font-extrabold text-stone-900 mt-2">0</div>
+                        <p id="kpiCodSplit" class="text-[11px] text-stone-600 mt-1"></p>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-stone-200 shadow-sm">
+                        <div class="text-stone-500 text-xs font-semibold uppercase">Pending COD Cash</div>
+                        <div id="kpiPendingCodAmt" class="text-2xl font-extrabold text-amber-600 mt-2">₹0</div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-stone-200 flex items-center justify-between">
+                        <h3 class="font-bold text-stone-800">Customer Records</h3>
+                        <div class="flex gap-2">
+                            <button onclick="exportOrdersCsv()" class="bg-maroon text-white text-xs font-bold px-3 py-1.5 rounded-lg">Orders CSV</button>
+                            <button onclick="exportCustomersCsv()" class="bg-stone-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg">Customers CSV</button>
+                        </div>
+                    </div>
+                    <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                        <thead>
+                            <tr class="bg-stone-50 border-b border-stone-200">
+                                <th class="p-3">Customer</th>
+                                <th class="p-3">Mobile</th>
+                                <th class="p-3">Address</th>
+                                <th class="p-3">Orders</th>
+                                <th class="p-3 text-right">Spend</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminCustomersTableBody" class="divide-y divide-stone-200"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 8: POLICIES & SEO -->
+            <div id="adminTab-policiesSeo" class="admin-tab-pane hidden space-y-6">
+                <form onsubmit="savePoliciesFromAdmin(event)" class="bg-white p-5 rounded-2xl border border-stone-200 shadow-sm space-y-3 text-xs sm:text-sm">
+                    <h3 class="font-bold text-maroon text-base">Store Policies</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-semibold mb-1">Return Window (Days)</label>
+                            <input id="cfgReturnDays" type="number" min="0" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block font-semibold mb-1">Dispatch Time</label>
+                            <input id="cfgDispatchHours" type="text" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1">Privacy Policy</label>
+                        <textarea id="cfgPrivacyPolicy" rows="2" class="w-full border border-stone-300 rounded-lg px-3 py-2"></textarea>
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1">Terms Policy</label>
+                        <textarea id="cfgTermsPolicy" rows="2" class="w-full border border-stone-300 rounded-lg px-3 py-2"></textarea>
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1">Refund & Shipping Policy</label>
+                        <textarea id="cfgRefundPolicy" rows="2" class="w-full border border-stone-300 rounded-lg px-3 py-2"></textarea>
+                    </div>
+                    <button type="submit" class="bg-maroon text-white font-bold py-2.5 px-5 rounded-xl shadow">Save Policies</button>
+                </form>
+
+                <form onsubmit="saveSeoAndGaFromAdmin(event)" class="bg-white p-5 rounded-2xl border border-stone-200 shadow-sm space-y-3 text-xs sm:text-sm">
+                    <h3 class="font-bold text-maroon text-base">SEO & GA4</h3>
+                    <div>
+                        <label class="block font-semibold mb-1">Page Title</label>
+                        <input id="cfgSeoTitle" type="text" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1">Meta Description</label>
+                        <textarea id="cfgSeoDesc" rows="2" class="w-full border border-stone-300 rounded-lg px-3 py-2"></textarea>
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1">Keywords</label>
+                        <input id="cfgSeoKeywords" type="text" class="w-full border border-stone-300 rounded-lg px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1">GA4 ID</label>
+                        <input id="cfgGaId" type="text" placeholder="G-XXXXXXXXXX" class="w-full border border-stone-300 rounded-lg px-3 py-2 font-mono">
+                    </div>
+                    <button type="submit" class="bg-stone-900 text-white font-bold py-2.5 px-5 rounded-xl shadow">Save SEO</button>
+                </form>
+
+                <div class="bg-white p-5 rounded-2xl border border-stone-200 shadow-sm space-y-3">
+                    <h3 class="font-bold text-stone-800 text-sm">Customer Reviews Moderation</h3>
+                    <div id="adminReviewsList" class="space-y-2 max-h-60 overflow-y-auto text-xs"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- CART DRAWER -->
+    <div id="cartDrawerBackdrop" onclick="toggleCartDrawer(false)" class="fixed inset-0 bg-black/60 z-50 hidden"></div>
+    <div id="cartDrawer" class="fixed top-0 right-0 h-full w-full max-w-md bg-cream z-50 shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
+        <div class="p-4 bg-maroon text-white flex items-center justify-between">
+            <h3 class="font-spiritual font-bold text-base"><i class="fa-solid fa-bag-shopping text-gold mr-2"></i> Your Sacred Cart</h3>
+            <button onclick="toggleCartDrawer(false)" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="cartItemsContainer" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+        <div id="cartFooter" class="p-4 bg-parchment border-t border-gold/40 space-y-3 max-h-[68vh] overflow-y-auto">
+            <div class="flex gap-2">
+                <input id="cartCouponInput" type="text" placeholder="Coupon Code" class="flex-1 bg-white border border-gold/50 rounded-lg px-3 py-1.5 text-xs uppercase font-mono">
+                <button onclick="applyCartCoupon()" class="bg-stone-800 text-amber-200 text-xs font-bold px-3 py-1.5 rounded-lg">Apply</button>
+            </div>
+            <div id="appliedCouponNotice" class="hidden text-xs"></div>
+            <div class="text-xs space-y-1 border-b border-gold/30 pb-2">
+                <div class="flex justify-between"><span>Subtotal:</span><span id="cartSubtotal">₹0</span></div>
+                <div class="flex justify-between text-emerald-700"><span>Discount:</span><span id="cartDiscount">-₹0</span></div>
+                <div class="flex justify-between"><span>Delivery:</span><span id="cartDeliveryCharge">₹0</span></div>
+                <div id="cartCodFeeRow" class="hidden flex justify-between text-amber-800"><span>COD Fee:</span><span id="cartCodFeeAmt">₹0</span></div>
+                <div class="flex justify-between text-sm font-extrabold text-maroon pt-1"><span>Total:</span><span id="cartGrandTotal">₹0</span></div>
+            </div>
+            <form id="checkoutForm" onsubmit="submitCustomerCheckout(event)" class="space-y-2 text-xs">
+                <div class="grid grid-cols-2 gap-2">
+                    <input id="custName" type="text" required placeholder="Full Name *" class="bg-white border rounded-lg px-2.5 py-2">
+                    <input id="custPhone" type="tel" required pattern="[0-9]{10}" placeholder="10-Digit Mobile *" class="bg-white border rounded-lg px-2.5 py-2">
+                </div>
+                <input id="custAddress" type="text" required placeholder="Address *" class="w-full bg-white border rounded-lg px-2.5 py-2">
+                <div class="grid grid-cols-3 gap-2">
+                    <input id="custCity" type="text" required placeholder="City *" class="bg-white border rounded-lg px-2.5 py-2">
+                    <input id="custState" type="text" required placeholder="State *" class="bg-white border rounded-lg px-2.5 py-2">
+                    <input id="custPincode" type="text" required pattern="[0-9]{6}" placeholder="Pincode *" class="bg-white border rounded-lg px-2.5 py-2 font-mono">
+                </div>
+                <div id="checkoutPaymentMethodsWrap" class="grid grid-cols-2 gap-2 pt-1"></div>
+                <div id="checkoutUpiQrBox" class="hidden p-3 rounded-xl bg-white border border-gold/50 text-center space-y-1.5">
+                    <div class="text-[11px] font-bold text-maroon">Scan to Pay via UPI</div>
+                    <img id="dynamicUpiQrImg" src="" alt="UPI QR" class="w-32 h-32 mx-auto rounded border p-1">
+                    <div class="text-[11px] font-extrabold text-emerald-700">Amount: <span id="upiQrPayAmount">₹0</span></div>
+                    <div id="upiMerchantIdLabel" class="text-[10px] font-mono text-stone-500"></div>
+                    <input id="custUtrInput" type="text" placeholder="Optional: 12-Digit UPI UTR No." class="w-full border rounded px-2 py-1 text-[11px] font-mono">
+                </div>
+                <button type="submit" class="w-full bg-saffron hover:bg-saffronHover text-white font-bold py-3 rounded-xl shadow-lg text-sm transition">Place Sacred Order</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <!-- 1. ADMIN AUTH -->
+    <div id="adminAuthModal" class="fixed inset-0 bg-black/70 z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border-2 border-gold space-y-3">
+            <h3 class="font-spiritual font-bold text-lg text-maroon">Admin Security Check</h3>
+            <form onsubmit="verifyAdminPasscode(event)" class="space-y-3">
+                <input id="adminAuthInput" type="password" required placeholder="Enter Admin Passcode" class="w-full border border-stone-300 rounded-xl px-3.5 py-2 text-sm">
+                <button type="submit" class="w-full bg-maroon text-white font-bold py-2 rounded-xl text-sm">Unlock</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. COURIER MODAL -->
+    <div id="courierModal" class="fixed inset-0 bg-black/70 z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border-2 border-gold space-y-3 text-xs">
+            <h3 class="font-bold text-base text-stone-900">1-Click Courier Booking</h3>
+            <input type="hidden" id="courierModalOrderId">
+            <div id="modalPickupAddressText" class="p-2 bg-amber-50 rounded"></div>
+            <div id="modalCustSummary" class="p-2 bg-stone-100 rounded"></div>
+            <div class="grid grid-cols-2 gap-2">
+                <label class="border p-2 rounded cursor-pointer"><input type="radio" id="radioShiprocket" name="courierPartner" value="Shiprocket" checked> Shiprocket</label>
+                <label class="border p-2 rounded cursor-pointer"><input type="radio" id="radioDelhivery" name="courierPartner" value="Delhivery"> Delhivery</label>
+            </div>
+            <div class="grid grid-cols-4 gap-2">
+                <input id="shipmentWeight" type="number" step="0.05" placeholder="Weight kg" class="border p-1.5 rounded">
+                <input id="shipmentL" type="number" placeholder="L cm" class="border p-1.5 rounded">
+                <input id="shipmentB" type="number" placeholder="B cm" class="border p-1.5 rounded">
+                <input id="shipmentH" type="number" placeholder="H cm" class="border p-1.5 rounded">
+            </div>
+            <input id="manualAwbOverride" type="text" placeholder="AWB Override (optional)" class="w-full border p-2 rounded font-mono">
+            <div class="flex gap-2">
+                <button onclick="confirmSingleClickShipment()" class="flex-1 bg-maroon text-white font-bold py-2.5 rounded-xl">Book & Generate AWB</button>
+                <button onclick="closeCourierModal()" class="bg-stone-200 px-4 rounded-xl">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. LABEL / INVOICE MODAL -->
+    <div id="labelInvoiceModal" class="fixed inset-0 bg-black/75 z-50 hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border-2 border-gold my-auto">
+            <div class="flex justify-between items-center pb-3 border-b">
+                <h3 class="font-bold text-base">Shipping Label & Invoice</h3>
+                <div class="flex gap-2">
+                    <button onclick="window.print()" class="bg-saffron text-white text-xs font-bold px-3 py-1.5 rounded-lg">Print</button>
+                    <button onclick="closeLabelInvoiceModal()" class="w-7 h-7 rounded-full bg-stone-100">✕</button>
+                </div>
+            </div>
+            <div id="printableDocArea" class="mt-4 space-y-4 max-h-[70vh] overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <!-- 4. TRACK ORDER MODAL -->
+    <div id="trackOrderModal" class="fixed inset-0 bg-black/70 z-50 hidden items-center justify-center p-4">
+        <div class="bg-cream rounded-3xl max-w-lg w-full p-6 shadow-2xl border-2 border-gold space-y-3">
+            <div class="flex justify-between items-center">
+                <h3 class="font-spiritual font-bold text-lg text-maroon">Track Order</h3>
+                <button onclick="closeTrackOrderModal()" class="w-7 h-7 rounded-full bg-stone-200">✕</button>
+            </div>
+            <div class="flex gap-2">
+                <input id="trackOrderInput" type="text" placeholder="Order ID / AWB / Mobile" class="flex-1 border border-gold rounded-xl px-3 py-2 text-xs uppercase font-mono">
+                <button onclick="lookupOrderTracking()" class="bg-maroon text-white font-bold px-4 py-2 rounded-xl text-xs">Track</button>
+            </div>
+            <div id="trackingResultBox"></div>
+        </div>
+    </div>
+
+    <!-- 5. PRODUCT DETAIL MODAL -->
+    <div id="productDetailModal" class="fixed inset-0 bg-black/70 z-50 hidden items-center justify-center p-4">
+        <div id="productDetailContent" class="bg-cream rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border-2 border-gold"></div>
+    </div>
+
+    <!-- 6. POLICY MODAL -->
+    <div id="policyModal" class="fixed inset-0 bg-black/70 z-50 hidden items-center justify-center p-4">
+        <div class="bg-cream rounded-3xl max-w-xl w-full p-6 shadow-2xl border-2 border-gold space-y-3 max-h-[85vh] flex flex-col">
+            <div class="flex justify-between items-center border-b pb-2">
+                <h3 id="policyModalTitle" class="font-spiritual font-bold text-lg text-maroon"></h3>
+                <button onclick="closePolicyModal()" class="w-7 h-7 rounded-full bg-stone-200">✕</button>
+            </div>
+            <div id="policyModalBody" class="text-xs text-stone-700 space-y-2 overflow-y-auto whitespace-pre-line"></div>
+        </div>
+    </div>
+
+    <!-- 7. WRITE REVIEW MODAL -->
+    <div id="writeReviewModal" class="fixed inset-0 bg-black/70 z-50 hidden items-center justify-center p-4">
+        <div class="bg-cream rounded-3xl max-w-md w-full p-6 shadow-2xl border-2 border-gold space-y-3">
+            <div class="flex justify-between items-center">
+                <h3 class="font-spiritual font-bold text-lg text-maroon">Write Customer Review</h3>
+                <button onclick="closeWriteReviewModal()" class="w-7 h-7 rounded-full bg-stone-200">✕</button>
+            </div>
+            <form onsubmit="submitCustomerReview(event)" class="space-y-3 text-xs">
+                <input id="revName" type="text" required placeholder="Your Name & City" class="w-full border rounded-xl px-3 py-2">
+                <input id="revProduct" type="text" required placeholder="Product Purchased" class="w-full border rounded-xl px-3 py-2">
+                <select id="revStars" class="w-full border rounded-xl px-3 py-2 font-bold text-amber-600">
+                    <option value="5">★★★★★ (5/5)</option>
+                    <option value="4">★★★★☆ (4/5)</option>
+                    <option value="3">★★★☆☆ (3/5)</option>
+                </select>
+                <textarea id="revText" rows="3" required placeholder="Review details..." class="w-full border rounded-xl px-3 py-2"></textarea>
+                <button type="submit" class="w-full bg-maroon text-white font-bold py-2.5 rounded-xl">Submit Review</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = "rps_dynamic_store_v1";
+
+        const defaultStoreState = {
+            storeConfig: {
+                storeName: "Rajeshwar Pooja Samagri",
+                announcement: "🙏 Welcome to Rajeshwar Pooja Samagri — Authentic Pooja Accessories & Spiritual Essentials",
+                whatsapp: "",
+                supportPhone: "",
+                supportEmail: "",
+                instagramUrl: "",
+                whatsappGreeting: "Namaste Rajeshwar Pooja Samagri! I would like to enquire about your Pooja Accessories.",
+                adminPasscode: ""
+            },
+            pickupAddress: {
+                contactName: "Rajeshwar Pooja Samagri",
+                street: "",
+                landmark: "",
+                city: "",
+                state: "",
+                pincode: "",
+                billingType: "NONGST",
+                gstin: "",
+                pan: ""
+            },
+            courierConfig: {
+                primaryCourier: "Shiprocket",
+                execMode: "LIVE_API",
+                srEmail: "",
+                srPassword: "",
+                srPickupLocation: "Primary",
+                corsProxy: "",
+                srToken: "",
+                dlToken: "",
+                dlWarehouse: "",
+                defaultWeight: 0.5,
+                defaultL: 15,
+                defaultB: 15,
+                defaultH: 10
+            },
+            paymentShipping: {
+                enableCod: true,
+                enablePrepaid: true,
+                merchantUpi: "",
+                razorpayKey: "",
+                deliveryCharge: 0,
+                freeDeliveryAbove: 0,
+                codFee: 0
+            },
+            policiesSeo: {
+                returnDays: 7,
+                dispatchHours: "24-48 Hours",
+                privacyPolicy: "",
+                termsPolicy: "",
+                refundPolicy: "",
+                seoTitle: "RAJESHWAR POOJA SAMAGRI | Sacred Pooja Accessories & Spiritual Store",
+                seoDesc: "Official Store of Rajeshwar Pooja Samagri. Shop handcrafted pure brass idols, shankh, dhoop burners & authentic pooja samagri.",
+                seoKeywords: "Rajeshwar Pooja Samagri, Pooja Accessories, Brass Murti, Shankh, Dhoop Dani, Spiritual Store India",
+                gaId: ""
+            },
+            categories: [
+                { id: "cat-1", name: "Daily Pooja Essentials", image: "https://images.unsplash.com/photo-1609710228159-0fa9bd7c0827?auto=format&fit=crop&w=400&q=80" },
+                { id: "cat-2", name: "Divine Shankh", image: "https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=400&q=80" },
+                { id: "cat-3", name: "Shop By Zodiac", image: "https://images.unsplash.com/photo-1611591472159-259f7ce81187?auto=format&fit=crop&w=400&q=80" },
+                { id: "cat-4", name: "Mangalavar Deepam", image: "https://images.unsplash.com/photo-1604608672516-f1b9b1d37076?auto=format&fit=crop&w=400&q=80" },
+                { id: "cat-5", name: "Murti Sangrah", image: "https://images.unsplash.com/photo-1567591414240-e9c1e59f3e06?auto=format&fit=crop&w=400&q=80" },
+                { id: "cat-6", name: "Brass Urlis", image: "https://images.unsplash.com/photo-1544967082-d9d25d867d66?auto=format&fit=crop&w=400&q=80" }
+            ],
+            products: [],
+            coupons: [],
+            orders: [],
+            reviews: []
+        };
+
+        let state = loadState();
+        let cart = [];
+        let activeCoupon = null;
+        let currentCategoryFilter = "ALL";
+        let isAdminMode = false;
+        let adminSessionUnlocked = false;
+        let pendingAdminTargetTab = "checklist";
+        let unreadOrderNotifications = 0;
+
+        function compressImageFile(file, maxWidth = 800, quality = 0.82) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        let width = img.width;
+                        let height = img.height;
+                        if (width > maxWidth) {
+                            height = Math.round((height * maxWidth) / width);
+                            width = maxWidth;
+                        }
+                        const canvas = document.createElement("canvas");
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext("2d");
+                        ctx.drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL("image/jpeg", quality));
+                    };
+                    img.onerror = reject;
+                    img.src = event.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function updateStorageMeter() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY) || "";
+                const kb = Math.round((raw.length * 2) / 1024);
+                const el = document.getElementById("storageUsageText");
+                if (el) el.textContent = `${kb} KB / 5120 KB`;
+            } catch (e) {}
+        }
+
+        function markAllNotificationsRead() {
+            unreadOrderNotifications = 0;
+            const badge = document.getElementById("unreadNotifBadge");
+            if (badge) badge.classList.add("hidden");
+        }
+
+        function incrementNotificationBadge() {
+            unreadOrderNotifications++;
+            const badge = document.getElementById("unreadNotifBadge");
+            if (badge) {
+                badge.textContent = unreadOrderNotifications;
+                badge.classList.remove("hidden");
+            }
+        }
+
+        function loadState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return JSON.parse(JSON.stringify(defaultStoreState));
+                const parsed = JSON.parse(raw);
+                return {
+                    ...JSON.parse(JSON.stringify(defaultStoreState)),
+                    ...parsed,
+                    storeConfig: { ...defaultStoreState.storeConfig, ...(parsed.storeConfig || {}) },
+                    pickupAddress: { ...defaultStoreState.pickupAddress, ...(parsed.pickupAddress || {}) },
+                    courierConfig: { ...defaultStoreState.courierConfig, ...(parsed.courierConfig || {}) },
+                    paymentShipping: { ...defaultStoreState.paymentShipping, ...(parsed.paymentShipping || {}) },
+                    policiesSeo: { ...defaultStoreState.policiesSeo, ...(parsed.policiesSeo || {}) }
+                };
+            } catch (e) {
+                return JSON.parse(JSON.stringify(defaultStoreState));
+            }
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            } catch (err) {
+                showToast("Storage Limit Warning", "Browser storage is nearly full. Export a JSON Backup or use compressed photos.", "warn");
+            }
+            updateStorageMeter();
+            syncAllViews();
+        }
+
+        window.addEventListener("storage", (event) => {
+            if (event.key === STORAGE_KEY && event.newValue) {
+                const oldOrderCount = state.orders.length;
+                state = loadState();
+                if (state.orders.length > oldOrderCount) {
+                    const newest = state.orders[0];
+                    incrementNotificationBadge();
+                    playNotificationChime();
+                    showToast(
+                        `🔔 New Live Order: ${newest.id}`,
+                        `${newest.customerName} (${newest.phone}) placed an order for ₹${newest.total} (${newest.paymentMode})`,
+                        "order"
+                    );
+                }
+                syncAllViews();
+            }
+        });
+
+        function playNotificationChime() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = "triangle";
+                osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+                osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.7);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.7);
+            } catch (e) {}
+        }
+
+        function showToast(title, message, type = "success") {
+            const container = document.getElementById("toastContainer");
+            const toast = document.createElement("div");
+            const colors = {
+                success: "bg-stone-900 border-gold text-white",
+                order: "bg-maroonDark border-amber-400 text-white",
+                warn: "bg-amber-900 border-amber-300 text-white"
+            };
+            toast.className = `pointer-events-auto p-3.5 rounded-2xl border-2 shadow-2xl flex items-start gap-3 transition transform duration-300 ${colors[type] || colors.success}`;
+            toast.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-gold/20 text-gold flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <i class="fa-solid ${type === 'order' ? 'fa-bell' : (type === 'warn' ? 'fa-circle-exclamation' : 'fa-check')}"></i>
+                </div>
+                <div class="flex-1 text-xs">
+                    <div class="font-bold text-amber-300 text-sm">${title}</div>
+                    <div class="text-stone-200 mt-0.5 leading-snug">${message}</div>
+                </div>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = "0";
+                setTimeout(() => toast.remove(), 300);
+            }, 4500);
+        }
+
+        function handleAdminAccessClick() {
+            if (isAdminMode) {
+                exitAdminToStorefront();
+            } else {
+                openAdminWithAuth("checklist");
+            }
+        }
+
+        function openAdminWithAuth(targetTab = "checklist") {
+            pendingAdminTargetTab = targetTab;
+            if (state.storeConfig.adminPasscode && !adminSessionUnlocked) {
+                const modal = document.getElementById("adminAuthModal");
+                document.getElementById("adminAuthInput").value = "";
+                modal.classList.remove("hidden");
+                modal.classList.add("flex");
+                return;
+            }
+            enterAdminPanel(targetTab);
+        }
+
+        function closeAdminAuthModal() {
+            const modal = document.getElementById("adminAuthModal");
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+
+        function verifyAdminPasscode(e) {
+            e.preventDefault();
+            const entered = document.getElementById("adminAuthInput").value;
+            if (entered === state.storeConfig.adminPasscode) {
+                adminSessionUnlocked = true;
+                closeAdminAuthModal();
+                enterAdminPanel(pendingAdminTargetTab);
+            } else {
+                showToast("Incorrect Passcode", "Please enter the correct Admin Passcode.", "warn");
+            }
+        }
+
+        function enterAdminPanel(tabName = "checklist") {
+            isAdminMode = true;
+            document.getElementById("storefrontView").classList.add("hidden");
+            document.getElementById("adminView").classList.remove("hidden");
+            document.getElementById("activeModeLabel").textContent = "Merchant Admin Panel";
+            document.getElementById("toggleViewBtn").innerHTML = `<i class="fa-solid fa-store"></i><span>View Storefront</span>`;
+            populateAdminFormsFromState();
+            switchAdminTab(tabName);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+
+        function exitAdminToStorefront() {
+            isAdminMode = false;
+            document.getElementById("adminView").classList.add("hidden");
+            document.getElementById("storefrontView").classList.remove("hidden");
+            document.getElementById("activeModeLabel").textContent = "Customer Storefront";
+            document.getElementById("toggleViewBtn").innerHTML = `<i class="fa-solid fa-sliders"></i><span>Admin Panel</span>`;
+            syncAllViews();
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+
+        function switchAdminTab(tabName) {
+            document.querySelectorAll(".admin-tab-pane").forEach(el => el.classList.add("hidden"));
+            const targetPane = document.getElementById(`adminTab-${tabName}`);
+            if (targetPane) targetPane.classList.remove("hidden");
+
+            document.querySelectorAll(".admin-tab-btn").forEach(btn => {
+                btn.className = "admin-tab-btn bg-stone-100 hover:bg-stone-200 text-stone-700 px-3.5 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap";
+            });
+            const activeBtn = document.getElementById(`tabBtn-${tabName}`);
+            if (activeBtn) {
+                activeBtn.className = "admin-tab-btn bg-maroon text-white px-3.5 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap shadow";
+            }
+            syncAllViews();
+        }
+
+        function syncAllViews() {
+            updateStorageMeter();
+            renderReadinessChecklist();
+            renderStorefrontHeaderAndFooter();
+            renderStorefrontCategories();
+            renderFeaturedSpotlightSection();
+            renderStorefrontProducts();
+            renderDynamicHomepageSections();
+            renderCustomerReviews();
+            updateCartBadge();
+            renderAdminProductsTable();
+            renderAdminCategoriesPills();
+            renderAdminCoupons();
+            renderAdminOrders();
+            renderAdminReportsAndCrm();
+            renderAdminReviewsModeration();
+            applyLiveSeoAndGa4();
+        }
+
+        function renderReadinessChecklist() {
+            const checks = [
+                {
+                    title: "WhatsApp & Instagram Contact Links",
+                    done: Boolean(state.storeConfig.whatsapp || state.storeConfig.instagramUrl),
+                    desc: state.storeConfig.whatsapp ? `WhatsApp: +${state.storeConfig.whatsapp}` : "Add your WhatsApp number & Instagram link",
+                    tab: "storeContact"
+                },
+                {
+                    title: "Merchant Pickup & Return Address",
+                    done: Boolean(state.pickupAddress.street && state.pickupAddress.city && state.pickupAddress.pincode),
+                    desc: state.pickupAddress.pincode ? `${state.pickupAddress.city} - ${state.pickupAddress.pincode}` : "Required for Courier Pickup, Shipping Labels & Invoices",
+                    tab: "storeContact"
+                },
+                {
+                    title: "Shiprocket / Delhivery Courier Setup",
+                    done: Boolean(state.courierConfig.srEmail || state.courierConfig.srToken || state.courierConfig.dlToken),
+                    desc: state.courierConfig.srToken ? "Shiprocket Bearer Token Active" : "Configure Shiprocket API User or Token",
+                    tab: "courierApi"
+                },
+                {
+                    title: "Live Product Catalog",
+                    done: state.products.length > 0,
+                    desc: `${state.products.length} Product(s) added to store`,
+                    tab: "products"
+                },
+                {
+                    title: "Payment Methods & Delivery Fee Rules",
+                    done: Boolean(state.paymentShipping.enableCod || state.paymentShipping.enablePrepaid),
+                    desc: `COD: ${state.paymentShipping.enableCod ? 'ON' : 'OFF'} | Prepaid: ${state.paymentShipping.enablePrepaid ? 'ON' : 'OFF'}`,
+                    tab: "paymentsShipping"
+                },
+                {
+                    title: "Privacy, Terms & Return/Refund Policies",
+                    done: Boolean(state.policiesSeo.privacyPolicy && state.policiesSeo.termsPolicy && state.policiesSeo.refundPolicy),
+                    desc: state.policiesSeo.refundPolicy ? `${state.policiesSeo.returnDays}-Day Return Policy Configured` : "Write your policies",
+                    tab: "policiesSeo"
+                },
+                {
+                    title: "SEO Meta & Google Analytics 4 (GA4)",
+                    done: Boolean(state.policiesSeo.gaId),
+                    desc: state.policiesSeo.gaId ? `GA4 Active (${state.policiesSeo.gaId})` : "Add your Measurement ID",
+                    tab: "policiesSeo"
+                }
+            ];
+
+            const completedCount = checks.filter(c => c.done).length;
+            document.getElementById("readinessProgressText").textContent = `Setup: ${completedCount}/7`;
+            document.getElementById("checklistScoreBig").textContent = `${completedCount} / 7 Completed`;
+
+            const container = document.getElementById("readinessChecklistContainer");
+            if (!container) return;
+
+            container.innerHTML = checks.map(c => `
+                <div class="p-4 rounded-xl border ${c.done ? 'bg-emerald-50/50 border-emerald-200' : 'bg-amber-50/50 border-amber-200'} flex items-start justify-between gap-3">
+                    <div class="flex items-start gap-3">
+                        <div class="w-7 h-7 rounded-full ${c.done ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-white'} flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                            <i class="fa-solid ${c.done ? 'fa-check' : 'fa-wrench'}"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-xs sm:text-sm text-stone-900">${c.title}</h4>
+                            <p class="text-xs text-stone-600 mt-0.5">${c.desc}</p>
+                        </div>
+                    </div>
+                    <button onclick="switchAdminTab('${c.tab}')" class="text-xs font-bold px-3 py-1.5 rounded-lg ${c.done ? 'bg-white text-stone-700 border border-stone-300' : 'bg-maroon text-white'} whitespace-nowrap">
+                        ${c.done ? 'Edit' : 'Configure →'}
+                    </button>
+                </div>
+            `).join("");
+        }
+
+        function populateAdminFormsFromState() {
+            document.getElementById("cfgStoreName").value = state.storeConfig.storeName || "";
+            document.getElementById("cfgAnnouncement").value = state.storeConfig.announcement || "";
+            document.getElementById("cfgWhatsapp").value = state.storeConfig.whatsapp || "";
+            document.getElementById("cfgSupportPhone").value = state.storeConfig.supportPhone || "";
+            document.getElementById("cfgSupportEmail").value = state.storeConfig.supportEmail || "";
+            document.getElementById("cfgInstagramUrl").value = state.storeConfig.instagramUrl || "";
+            document.getElementById("cfgWhatsappGreeting").value = state.storeConfig.whatsappGreeting || "";
+            document.getElementById("cfgAdminPasscode").value = state.storeConfig.adminPasscode || "";
+
+            document.getElementById("cfgPickupContactName").value = state.pickupAddress.contactName || "";
+            document.getElementById("cfgPickupStreet").value = state.pickupAddress.street || "";
+            document.getElementById("cfgPickupLandmark").value = state.pickupAddress.landmark || "";
+            document.getElementById("cfgPickupCity").value = state.pickupAddress.city || "";
+            document.getElementById("cfgPickupState").value = state.pickupAddress.state || "";
+            document.getElementById("cfgPickupPincode").value = state.pickupAddress.pincode || "";
+            document.getElementById("cfgBillingType").value = state.pickupAddress.billingType || "NONGST";
+            document.getElementById("cfgGstin").value = state.pickupAddress.gstin || "";
+            document.getElementById("cfgPan").value = state.pickupAddress.pan || "";
+            toggleGstFields();
+
+            document.getElementById("cfgPrimaryCourier").value = state.courierConfig.primaryCourier || "Shiprocket";
+            document.getElementById("cfgCourierExecMode").value = state.courierConfig.execMode || "LIVE_API";
+            document.getElementById("cfgSrEmail").value = state.courierConfig.srEmail || "";
+            document.getElementById("cfgSrPassword").value = state.courierConfig.srPassword || "";
+            document.getElementById("cfgSrPickupLocation").value = state.courierConfig.srPickupLocation || "Primary";
+            document.getElementById("cfgCorsProxy").value = state.courierConfig.corsProxy || "";
+            document.getElementById("cfgSrToken").value = state.courierConfig.srToken || "";
+            document.getElementById("cfgDlToken").value = state.courierConfig.dlToken || "";
+            document.getElementById("cfgDlWarehouse").value = state.courierConfig.dlWarehouse || "";
+            document.getElementById("cfgPkgWeight").value = state.courierConfig.defaultWeight || 0.5;
+            document.getElementById("cfgPkgLength").value = state.courierConfig.defaultL || 15;
+            document.getElementById("cfgPkgBreadth").value = state.courierConfig.defaultB || 15;
+            document.getElementById("cfgPkgHeight").value = state.courierConfig.defaultH || 10;
+
+            document.getElementById("cfgEnableCod").checked = Boolean(state.paymentShipping.enableCod);
+            document.getElementById("cfgEnablePrepaid").checked = Boolean(state.paymentShipping.enablePrepaid);
+            document.getElementById("cfgMerchantUpi").value = state.paymentShipping.merchantUpi || "";
+            document.getElementById("cfgRazorpayKey").value = state.paymentShipping.razorpayKey || "";
+            document.getElementById("cfgDeliveryCharge").value = state.paymentShipping.deliveryCharge ?? 0;
+            document.getElementById("cfgFreeDeliveryAbove").value = state.paymentShipping.freeDeliveryAbove ?? 0;
+            document.getElementById("cfgCodFee").value = state.paymentShipping.codFee ?? 0;
+
+            document.getElementById("cfgReturnDays").value = state.policiesSeo.returnDays ?? 7;
+            document.getElementById("cfgDispatchHours").value = state.policiesSeo.dispatchHours || "24-48 Hours";
+            document.getElementById("cfgPrivacyPolicy").value = state.policiesSeo.privacyPolicy || "";
+            document.getElementById("cfgTermsPolicy").value = state.policiesSeo.termsPolicy || "";
+            document.getElementById("cfgRefundPolicy").value = state.policiesSeo.refundPolicy || "";
+            document.getElementById("cfgSeoTitle").value = state.policiesSeo.seoTitle || "";
+            document.getElementById("cfgSeoDesc").value = state.policiesSeo.seoDesc || "";
+            document.getElementById("cfgSeoKeywords").value = state.policiesSeo.seoKeywords || "";
+            document.getElementById("cfgGaId").value = state.policiesSeo.gaId || "";
+        }
+
+        function toggleGstFields() {
+            const mode = document.getElementById("cfgBillingType").value;
+            const gstWrap = document.getElementById("gstNumberFieldWrap");
+            const panWrap = document.getElementById("panNumberFieldWrap");
+            if (mode === "GST") {
+                gstWrap.classList.remove("hidden");
+                panWrap.classList.remove("hidden");
+            } else {
+                gstWrap.classList.add("hidden");
+                panWrap.classList.add("hidden");
+            }
+        }
+
+        function saveStoreContactAndPickup(e) {
+            e.preventDefault();
+            state.storeConfig.storeName = document.getElementById("cfgStoreName").value.trim() || "Rajeshwar Pooja Samagri";
+            state.storeConfig.announcement = document.getElementById("cfgAnnouncement").value.trim();
+            state.storeConfig.whatsapp = document.getElementById("cfgWhatsapp").value.replace(/\D/g, "");
+            state.storeConfig.supportPhone = document.getElementById("cfgSupportPhone").value.trim();
+            state.storeConfig.supportEmail = document.getElementById("cfgSupportEmail").value.trim();
+            state.storeConfig.instagramUrl = document.getElementById("cfgInstagramUrl").value.trim();
+            state.storeConfig.whatsappGreeting = document.getElementById("cfgWhatsappGreeting").value.trim();
+            state.storeConfig.adminPasscode = document.getElementById("cfgAdminPasscode").value;
+
+            state.pickupAddress.contactName = document.getElementById("cfgPickupContactName").value.trim();
+            state.pickupAddress.street = document.getElementById("cfgPickupStreet").value.trim();
+            state.pickupAddress.landmark = document.getElementById("cfgPickupLandmark").value.trim();
+            state.pickupAddress.city = document.getElementById("cfgPickupCity").value.trim();
+            state.pickupAddress.state = document.getElementById("cfgPickupState").value.trim();
+            state.pickupAddress.pincode = document.getElementById("cfgPickupPincode").value.trim();
+            state.pickupAddress.billingType = document.getElementById("cfgBillingType").value;
+            state.pickupAddress.gstin = document.getElementById("cfgGstin").value.trim().toUpperCase();
+            state.pickupAddress.pan = document.getElementById("cfgPan").value.trim().toUpperCase();
+
+            saveState();
+            showToast("Store & Pickup Details Saved", "Your contact links and courier pickup address are now live.");
+        }
+
+        function saveCourierApiSettings(e) {
+            e.preventDefault();
+            state.courierConfig.primaryCourier = document.getElementById("cfgPrimaryCourier").value;
+            state.courierConfig.execMode = document.getElementById("cfgCourierExecMode").value;
+            state.courierConfig.srEmail = document.getElementById("cfgSrEmail").value.trim();
+            state.courierConfig.srPassword = document.getElementById("cfgSrPassword").value;
+            state.courierConfig.srPickupLocation = document.getElementById("cfgSrPickupLocation").value.trim() || "Primary";
+            state.courierConfig.corsProxy = document.getElementById("cfgCorsProxy").value.trim();
+            state.courierConfig.srToken = document.getElementById("cfgSrToken").value.trim();
+            state.courierConfig.dlToken = document.getElementById("cfgDlToken").value.trim();
+            state.courierConfig.dlWarehouse = document.getElementById("cfgDlWarehouse").value.trim();
+            state.courierConfig.defaultWeight = Number(document.getElementById("cfgPkgWeight").value) || 0.5;
+            state.courierConfig.defaultL = Number(document.getElementById("cfgPkgLength").value) || 15;
+            state.courierConfig.defaultB = Number(document.getElementById("cfgPkgBreadth").value) || 15;
+            state.courierConfig.defaultH = Number(document.getElementById("cfgPkgHeight").value) || 10;
+
+            saveState();
+            showToast("Courier Settings Saved", `Primary partner set to ${state.courierConfig.primaryCourier}.`);
+        }
+
+        function savePaymentAndDeliveryConfig(e) {
+            e.preventDefault();
+            state.paymentShipping.enableCod = document.getElementById("cfgEnableCod").checked;
+            state.paymentShipping.enablePrepaid = document.getElementById("cfgEnablePrepaid").checked;
+            state.paymentShipping.merchantUpi = document.getElementById("cfgMerchantUpi").value.trim();
+            state.paymentShipping.razorpayKey = document.getElementById("cfgRazorpayKey").value.trim();
+            state.paymentShipping.deliveryCharge = Number(document.getElementById("cfgDeliveryCharge").value) || 0;
+            state.paymentShipping.freeDeliveryAbove = Number(document.getElementById("cfgFreeDeliveryAbove").value) || 0;
+            state.paymentShipping.codFee = Number(document.getElementById("cfgCodFee").value) || 0;
+
+            if (!state.paymentShipping.enableCod && !state.paymentShipping.enablePrepaid) {
+                state.paymentShipping.enableCod = true;
+                document.getElementById("cfgEnableCod").checked = true;
+                showToast("Notice", "At least one payment method must remain enabled.", "warn");
+            }
+
+            saveState();
+            showToast("Payment & Delivery Updated", "Changes saved successfully.");
+        }
+
+        function savePoliciesFromAdmin(e) {
+            e.preventDefault();
+            state.policiesSeo.returnDays = Number(document.getElementById("cfgReturnDays").value) || 7;
+            state.policiesSeo.dispatchHours = document.getElementById("cfgDispatchHours").value.trim() || "24-48 Hours";
+            state.policiesSeo.privacyPolicy = document.getElementById("cfgPrivacyPolicy").value.trim();
+            state.policiesSeo.termsPolicy = document.getElementById("cfgTermsPolicy").value.trim();
+            state.policiesSeo.refundPolicy = document.getElementById("cfgRefundPolicy").value.trim();
+            saveState();
+            showToast("Policies Saved", "Store policies updated.");
+        }
+
+        function saveSeoAndGaFromAdmin(e) {
+            e.preventDefault();
+            state.policiesSeo.seoTitle = document.getElementById("cfgSeoTitle").value.trim();
+            state.policiesSeo.seoDesc = document.getElementById("cfgSeoDesc").value.trim();
+            state.policiesSeo.seoKeywords = document.getElementById("cfgSeoKeywords").value.trim();
+            state.policiesSeo.gaId = document.getElementById("cfgGaId").value.trim().toUpperCase();
+            saveState();
+            showToast("SEO & GA4 Active", "SEO & Analytics settings updated.");
+        }
+
+        function logToShiprocketConsole(text) {
+            const el = document.getElementById("shiprocketApiConsole");
+            if (!el) return;
+            const time = new Date().toLocaleTimeString();
+            el.textContent = `[${time}] ${text}\n\n` + el.textContent;
+        }
+
+        async function authenticateShiprocketLive() {
+            const email = document.getElementById("cfgSrEmail").value.trim();
+            const password = document.getElementById("cfgSrPassword").value;
+            const proxy = document.getElementById("cfgCorsProxy").value.trim();
+
+            if (!email || !password) {
+                showToast("Missing Credentials", "Enter Shiprocket Email and Password first.", "warn");
+                return;
+            }
+
+            const endpoint = (proxy ? proxy.replace(/\/$/, "") + "/" : "") + "https://apiv2.shiprocket.in/v1/external/auth/login";
+            logToShiprocketConsole(`POST ${endpoint}\nPayload: { "email": "${email}" }`);
+
+            try {
+                const res = await fetch(endpoint, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+                logToShiprocketConsole(`Response (${res.status}):\n` + JSON.stringify(data, null, 2));
+
+                if (data && data.token) {
+                    document.getElementById("cfgSrToken").value = data.token;
+                    state.courierConfig.srEmail = email;
+                    state.courierConfig.srPassword = password;
+                    state.courierConfig.srToken = data.token;
+                    saveState();
+                    showToast("Shiprocket Connected!", "Live Bearer Token generated.");
+                } else {
+                    showToast("Auth Notice", data.message || "Check API Inspector.", "warn");
+                }
+            } catch (err) {
+                logToShiprocketConsole(`CORS / Network Error: ${err.message}`);
+                showToast("CORS / Network Notice", "Check API console for details.", "warn");
+            }
+        }
+
+        function getFormattedPickupAddress() {
+            const p = state.pickupAddress;
+            if (!p.street && !p.city && !p.pincode) return "";
+            return [p.contactName, p.street, p.landmark, p.city, p.state, p.pincode].filter(Boolean).join(", ");
+        }
+
+        function renderStorefrontHeaderAndFooter() {
+            const fullName = state.storeConfig.storeName || "Rajeshwar Pooja Samagri";
+            const words = fullName.split(" ");
+            const firstWord = words[0] || "RAJESHWAR";
+            const restWords = words.slice(1).join(" ") || "POOJA SAMAGRI";
+
+            document.getElementById("headerBrandTitle").textContent = firstWord.toUpperCase();
+            document.getElementById("headerBrandSubtitle").textContent = restWords.toUpperCase();
+            document.getElementById("footerBrandTitle").textContent = firstWord.toUpperCase();
+            document.getElementById("footerBrandSubtitle").textContent = restWords.toUpperCase();
+            document.getElementById("footerCopyrightName").textContent = fullName;
+            document.getElementById("storefrontAnnouncementText").textContent = state.storeConfig.announcement || `🙏 Welcome to ${fullName}`;
+
+            const contactBlock = document.getElementById("footerDynamicContactBlock");
+            const addrStr = getFormattedPickupAddress();
+            let contactHtml = "";
+            if (addrStr) {
+                contactHtml += `<p>📍 ${addrStr}</p>`;
+            } else {
+                contactHtml += `<p class="text-amber-300/80 italic">📍 Address not configured yet. <button onclick="openAdminWithAuth('storeContact')" class="underline font-bold">Add in Admin</button></p>`;
+            }
+            if (state.storeConfig.supportPhone || state.storeConfig.whatsapp) {
+                contactHtml += `<p>📞 ${state.storeConfig.supportPhone || ('+' + state.storeConfig.whatsapp)}</p>`;
+            }
+            if (state.storeConfig.supportEmail) {
+                contactHtml += `<p>✉️ ${state.storeConfig.supportEmail}</p>`;
+            }
+            contactBlock.innerHTML = contactHtml;
+
+            document.getElementById("footerGaBadge").textContent = state.policiesSeo.gaId || "Not Set";
+            document.getElementById("footerCourierBadge").textContent = state.courierConfig.primaryCourier || "Shiprocket";
+
+            const pmList = [];
+            if (state.paymentShipping.enableCod) pmList.push("Cash On Delivery (COD)");
+            if (state.paymentShipping.enablePrepaid) pmList.push("UPI QR / Online Prepaid");
+            document.getElementById("footerPaymentMethodsText").textContent = pmList.length ? `Accepted Payments: ${pmList.join(" • ")}` : "Configure Payments in Admin";
+        }
+
+        function handleWhatsAppClick() {
+            const num = (state.storeConfig.whatsapp || "").replace(/\D/g, "");
+            if (!num) {
+                showToast("WhatsApp Not Configured", "Opening Admin Panel to enter WhatsApp number.", "warn");
+                openAdminWithAuth("storeContact");
+                return;
+            }
+            const text = encodeURIComponent(state.storeConfig.whatsappGreeting || "Namaste Rajeshwar Pooja Samagri!");
+            window.open(`https://wa.me/${num}?text=${text}`, "_blank");
+        }
+
+        function handleInstagramClick() {
+            const url = (state.storeConfig.instagramUrl || "").trim();
+            if (!url) {
+                showToast("Instagram Not Configured", "Opening Admin Panel to enter Instagram link.", "warn");
+                openAdminWithAuth("storeContact");
+                return;
+            }
+            window.open(url, "_blank");
+        }
+
+        async function checkStorefrontPincode(e) {
+            e.preventDefault();
+            const pin = document.getElementById("storefrontPincodeInput").value.trim();
+            if (!/^[0-9]{6}$/.test(pin)) {
+                showToast("Invalid Pincode", "Please enter a valid 6-digit Pincode.", "warn");
+                return;
+            }
+
+            const subtext = document.getElementById("pincodeStatusSubtext");
+            const headerLabel = document.getElementById("headerPincodeLabel");
+            headerLabel.textContent = `PIN: ${pin}`;
+
+            const estDate = new Date();
+            estDate.setDate(estDate.getDate() + 4);
+            const formattedDate = estDate.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" });
+            const codStatus = state.paymentShipping.enableCod ? "COD & Prepaid Available" : "Prepaid Delivery Available";
+            const feeText = state.paymentShipping.deliveryCharge === 0 ? "FREE Delivery" : `Delivery Fee: ₹${state.paymentShipping.deliveryCharge}`;
+
+            subtext.innerHTML = `<span class="text-emerald-700 font-bold">✓ Deliverable to ${pin} • Dispatch in ${state.policiesSeo.dispatchHours || '24-48 Hours'} • Est. Delivery by ${formattedDate} (${codStatus} • ${feeText})</span>`;
+            showToast(`✓ Pincode ${pin} Serviceable`, `Est. Delivery by ${formattedDate}`);
+        }
+
+        async function handleCategoryPhotoUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            try {
+                const compressedDataUrl = await compressImageFile(file, 400, 0.8);
+                document.getElementById("catImgInput").value = compressedDataUrl;
+                showToast("Category Photo Ready", "Click '+ Add Category' to save.");
+            } catch (err) {
+                showToast("Upload Error", "Could not process image.", "warn");
+            }
+        }
+
+        function saveCategoryFromAdmin(e) {
+            e.preventDefault();
+            const name = document.getElementById("catNameInput").value.trim();
+            const image = document.getElementById("catImgInput").value.trim() || "https://images.unsplash.com/photo-1609710228159-0fa9bd7c0827?auto=format&fit=crop&w=400&q=80";
+            if (!name) return;
+
+            state.categories.push({ id: "cat-" + Date.now(), name, image });
+            document.getElementById("catNameInput").value = "";
+            document.getElementById("catImgInput").value = "";
+            saveState();
+            showToast("Category Added", `${name} added.`);
+        }
+
+        function deleteCategoryFromAdmin(catId) {
+            state.categories = state.categories.filter(c => c.id !== catId);
+            saveState();
+            showToast("Category Removed", "Category deleted.");
+        }
+
+        function renderStorefrontCategories() {
+            const grid = document.getElementById("dynamicCategoriesGrid");
+            const pills = document.getElementById("dynamicCategoryPills");
+            const footerList = document.getElementById("footerCategoriesList");
+            const prodCatSelect = document.getElementById("prodCategory");
+
+            if (state.categories.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-xs text-stone-500">No categories. <button onclick="openAdminWithAuth('products')" class="text-maroon underline font-bold">Add Categories</button></div>`;
+            } else {
+                grid.innerHTML = state.categories.map(c => `
+                    <button onclick="filterByCategory('${c.name.replace(/'/g, "\\'")}')" class="group flex flex-col items-center focus:outline-none">
+                        <div class="w-24 h-24 sm:w-32 sm:h-32 rounded-full p-1 bg-gradient-to-tr from-maroon via-gold to-saffron shadow-md group-hover:scale-105 transition">
+                            <img src="${c.image}" alt="${c.name}" class="w-full h-full object-cover rounded-full border-2 border-cream" onerror="this.src='https://placehold.co/200x200/6E1414/FFF?text=Pooja'">
+                        </div>
+                        <span class="mt-2.5 text-xs sm:text-sm font-bold text-stone-800 group-hover:text-maroon">${c.name}</span>
+                    </button>
+                `).join("");
+            }
+
+            pills.innerHTML = `
+                <button onclick="resetCategoryFilter()" class="cat-pill ${currentCategoryFilter === 'ALL' ? 'bg-maroon text-white' : 'bg-parchment hover:bg-gold/30 text-stone-800'} text-xs font-semibold px-3.5 py-1.5 rounded-full whitespace-nowrap transition">All Items (${state.products.length})</button>
+                ${state.categories.map(c => `
+                    <button onclick="filterByCategory('${c.name.replace(/'/g, "\\'")}')" class="cat-pill ${currentCategoryFilter === c.name ? 'bg-maroon text-white' : 'bg-parchment hover:bg-gold/30 text-stone-800'} text-xs font-semibold px-3.5 py-1.5 rounded-full whitespace-nowrap transition">${c.name}</button>
+                `).join("")}
+            `;
+
+            footerList.innerHTML = state.categories.map(c => `
+                <li><button onclick="filterByCategory('${c.name.replace(/'/g, "\\'")}')" class="hover:text-gold transition">${c.name}</button></li>
+            `).join("");
+
+            if (prodCatSelect) {
+                const currentVal = prodCatSelect.value;
+                prodCatSelect.innerHTML = state.categories.map(c => `<option value="${c.name}">${c.name}</option>`).join("");
+                if (currentVal) prodCatSelect.value = currentVal;
+            }
+        }
+
+        function renderAdminCategoriesPills() {
+            const wrap = document.getElementById("adminCategoriesPillsList");
+            if (!wrap) return;
+            wrap.innerHTML = state.categories.map(c => `
+                <div class="inline-flex items-center gap-2 bg-stone-100 border border-stone-300 rounded-full pl-1.5 pr-3 py-1 text-xs font-semibold">
+                    <img src="${c.image}" class="w-6 h-6 rounded-full object-cover">
+                    <span>${c.name}</span>
+                    <button onclick="deleteCategoryFromAdmin('${c.id}')" class="text-red-600 ml-1"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            `).join("");
+        }
+
+        function renderFeaturedSpotlightSection() {
+            const section = document.getElementById("featuredSpotlightSection");
+            const spotlightProd = state.products.find(p => p.section === "Featured Spotlight") || state.products[0];
+
+            if (!spotlightProd) {
+                section.innerHTML = `
+                    <div class="rounded-3xl bg-gradient-to-br from-[#F6E6CB] via-[#FDF8F0] to-[#EED7B0] border-2 border-dashed border-gold/70 p-6 sm:p-10 text-center space-y-3">
+                        <span class="inline-flex items-center gap-1.5 bg-maroon text-amber-100 text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                            <i class="fa-solid fa-fire-flame-curved text-saffron"></i> #1 Bestseller Spotlight Slot
+                        </span>
+                        <h3 class="font-spiritual text-xl sm:text-2xl font-bold text-maroon">Your Featured Spotlight Product Will Appear Here</h3>
+                        <p class="text-xs sm:text-sm text-stone-600 max-w-lg mx-auto">Add a product in the Admin Panel and select <b>"#1 Bestseller Spotlight Card"</b> to display it here.</p>
+                        <button onclick="openAdminWithAuth('products')" class="bg-maroon text-white font-bold px-5 py-2.5 rounded-xl text-xs sm:text-sm shadow">+ Add Featured Product</button>
+                    </div>
+                `;
+                return;
+            }
+
+            const discount = spotlightProd.mrp > spotlightProd.price ? Math.round(((spotlightProd.mrp - spotlightProd.price) / spotlightProd.mrp) * 100) : 0;
+
+            section.innerHTML = `
+                <div class="rounded-3xl bg-gradient-to-br from-[#F6E6CB] via-[#FDF8F0] to-[#EED7B0] border-2 border-gold/50 shadow-xl overflow-hidden grid grid-cols-1 md:grid-cols-12 items-center">
+                    <div class="p-6 sm:p-8 md:col-span-7 text-left">
+                        <span class="inline-flex items-center gap-1.5 bg-maroon text-amber-100 text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                            <i class="fa-solid fa-fire-flame-curved text-saffron"></i> #1 Featured Bestseller
+                        </span>
+                        <h2 class="font-spiritual text-2xl sm:text-4xl font-extrabold text-maroon mt-3">${spotlightProd.name}</h2>
+                        <p class="text-xs sm:text-sm text-stone-700 mt-2 leading-relaxed">${spotlightProd.desc || ''}</p>
+                        <div class="mt-5 flex items-baseline gap-3">
+                            <span class="text-2xl sm:text-3xl font-extrabold text-maroon">₹${spotlightProd.price.toLocaleString('en-IN')}</span>
+                            <span class="text-sm text-stone-400 line-through">₹${spotlightProd.mrp.toLocaleString('en-IN')}</span>
+                            ${discount > 0 ? `<span class="bg-amber-200 text-maroon text-xs font-bold px-2 py-0.5 rounded">${discount}% OFF</span>` : ''}
+                        </div>
+                        <div class="mt-5 flex flex-wrap gap-3">
+                            <button onclick="buyNowInstant('${spotlightProd.id}')" class="bg-saffron hover:bg-saffronHover text-white font-bold px-6 py-3 rounded-xl text-xs sm:text-sm flex items-center gap-2 shadow-md">
+                                <i class="fa-solid fa-bolt"></i> <span>Buy It Now</span>
+                            </button>
+                            <button onclick="addToCart('${spotlightProd.id}')" class="bg-maroon hover:bg-maroonDark text-white font-bold px-5 py-3 rounded-xl text-xs sm:text-sm flex items-center gap-2 shadow-md">
+                                <i class="fa-solid fa-cart-plus"></i> <span>Add to Cart</span>
+                            </button>
+                            <button onclick="openProductDetailModal('${spotlightProd.id}')" class="bg-white hover:bg-parchment text-maroon border border-maroon font-bold px-4 py-3 rounded-xl text-xs sm:text-sm">Quick View</button>
+                        </div>
+                    </div>
+                    <div class="md:col-span-5 h-64 md:h-full relative bg-stone-900">
+                        <img src="${spotlightProd.image}" alt="${spotlightProd.name}" class="w-full h-full object-cover opacity-95">
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderDynamicHomepageSections() {
+            const container = document.getElementById("dynamicHomepageSectionsContainer");
+            const sectionDefinitions = [
+                { key: "Shop By Zodiac", title: "Shop By Zodiac", subtitle: "Energized crystal & Rudraksha bracelets tailored to your Rashi" },
+                { key: "Divine Shankh Collection", title: "Divine Shankh Collection", subtitle: "100% Natural Valampuri & Rameshwaram Conch Shells" },
+                { key: "Mangalavar Deepam Collection", title: "Mangalavar Deepam Collection", subtitle: "Traditional handcrafted pure brass oil lamps & standing diyas" },
+                { key: "Murti Sangrah", title: "Murti Sangrah", subtitle: "Pran-Pratishtha worthy pure brass idols for your home temple" },
+                { key: "Timeless Brass Urlis", title: "Timeless Beauty of Brass Urlis", subtitle: "Handcrafted decorative bowls for floating flowers & diyas" }
+            ];
+
+            const populatedSectionsHtml = sectionDefinitions.map(sec => {
+                const secProds = state.products.filter(p => p.section === sec.key || p.category === sec.title);
+                if (secProds.length === 0) return "";
+                return `
+                    <section class="py-6 px-3 sm:px-6 max-w-7xl mx-auto">
+                        <div class="text-center mb-6">
+                            <h2 class="font-spiritual text-2xl sm:text-3xl font-bold text-maroon">${sec.title}</h2>
+                            <p class="text-xs sm:text-sm text-stone-600 mt-1">${sec.subtitle}</p>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-6">
+                            ${secProds.map(p => renderSingleProductCardHtml(p)).join("")}
+                        </div>
+                    </section>
+                `;
+            }).join("");
+
+            container.innerHTML = populatedSectionsHtml;
+        }
+
+        function renderSingleProductCardHtml(p) {
+            const discount = p.mrp > p.price ? Math.round(((p.mrp - p.price) / p.mrp) * 100) : 0;
+            const outOfStock = p.stock <= 0;
+            return `
+                <div class="bg-white rounded-2xl border border-gold/30 shadow-sm hover:shadow-xl transition flex flex-col overflow-hidden group">
+                    <div onclick="openProductDetailModal('${p.id}')" class="relative h-44 sm:h-56 bg-stone-100 overflow-hidden cursor-pointer">
+                        <img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" onerror="this.src='https://placehold.co/400x400/F7EFE1/6E1414?text=Rajeshwar+Pooja'">
+                        ${discount > 0 ? `<span class="absolute top-2.5 left-2.5 bg-maroon text-amber-100 text-[10px] sm:text-xs font-bold px-2.5 py-0.5 rounded-md shadow">Save ${discount}%</span>` : ''}
+                    </div>
+                    <div class="p-3 sm:p-4 flex-1 flex flex-col justify-between">
+                        <div>
+                            <div class="text-[10px] uppercase tracking-wider font-bold text-amber-800">${p.category}</div>
+                            <h3 onclick="openProductDetailModal('${p.id}')" class="font-bold text-xs sm:text-sm text-stone-900 line-clamp-2 mt-0.5 cursor-pointer hover:text-maroon">${p.name}</h3>
+                        </div>
+                        <div class="mt-3">
+                            <div class="flex items-baseline gap-2">
+                                <span class="text-sm sm:text-lg font-extrabold text-maroon">₹${p.price.toLocaleString('en-IN')}</span>
+                                <span class="text-[11px] text-stone-400 line-through">₹${p.mrp.toLocaleString('en-IN')}</span>
+                            </div>
+                            <div class="text-[10px] mt-0.5 ${outOfStock ? 'text-red-600 font-bold' : 'text-emerald-700 font-medium'}">
+                                ${outOfStock ? 'Out of Stock' : `✓ In Stock (${p.stock} available)`}
+                            </div>
+                            <button onclick="addToCart('${p.id}')" ${outOfStock ? 'disabled' : ''} class="mt-2.5 w-full ${outOfStock ? 'bg-stone-300 text-stone-500 cursor-not-allowed' : 'bg-saffron hover:bg-saffronHover text-white shadow'} font-bold py-2 rounded-xl text-xs uppercase tracking-wider transition flex items-center justify-center gap-1.5">
+                                <i class="fa-solid fa-cart-shopping"></i>
+                                <span>${outOfStock ? 'Out of Stock' : 'Add To Cart'}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderStorefrontProducts(searchQuery = "") {
+            const grid = document.getElementById("storeProductGrid");
+            let filtered = state.products;
+
+            if (currentCategoryFilter !== "ALL") {
+                filtered = filtered.filter(p => p.category === currentCategoryFilter || p.section === currentCategoryFilter);
+            }
+            if (searchQuery.trim() !== "") {
+                const q = searchQuery.toLowerCase();
+                filtered = filtered.filter(p =>
+                    p.name.toLowerCase().includes(q) ||
+                    p.category.toLowerCase().includes(q) ||
+                    (p.desc && p.desc.toLowerCase().includes(q))
+                );
+            }
+
+            if (state.products.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-12 px-4 text-center bg-parchment rounded-3xl border-2 border-dashed border-gold/60 space-y-3">
+                        <div class="w-14 h-14 rounded-full bg-maroon/10 text-maroon flex items-center justify-center mx-auto text-2xl">
+                            <i class="fa-solid fa-store"></i>
+                        </div>
+                        <h3 class="font-spiritual text-xl font-bold text-maroon">Your Catalog Is Ready For Your First Product</h3>
+                        <p class="text-xs sm:text-sm text-stone-600 max-w-md mx-auto">Click below to open your Admin Product Manager and add products, photos, prices, and stock.</p>
+                        <button onclick="openAdminWithAuth('products')" class="bg-saffron hover:bg-saffronHover text-white font-bold px-6 py-3 rounded-xl text-xs sm:text-sm shadow-md transition">
+                            <i class="fa-solid fa-plus-circle mr-1.5"></i> Add Product in Admin Panel
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-12 text-center bg-parchment rounded-2xl border border-gold/30">
+                        <p class="font-bold text-stone-700">No products found in "${currentCategoryFilter}".</p>
+                        <button onclick="resetCategoryFilter()" class="mt-3 bg-maroon text-white text-xs font-bold px-4 py-2 rounded-full">Show All Products</button>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(p => renderSingleProductCardHtml(p)).join("");
+        }
+
+        function filterByCategory(cat) {
+            currentCategoryFilter = cat;
+            document.getElementById("activeCategoryTitle").textContent = cat;
+            renderStorefrontCategories();
+            renderStorefrontProducts();
+            scrollToSection("allProductsSection");
+        }
+
+        function resetCategoryFilter() {
+            currentCategoryFilter = "ALL";
+            document.getElementById("activeCategoryTitle").textContent = "All Sacred Collections";
+            document.getElementById("searchInput").value = "";
+            document.getElementById("mobileSearchInput").value = "";
+            renderStorefrontCategories();
+            renderStorefrontProducts();
+        }
+
+        function handleSearch(val) {
+            renderStorefrontProducts(val);
+            const dropdown = document.getElementById("searchSuggestionsDropdown");
+            if (!dropdown) return;
+            const q = (val || "").trim().toLowerCase();
+            if (!q || state.products.length === 0) {
+                dropdown.classList.add("hidden");
+                return;
+            }
+            const matches = state.products.filter(p =>
+                p.name.toLowerCase().includes(q) ||
+                p.category.toLowerCase().includes(q)
+            ).slice(0, 5);
+
+            if (matches.length === 0) {
+                dropdown.innerHTML = `<div class="p-3 text-xs text-stone-500">No matching products found for "${val}"</div>`;
+            } else {
+                dropdown.innerHTML = matches.map(p => `
+                    <div onclick="openProductDetailModal('${p.id}'); document.getElementById('searchSuggestionsDropdown').classList.add('hidden');" class="p-2.5 hover:bg-parchment flex items-center justify-between gap-3 cursor-pointer">
+                        <div class="flex items-center gap-2.5">
+                            <img src="${p.image}" class="w-9 h-9 rounded-lg object-cover border border-gold/40">
+                            <div>
+                                <div class="text-xs font-bold text-stone-900">${p.name}</div>
+                                <div class="text-[10px] text-amber-800">${p.category}</div>
+                            </div>
+                        </div>
+                        <span class="text-xs font-extrabold text-maroon">₹${p.price}</span>
+                    </div>
+                `).join("");
+            }
+            dropdown.classList.remove("hidden");
+        }
+
+        document.addEventListener("click", (e) => {
+            const dropdown = document.getElementById("searchSuggestionsDropdown");
+            const input = document.getElementById("searchInput");
+            if (dropdown && input && !dropdown.contains(e.target) && e.target !== input) {
+                dropdown.classList.add("hidden");
+            }
+        });
+
+        function scrollToSection(id) {
+            const el = document.getElementById(id);
+            if (el) el.scrollIntoView({ behavior: "smooth" });
+        }
+
+        async function handleProductPhotoUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            try {
+                const compressedDataUrl = await compressImageFile(file, 800, 0.82);
+                document.getElementById("prodImage").value = compressedDataUrl;
+                showToast("Photo Compressed & Ready", "Optimized for fast mobile loading.");
+            } catch (err) {
+                showToast("Photo Upload Error", "Could not process image.", "warn");
+            }
+        }
+
+        function saveProductFromAdmin(e) {
+            e.preventDefault();
+            const editId = document.getElementById("editProdId").value;
+            const name = document.getElementById("prodName").value.trim();
+            const category = document.getElementById("prodCategory").value || "Daily Pooja Essentials";
+            const section = document.getElementById("prodSection").value || "General Catalog";
+            const price = Number(document.getElementById("prodPrice").value);
+            const mrp = Math.max(price, Number(document.getElementById("prodMrp").value));
+            const cost = Number(document.getElementById("prodCost").value) || 0;
+            const stock = Number(document.getElementById("prodStock").value) || 0;
+            const sku = document.getElementById("prodSku").value.trim() || ("RPS-" + Math.floor(100 + Math.random() * 900));
+            const weight = Number(document.getElementById("prodWeight").value) || state.courierConfig.defaultWeight || 0.5;
+            const image = document.getElementById("prodImage").value.trim();
+            const desc = document.getElementById("prodDesc").value.trim();
+
+            if (editId) {
+                const existing = state.products.find(p => String(p.id) === String(editId));
+                if (existing) {
+                    Object.assign(existing, { name, category, section, price, mrp, cost, stock, sku, weight, image, desc });
+                    showToast("Product Updated", `${name} has been updated.`);
+                }
+            } else {
+                state.products.unshift({
+                    id: "PROD-" + Date.now(),
+                    name,
+                    category,
+                    section,
+                    price,
+                    mrp,
+                    cost,
+                    stock,
+                    sku,
+                    weight,
+                    image,
+                    desc
+                });
+                showToast("Product Added!", `${name} is live.`);
+            }
+
+            resetProductForm();
+            saveState();
+        }
+
+        function loadProductIntoEditForm(prodId) {
+            const p = state.products.find(item => String(item.id) === String(prodId));
+            if (!p) return;
+            document.getElementById("editProdId").value = p.id;
+            document.getElementById("prodName").value = p.name;
+            document.getElementById("prodCategory").value = p.category;
+            document.getElementById("prodSection").value = p.section || "General Catalog";
+            document.getElementById("prodPrice").value = p.price;
+            document.getElementById("prodMrp").value = p.mrp;
+            document.getElementById("prodCost").value = p.cost || 0;
+            document.getElementById("prodStock").value = p.stock;
+            document.getElementById("prodSku").value = p.sku || "";
+            document.getElementById("prodWeight").value = p.weight || 0.5;
+            document.getElementById("prodImage").value = p.image;
+            document.getElementById("prodDesc").value = p.desc || "";
+            document.getElementById("productFormHeading").innerHTML = `<i class="fa-solid fa-pen-to-square mr-1"></i> Editing: ${p.name}`;
+            window.scrollTo({ top: 220, behavior: "smooth" });
+        }
+
+        function resetProductForm() {
+            document.getElementById("adminProductForm").reset();
+            document.getElementById("editProdId").value = "";
+            document.getElementById("productFormHeading").innerHTML = `<i class="fa-solid fa-plus-circle mr-1"></i> Add / Edit Product`;
+        }
+
+        function adjustStock(prodId, delta) {
+            const p = state.products.find(item => String(item.id) === String(prodId));
+            if (!p) return;
+            p.stock = Math.max(0, p.stock + delta);
+            saveState();
+        }
+
+        function deleteProductFromAdmin(prodId) {
+            state.products = state.products.filter(p => String(p.id) !== String(prodId));
+            saveState();
+            showToast("Product Deleted", "Item removed.", "warn");
+        }
+
+        function renderAdminProductsTable() {
+            document.getElementById("adminProdCountBadge").textContent = state.products.length;
+            document.getElementById("inventoryTotalCount").textContent = state.products.length;
+            const tbody = document.getElementById("adminProductsTableBody");
+            if (!tbody) return;
+
+            if (state.products.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-stone-400">No products added yet.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = state.products.map(p => `
+                <tr class="hover:bg-stone-50">
+                    <td class="p-3 flex items-center gap-2.5">
+                        <img src="${p.image}" class="w-11 h-11 rounded-lg object-cover border border-stone-200">
+                        <div>
+                            <div class="font-bold text-stone-900">${p.name}</div>
+                            <div class="text-[11px] text-stone-400 font-mono">SKU: ${p.sku || p.id} • ${p.weight || 0.5}kg</div>
+                        </div>
+                    </td>
+                    <td class="p-3">
+                        <div class="font-semibold text-stone-700">${p.category}</div>
+                        <div class="text-[11px] text-maroon font-medium">${p.section || 'General Catalog'}</div>
+                    </td>
+                    <td class="p-3">
+                        <div class="font-bold text-maroon">₹${p.price} <span class="text-stone-400 line-through font-normal text-xs">₹${p.mrp}</span></div>
+                        <div class="text-[11px] text-stone-500">Cost: ₹${p.cost || 0}</div>
+                    </td>
+                    <td class="p-3">
+                        <div class="inline-flex items-center gap-2 bg-stone-100 rounded-lg px-2 py-1 border border-stone-200">
+                            <button onclick="adjustStock('${p.id}', -1)" class="w-5 h-5 rounded bg-white shadow-xs font-bold text-xs">-</button>
+                            <span class="font-bold ${p.stock <= 3 ? 'text-red-600' : 'text-emerald-700'}">${p.stock}</span>
+                            <button onclick="adjustStock('${p.id}', 1)" class="w-5 h-5 rounded bg-white shadow-xs font-bold text-xs">+</button>
+                        </div>
+                    </td>
+                    <td class="p-3 text-right space-x-1">
+                        <button onclick="loadProductIntoEditForm('${p.id}')" class="bg-amber-100 text-amber-900 font-bold px-2.5 py-1 rounded-lg text-xs">Edit</button>
+                        <button onclick="deleteProductFromAdmin('${p.id}')" class="bg-red-100 text-red-700 font-bold px-2.5 py-1 rounded-lg text-xs">Delete</button>
+                    </td>
+                </tr>
+            `).join("");
+        }
+
+        function openProductDetailModal(prodId) {
+            const p = state.products.find(item => String(item.id) === String(prodId));
+            if (!p) return;
+            const modal = document.getElementById("productDetailModal");
+            const container = document.getElementById("productDetailContent");
+            const discount = p.mrp > p.price ? Math.round(((p.mrp - p.price) / p.mrp) * 100) : 0;
+            const prodReviews = state.reviews.filter(r => r.product.toLowerCase().includes(p.name.toLowerCase()));
+
+            container.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2">
+                    <div class="relative h-64 md:h-auto bg-stone-900 overflow-hidden group">
+                        <img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover">
+                        ${discount > 0 ? `<span class="absolute top-3 left-3 bg-maroon text-white text-xs font-bold px-3 py-1 rounded-full shadow">Save ${discount}%</span>` : ''}
+                    </div>
+                    <div class="p-6 flex flex-col justify-between space-y-4">
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold uppercase tracking-widest text-amber-800">${p.category}</span>
+                                <button onclick="closeProductDetailModal()" class="w-8 h-8 rounded-full bg-stone-200 hover:bg-stone-300 flex items-center justify-center">✕</button>
+                            </div>
+                            <h3 class="font-spiritual text-xl font-bold text-maroon mt-1">${p.name}</h3>
+                            <p class="text-xs sm:text-sm text-stone-600 mt-3 leading-relaxed">${p.desc || ''}</p>
+                        </div>
+                        <div>
+                            <div class="flex items-baseline gap-3">
+                                <span class="text-2xl font-extrabold text-maroon">₹${p.price.toLocaleString('en-IN')}</span>
+                                <span class="text-sm text-stone-400 line-through">₹${p.mrp.toLocaleString('en-IN')}</span>
+                                <span class="text-xs font-bold ${p.stock > 0 ? 'text-emerald-700' : 'text-red-600'}">${p.stock > 0 ? `✓ In Stock (${p.stock})` : 'Out of Stock'}</span>
+                            </div>
+                            <div class="mt-4 grid grid-cols-2 gap-2.5">
+                                <button onclick="addToCart('${p.id}'); closeProductDetailModal();" ${p.stock <= 0 ? 'disabled' : ''} class="bg-maroon hover:bg-maroonDark text-white font-bold py-2.5 rounded-xl text-xs sm:text-sm shadow">Add to Cart</button>
+                                <button onclick="buyNowInstant('${p.id}'); closeProductDetailModal();" ${p.stock <= 0 ? 'disabled' : ''} class="bg-saffron hover:bg-saffronHover text-white font-bold py-2.5 rounded-xl text-xs sm:text-sm shadow">Buy It Now</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+        }
+
+        function buyNowInstant(prodId) {
+            addToCart(prodId);
+            toggleCartDrawer(true);
+        }
+
+        function closeProductDetailModal() {
+            const modal = document.getElementById("productDetailModal");
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+
+        function toggleCartDrawer(open) {
+            const drawer = document.getElementById("cartDrawer");
+            const backdrop = document.getElementById("cartDrawerBackdrop");
+            if (open) {
+                backdrop.classList.remove("hidden");
+                drawer.classList.remove("translate-x-full");
+                renderCartDrawer();
+            } else {
+                backdrop.classList.add("hidden");
+                drawer.classList.add("translate-x-full");
+            }
+        }
+
+        function addToCart(prodId) {
+            const prod = state.products.find(p => String(p.id) === String(prodId));
+            if (!prod || prod.stock <= 0) {
+                showToast("Out of Stock", "Item currently out of stock.", "warn");
+                return;
+            }
+            const existing = cart.find(item => String(item.id) === String(prodId));
+            if (existing) {
+                if (existing.qty < prod.stock) existing.qty++;
+            } else {
+                cart.push({ id: prod.id, qty: 1 });
+            }
+            updateCartBadge();
+            showToast("Added to Cart", `${prod.name} added.`);
+            toggleCartDrawer(true);
+        }
+
+        function changeCartQty(prodId, delta) {
+            const idx = cart.findIndex(c => String(c.id) === String(prodId));
+            if (idx === -1) return;
+            const prod = state.products.find(p => String(p.id) === String(prodId));
+            cart[idx].qty += delta;
+            if (cart[idx].qty <= 0) {
+                cart.splice(idx, 1);
+            } else if (prod && cart[idx].qty > prod.stock) {
+                cart[idx].qty = prod.stock;
+            }
+            updateCartBadge();
+            renderCartDrawer();
+        }
+
+        function updateCartBadge() {
+            const count = cart.reduce((sum, item) => sum + item.qty, 0);
+            document.getElementById("cartCountBadge").textContent = count;
+        }
+
+        function applyCartCoupon() {
+            const code = document.getElementById("cartCouponInput").value.trim().toUpperCase();
+            const found = state.coupons.find(c => c.code === code);
+            if (!found) {
+                showToast("Invalid Coupon", "Coupon not found or inactive.", "warn");
+                return;
+            }
+            activeCoupon = found;
+            showToast("Coupon Applied!", `Code ${found.code} applied.`);
+            renderCartDrawer();
+        }
+
+        function computeCartTotals(selectedPayMode) {
+            let subtotal = 0;
+            cart.forEach(item => {
+                const p = state.products.find(prod => String(prod.id) === String(item.id));
+                if (p) subtotal += p.price * item.qty;
+            });
+
+            let discountAmount = 0;
+            if (activeCoupon && subtotal >= activeCoupon.minOrder) {
+                if (activeCoupon.type === "FLAT") {
+                    discountAmount = Math.min(subtotal, activeCoupon.val);
+                } else {
+                    discountAmount = Math.round((subtotal * activeCoupon.val) / 100);
+                }
+            }
+
+            const afterDiscount = Math.max(0, subtotal - discountAmount);
+            const ps = state.paymentShipping;
+            let shippingFee = Number(ps.deliveryCharge) || 0;
+            if (ps.freeDeliveryAbove > 0 && afterDiscount >= ps.freeDeliveryAbove) {
+                shippingFee = 0;
+            }
+
+            const isCod = (selectedPayMode || "COD").includes("COD");
+            const codHandlingFee = isCod ? (Number(ps.codFee) || 0) : 0;
+            const grandTotal = afterDiscount + shippingFee + codHandlingFee;
+
+            return { subtotal, discountAmount, shippingFee, codHandlingFee, grandTotal };
+        }
+
+        function renderCartDrawer() {
+            const container = document.getElementById("cartItemsContainer");
+            const footer = document.getElementById("cartFooter");
+
+            cart = cart.filter(item => state.products.some(p => String(p.id) === String(item.id)));
+
+            if (cart.length === 0) {
+                container.innerHTML = `<div class="text-center py-16"><p class="font-bold text-stone-600 text-sm">Your cart is empty</p></div>`;
+                footer.classList.add("hidden");
+                return;
+            }
+
+            footer.classList.remove("hidden");
+
+            container.innerHTML = cart.map(item => {
+                const p = state.products.find(prod => String(prod.id) === String(item.id));
+                if (!p) return "";
+                const lineTotal = p.price * item.qty;
+                return `
+                    <div class="bg-white p-3 rounded-xl border border-gold/30 flex items-center gap-3">
+                        <img src="${p.image}" class="w-14 h-14 rounded-lg object-cover flex-shrink-0">
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-bold text-xs text-stone-800 truncate">${p.name}</h4>
+                            <div class="text-xs font-extrabold text-maroon mt-0.5">₹${p.price} × ${item.qty} = ₹${lineTotal}</div>
+                            <div class="flex items-center gap-2 mt-1.5">
+                                <button onclick="changeCartQty('${p.id}', -1)" class="w-6 h-6 rounded bg-stone-100 font-bold text-xs">-</button>
+                                <span class="text-xs font-bold">${item.qty}</span>
+                                <button onclick="changeCartQty('${p.id}', 1)" class="w-6 h-6 rounded bg-stone-100 font-bold text-xs">+</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+
+            const pmWrap = document.getElementById("checkoutPaymentMethodsWrap");
+            const currentlyChecked = document.querySelector('input[name="paymentMode"]:checked')?.value;
+            const methods = [];
+            if (state.paymentShipping.enableCod) methods.push({ val: "COD", label: "💵 COD" });
+            if (state.paymentShipping.enablePrepaid) methods.push({ val: "Prepaid", label: "⚡ Online / UPI" });
+            const activeMode = methods.some(m => m.val === currentlyChecked) ? currentlyChecked : (methods[0]?.val || "COD");
+
+            pmWrap.innerHTML = methods.map(m => `
+                <label class="flex items-center gap-1.5 bg-white border border-stone-300 rounded-lg p-2 cursor-pointer text-xs font-semibold">
+                    <input type="radio" name="paymentMode" value="${m.val}" ${m.val === activeMode ? 'checked' : ''} onchange="renderCartDrawer()" class="accent-maroon">
+                    <span>${m.label}</span>
+                </label>
+            `).join("");
+
+            const totals = computeCartTotals(activeMode);
+
+            document.getElementById("cartSubtotal").textContent = `₹${totals.subtotal.toLocaleString('en-IN')}`;
+            document.getElementById("cartDiscount").textContent = `-₹${totals.discountAmount.toLocaleString('en-IN')}`;
+            document.getElementById("cartDeliveryCharge").textContent = totals.shippingFee === 0 ? "FREE" : `₹${totals.shippingFee}`;
+
+            const codRow = document.getElementById("cartCodFeeRow");
+            if (totals.codHandlingFee > 0) {
+                codRow.classList.remove("hidden");
+                document.getElementById("cartCodFeeAmt").textContent = `₹${totals.codHandlingFee}`;
+            } else {
+                codRow.classList.add("hidden");
+            }
+
+            document.getElementById("cartGrandTotal").textContent = `₹${totals.grandTotal.toLocaleString('en-IN')}`;
+
+            const upiBox = document.getElementById("checkoutUpiQrBox");
+            if (activeMode.includes("Prepaid") && state.paymentShipping.merchantUpi) {
+                upiBox.classList.remove("hidden");
+                document.getElementById("upiQrPayAmount").textContent = `₹${totals.grandTotal}`;
+                document.getElementById("upiMerchantIdLabel").textContent = `UPI ID: ${state.paymentShipping.merchantUpi}`;
+                const upiUri = `upi://pay?pa=${encodeURIComponent(state.paymentShipping.merchantUpi)}&pn=${encodeURIComponent(state.storeConfig.storeName)}&am=${totals.grandTotal}&cu=INR`;
+                document.getElementById("dynamicUpiQrImg").src = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(upiUri)}`;
+            } else {
+                upiBox.classList.add("hidden");
+            }
+        }
+
+        function submitCustomerCheckout(e) {
+            e.preventDefault();
+            if (cart.length === 0) return;
+
+            const name = document.getElementById("custName").value.trim();
+            const phone = document.getElementById("custPhone").value.trim();
+            const street = document.getElementById("custAddress").value.trim();
+            const city = document.getElementById("custCity").value.trim();
+            const custState = document.getElementById("custState").value.trim();
+            const pincode = document.getElementById("custPincode").value.trim();
+            const paymentMode = document.querySelector('input[name="paymentMode"]:checked')?.value || "COD";
+            const utrNumber = document.getElementById("custUtrInput")?.value.trim() || "";
+
+            const totals = computeCartTotals(paymentMode);
+
+            const finalPayLabel = paymentMode.includes("Prepaid") && utrNumber ? `Prepaid (UTR: ${utrNumber})` : paymentMode;
+
+            let totalCogs = 0;
+            const orderItems = [];
+
+            cart.forEach(item => {
+                const p = state.products.find(prod => String(prod.id) === String(item.id));
+                if (p) {
+                    orderItems.push({
+                        id: p.id,
+                        sku: p.sku || p.id,
+                        name: p.name,
+                        qty: item.qty,
+                        price: p.price,
+                        cost: p.cost || 0
+                    });
+                    totalCogs += (p.cost || 0) * item.qty;
+                    p.stock = Math.max(0, p.stock - item.qty);
+                }
+            });
+
+            const newOrderId = "ORD-" + Math.floor(10000 + Math.random() * 90000);
+            const nowStr = new Date().toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
+
+            const newOrder = {
+                id: newOrderId,
+                createdAt: Date.now(),
+                date: nowStr,
+                customerName: name,
+                phone: phone,
+                street: street,
+                city: city,
+                state: custState,
+                pincode: pincode,
+                address: `${street}, ${city}, ${custState} - ${pincode}`,
+                items: orderItems,
+                subtotal: totals.subtotal,
+                discount: totals.discountAmount,
+                shippingFee: totals.shippingFee,
+                codFee: totals.codHandlingFee,
+                total: totals.grandTotal,
+                cogs: totalCogs,
+                paymentMode: finalPayLabel,
+                codRemitted: !paymentMode.includes("COD"),
+                status: "New Order",
+                courier: null,
+                awb: null,
+                shipmentId: null,
+                pickupScheduled: false
+            };
+
+            state.orders.unshift(newOrder);
+            cart = [];
+            activeCoupon = null;
+            updateCartBadge();
+            toggleCartDrawer(false);
+            saveState();
+
+            incrementNotificationBadge();
+            playNotificationChime();
+            showToast(`Order Confirmed: ${newOrderId}`, `Thank you ${name}! Order received.`);
+            document.getElementById("trackOrderInput").value = newOrderId;
+            openTrackOrderModal();
+        }
+
+        function addCouponFromAdmin(e) {
+            e.preventDefault();
+            const code = document.getElementById("couponCodeInput").value.trim().toUpperCase();
+            const type = document.getElementById("couponTypeInput").value;
+            const val = Number(document.getElementById("couponValInput").value);
+            const minOrder = Number(document.getElementById("couponMinInput").value) || 0;
+
+            state.coupons.push({ code, type, val, minOrder });
+            e.target.reset();
+            saveState();
+            showToast("Coupon Activated", `${code} is live.`);
+        }
+
+        function removeCoupon(idx) {
+            state.coupons.splice(idx, 1);
+            saveState();
+        }
+
+        function renderAdminCoupons() {
+            const list = document.getElementById("adminCouponsList");
+            if (!list) return;
+            if (state.coupons.length === 0) {
+                list.innerHTML = `<div class="text-xs text-stone-400 italic">No coupons.</div>`;
+                return;
+            }
+            list.innerHTML = state.coupons.map((c, idx) => `
+                <div class="p-2.5 rounded-xl bg-amber-50 border flex items-center justify-between text-xs">
+                    <div>
+                        <span class="font-mono font-bold bg-maroon text-white px-2 py-0.5 rounded">${c.code}</span>
+                        <span class="font-bold text-stone-800 ml-2">${c.type === 'FLAT' ? `Flat ₹${c.val}` : `${c.val}%`} OFF</span>
+                    </div>
+                    <button onclick="removeCoupon(${idx})" class="text-red-600 font-bold"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `).join("");
+        }
+
+        function renderAdminOrders() {
+            document.getElementById("adminOrderBadge").textContent = state.orders.length;
+            const container = document.getElementById("adminOrdersContainer");
+            if (!container) return;
+
+            const statusFilter = document.getElementById("adminOrderStatusFilter")?.value || "ALL";
+            let list = state.orders;
+            if (statusFilter !== "ALL") list = list.filter(o => o.status === statusFilter);
+
+            if (list.length === 0) {
+                container.innerHTML = `<div class="bg-white p-8 rounded-2xl border text-center text-xs text-stone-400">No orders in this status.</div>`;
+                return;
+            }
+
+            container.innerHTML = list.map(o => `
+                <div class="bg-white rounded-2xl border p-4 space-y-3">
+                    <div class="flex justify-between items-center border-b pb-2 text-xs">
+                        <div class="flex items-center gap-2">
+                            <span class="font-mono font-bold text-maroon">${o.id}</span>
+                            <span class="font-bold bg-stone-100 px-2 py-0.5 rounded">${o.status}</span>
+                            <span class="font-bold text-stone-600">${o.paymentMode}</span>
+                            <span class="text-stone-400">${o.date}</span>
+                        </div>
+                        <select onchange="updateOrderStatus('${o.id}', this.value)" class="border rounded px-2 py-1 text-xs">
+                            <option value="New Order" ${o.status === 'New Order' ? 'selected' : ''}>New Order</option>
+                            <option value="Processing" ${o.status === 'Processing' ? 'selected' : ''}>Processing</option>
+                            <option value="Shipped" ${o.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
+                            <option value="Delivered" ${o.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                            <option value="Cancelled" ${o.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                            <option value="Refunded" ${o.status === 'Refunded' ? 'selected' : ''}>Refunded</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                        <div class="p-3 bg-stone-50 rounded-xl">
+                            <div class="font-bold">${o.customerName} (+91 ${o.phone})</div>
+                            <div class="text-stone-600 mt-1">${o.address}</div>
+                        </div>
+                        <div class="p-3 bg-stone-50 rounded-xl">
+                            <div class="font-bold">Items (${o.items.length})</div>
+                            <div class="text-stone-600 mt-1">${o.items.map(i => `${i.qty}x ${i.name}`).join(", ")}</div>
+                            <div class="font-extrabold text-maroon mt-2">Total: ₹${o.total}</div>
+                        </div>
+                        <div class="p-3 bg-amber-50 rounded-xl flex flex-col justify-between">
+                            ${o.awb ? `
+                                <div>
+                                    <div class="font-bold text-emerald-800">AWB: ${o.awb}</div>
+                                    <div class="text-stone-500">${o.courier}</div>
+                                </div>
+                                <div class="mt-2 flex gap-1">
+                                    <button onclick="openLabelInvoiceModal('${o.id}')" class="bg-maroon text-white font-bold px-2 py-1 rounded text-[11px]">Print Label</button>
+                                    <button onclick="sendWhatsAppTrackingToCustomer('${o.id}')" class="bg-emerald-600 text-white font-bold px-2 py-1 rounded text-[11px]">WhatsApp</button>
+                                </div>
+                            ` : `
+                                <div>
+                                    <div class="font-bold text-stone-800">Ready for Courier</div>
+                                </div>
+                                <button onclick="openCourierModal('${o.id}')" class="bg-saffron text-white font-bold py-1.5 px-3 rounded-lg text-xs mt-2">Book Courier</button>
+                            `}
+                        </div>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        function updateOrderStatus(orderId, newStatus) {
+            const ord = state.orders.find(o => o.id === orderId);
+            if (!ord) return;
+            ord.status = newStatus;
+            saveState();
+        }
+
+        function openCourierModal(orderId) {
+            const ord = state.orders.find(o => o.id === orderId);
+            if (!ord) return;
+            document.getElementById("courierModalOrderId").value = orderId;
+            document.getElementById("modalPickupAddressText").textContent = getFormattedPickupAddress() || "No pickup address set";
+            document.getElementById("modalCustSummary").textContent = `${ord.customerName} - ${ord.address}`;
+            document.getElementById("shipmentWeight").value = state.courierConfig.defaultWeight || 0.5;
+            document.getElementById("shipmentL").value = state.courierConfig.defaultL || 15;
+            document.getElementById("shipmentB").value = state.courierConfig.defaultB || 15;
+            document.getElementById("shipmentH").value = state.courierConfig.defaultH || 10;
+            document.getElementById("manualAwbOverride").value = "";
+
+            const modal = document.getElementById("courierModal");
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+        }
+
+        function closeCourierModal() {
+            const modal = document.getElementById("courierModal");
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+
+        async function confirmSingleClickShipment() {
+            const orderId = document.getElementById("courierModalOrderId").value;
+            const ord = state.orders.find(o => o.id === orderId);
+            if (!ord) return;
+
+            const partner = document.querySelector('input[name="courierPartner"]:checked').value;
+            const manualAwb = document.getElementById("manualAwbOverride").value.trim().toUpperCase();
+
+            const prefix = partner === "Delhivery" ? "DLV" : "SRK";
+            ord.courier = partner;
+            ord.awb = manualAwb || (prefix + Math.floor(100000000 + Math.random() * 900000000) + "IN");
+            ord.status = "Shipped";
+            ord.pickupScheduled = true;
+
+            closeCourierModal();
+            saveState();
+            showToast("Courier Booked!", `${partner} AWB: ${ord.awb}`);
+            openLabelInvoiceModal(orderId);
+        }
+
+        function sendWhatsAppTrackingToCustomer(orderId) {
+            const ord = state.orders.find(o => o.id === orderId);
+            if (!ord) return;
+            const msg = encodeURIComponent(`Namaste ${ord.customerName}! Your order ${ord.id} has shipped via ${ord.courier}. AWB: ${ord.awb}`);
+            window.open(`https://wa.me/91${ord.phone}?text=${msg}`, "_blank");
+        }
+
+        function openLabelInvoiceModal(orderId) {
+            const ord = state.orders.find(o => o.id === orderId);
+            if (!ord) return;
+            const area = document.getElementById("printableDocArea");
+            area.innerHTML = `
+                <div class="bg-white p-4 border rounded text-xs space-y-2">
+                    <div class="font-bold text-sm">AWB: ${ord.awb || 'N/A'} (${ord.courier || 'Standard'})</div>
+                    <div><b>Deliver To:</b> ${ord.customerName}, ${ord.address} (Ph: ${ord.phone})</div>
+                    <div><b>From:</b> ${state.pickupAddress.contactName || state.storeConfig.storeName}, ${getFormattedPickupAddress()}</div>
+                    <div class="font-bold mt-2">Total: ₹${ord.total} (${ord.paymentMode})</div>
+                </div>
+            `;
+            const modal = document.getElementById("labelInvoiceModal");
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+        }
+
+        function closeLabelInvoiceModal() {
+            const modal = document.getElementById("labelInvoiceModal");
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+
+        function renderAdminReportsAndCrm() {
+            const validOrders = state.orders.filter(o => o.status !== "Cancelled" && o.status !== "Refunded");
+            const grossRev = validOrders.reduce((s, o) => s + o.total, 0);
+            const totalCogs = validOrders.reduce((s, o) => s + (o.cogs || 0), 0);
+            const netProfit = grossRev - totalCogs;
+
+            document.getElementById("kpiTotalSales").textContent = `₹${grossRev.toLocaleString('en-IN')}`;
+            document.getElementById("kpiTotalProfit").textContent = `₹${netProfit.toLocaleString('en-IN')}`;
+            document.getElementById("kpiTotalOrders").textContent = `${validOrders.length} Orders`;
+        }
+
+        function openTrackOrderModal() {
+            const modal = document.getElementById("trackOrderModal");
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+            if (document.getElementById("trackOrderInput").value.trim()) lookupOrderTracking();
+        }
+
+        function closeTrackOrderModal() {
+            const modal = document.getElementById("trackOrderModal");
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+
+        function lookupOrderTracking() {
+            const q = document.getElementById("trackOrderInput").value.trim().toUpperCase();
+            const box = document.getElementById("trackingResultBox");
+            if (!q) return;
+
+            const ord = state.orders.find(o => o.id.toUpperCase() === q || (o.awb && o.awb.toUpperCase() === q) || (o.phone && o.phone === q));
+            if (!ord) {
+                box.innerHTML = `<div class="p-3 text-red-700 bg-red-50 rounded text-xs">No order found matching "${q}".</div>`;
+                return;
+            }
+
+            box.innerHTML = `
+                <div class="p-3 bg-white border rounded text-xs space-y-1">
+                    <div class="font-bold text-maroon">${ord.id} - ${ord.status}</div>
+                    <div>Destination: ${ord.address}</div>
+                    ${ord.awb ? `<div>AWB: <b>${ord.awb}</b> (${ord.courier})</div>` : ''}
+                </div>
+            `;
+        }
+
+        function renderCustomerReviews() {
+            const grid = document.getElementById("reviewsGrid");
+            if (state.reviews.length === 0) {
+                grid.innerHTML = `<div class="col-span-full p-4 text-center text-xs text-stone-500">No reviews yet.</div>`;
+                return;
+            }
+            grid.innerHTML = state.reviews.map(r => `
+                <div class="bg-cream p-4 rounded-xl border border-gold/40 text-xs space-y-1">
+                    <div class="font-bold text-maroon">${r.product} (${r.stars}★)</div>
+                    <p class="text-stone-700">"${r.comment}"</p>
+                    <div class="text-[10px] text-stone-400">— ${r.name}</div>
+                </div>
+            `).join("");
+        }
+
+        function renderAdminReviewsModeration() {
+            const wrap = document.getElementById("adminReviewsList");
+            if (!wrap) return;
+            wrap.innerHTML = state.reviews.map((r, idx) => `
+                <div class="p-2 border rounded flex justify-between">
+                    <div><b>${r.name}</b>: ${r.comment}</div>
+                    <button onclick="deleteReviewFromAdmin(${idx})" class="text-red-600 font-bold">✕</button>
+                </div>
+            `).join("");
+        }
+
+        function deleteReviewFromAdmin(idx) {
+            state.reviews.splice(idx, 1);
+            saveState();
+        }
+
+        function openWriteReviewModal() {
+            const m = document.getElementById("writeReviewModal");
+            m.classList.remove("hidden");
+            m.classList.add("flex");
+        }
+
+        function closeWriteReviewModal() {
+            const m = document.getElementById("writeReviewModal");
+            m.classList.add("hidden");
+            m.classList.remove("flex");
+        }
+
+        function submitCustomerReview(e) {
+            e.preventDefault();
+            state.reviews.unshift({
+                name: document.getElementById("revName").value.trim(),
+                product: document.getElementById("revProduct").value.trim(),
+                stars: Number(document.getElementById("revStars").value) || 5,
+                comment: document.getElementById("revText").value.trim(),
+                date: "Just now"
+            });
+            e.target.reset();
+            closeWriteReviewModal();
+            saveState();
+            showToast("Review Posted", "Thank you for your feedback!");
+        }
+
+        function openPolicyModal(type) {
+            const titleEl = document.getElementById("policyModalTitle");
+            const bodyEl = document.getElementById("policyModalBody");
+            titleEl.textContent = type.toUpperCase() + " POLICY";
+            bodyEl.textContent = state.policiesSeo[type + "Policy"] || "Policy not yet configured.";
+            const modal = document.getElementById("policyModal");
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+        }
+
+        function closePolicyModal() {
+            const modal = document.getElementById("policyModal");
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+
+        function applyLiveSeoAndGa4() {
+            document.title = state.policiesSeo.seoTitle || "Rajeshwar Pooja Samagri";
+        }
+
+        function exportOrdersCsv() {
+            const csv = "data:text/csv;charset=utf-8,Order ID,Name,Phone,Total\n" + state.orders.map(o => `${o.id},"${o.customerName}",${o.phone},${o.total}`).join("\n");
+            const a = document.createElement("a");
+            a.href = encodeURI(csv);
+            a.download = "orders.csv";
+            a.click();
+        }
+
+        function exportCustomersCsv() {
+            const csv = "data:text/csv;charset=utf-8,Name,Phone\n" + state.orders.map(o => `"${o.customerName}",${o.phone}`).join("\n");
+            const a = document.createElement("a");
+            a.href = encodeURI(csv);
+            a.download = "customers.csv";
+            a.click();
+        }
+
+        function exportStoreJson() {
+            const a = document.createElement("a");
+            a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+            a.download = "backup.json";
+            a.click();
+        }
+
+        function importStoreJson(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (evt) {
+                try {
+                    state = { ...defaultStoreState, ...JSON.parse(evt.target.result) };
+                    saveState();
+                    populateAdminFormsFromState();
+                    showToast("Restored", "Backup restored successfully.");
+                } catch (err) {}
+            };
+            reader.readAsText(file);
+        }
+
+        window.onload = function () {
+            syncAllViews();
+        };
+    </script>
+</body>
+</html>
