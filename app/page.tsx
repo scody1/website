@@ -15,6 +15,7 @@ import OrderTrackerSection from '@/components/OrderTrackerSection';
 import Footer from '@/components/Footer';
 import CartDrawer from '@/components/CartDrawer';
 import CheckoutModal from '@/components/CheckoutModal';
+import TrackingModal from '@/components/TrackingModal';
 import ProductQuickViewModal from '@/components/ProductQuickViewModal';
 import WriteReviewModal from '@/components/WriteReviewModal';
 import PolicyModals from '@/components/PolicyModals';
@@ -123,6 +124,7 @@ export default function Home() {
           {/* 4. Drawers & Modals */}
           <CartDrawer />
           <CheckoutModal />
+          <TrackingModal />
           <ProductQuickViewModal />
           <WriteReviewModal />
           <PolicyModals />
