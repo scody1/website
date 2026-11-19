@@ -60,7 +60,7 @@ export const defaultStoreState: StoreState = {
   },
   supabaseConfig: {
     url: 'https://bbqjlkchmelcvjzepjut.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJicWpsa2NobWVsY3ZqemVwanV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUwODc0MjEsImV4cCI6MjExMDY2MzQyMX0.EC-QipDupuauV6Qn2MUNo56MecWjzoO2HpSWo5u_oWI',
+    anonKey: 'sb_publishable_htaNaZCruAwEH0zYpIyi9w_bsxFouGH',
     syncEnabled: true,
     lastSyncedAt: undefined
   },
