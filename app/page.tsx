@@ -81,7 +81,7 @@ export default function Home() {
         <AdminSuite />
       ) : (
         <div className="min-h-screen flex flex-col bg-parchment-100 text-espresso">
-          
+
           {/* 1. Header (Announcement + Floating Glass Header) */}
           <Header />
 
