@@ -156,7 +156,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           courierConfig: { ...prev.courierConfig, ...(parsed.courierConfig || {}) },
           paymentShipping: { ...prev.paymentShipping, ...(parsed.paymentShipping || {}) },
           policiesSeo: { ...prev.policiesSeo, ...(parsed.policiesSeo || {}) },
-          supabaseConfig: { ...prev.supabaseConfig, ...(parsed.supabaseConfig || {}) },
+          supabaseConfig: {
+            ...prev.supabaseConfig,
+            ...(parsed.supabaseConfig || {}),
+            url: parsed.supabaseConfig?.url || prev.supabaseConfig.url,
+            anonKey: parsed.supabaseConfig?.anonKey || prev.supabaseConfig.anonKey,
+            syncEnabled: parsed.supabaseConfig?.syncEnabled ?? prev.supabaseConfig.syncEnabled
+          },
           categories: parsed.categories && parsed.categories.length > 0 ? parsed.categories : prev.categories,
           products: parsed.products && parsed.products.length > 0 ? parsed.products : prev.products,
           coupons: parsed.coupons || prev.coupons,

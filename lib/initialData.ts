@@ -59,9 +59,9 @@ export const defaultStoreState: StoreState = {
     refundPolicy: `We offer a 7-day hassle-free replacement or refund policy for items that arrive damaged, defective, or incorrect during transit. Customers must provide an unboxing video or photographs within 48 hours of delivery to our support team on WhatsApp or Email.`
   },
   supabaseConfig: {
-    url: '',
-    anonKey: '',
-    syncEnabled: false,
+    url: 'https://bbqjlkchmelcvjzepjut.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJicWpsa2NobWVsY3ZqemVwanV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUwODc0MjEsImV4cCI6MjExMDY2MzQyMX0.EC-QipDupuauV6Qn2MUNo56MecWjzoO2HpSWo5u_oWI',
+    syncEnabled: true,
     lastSyncedAt: undefined
   },
   categories: [
