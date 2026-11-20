@@ -2,13 +2,12 @@
 
 import React from 'react';
 import { useStore } from '@/lib/storeContext';
-import { Home, Grid, Truck, Star, ShoppingBag, Shield } from 'lucide-react';
+import { Home, Grid, Truck, Star, ShoppingBag } from 'lucide-react';
 
 export default function MobileDock() {
   const {
     cart,
     setIsCartOpen,
-    setIsAdminOpen,
     setIsTrackingModalOpen
   } = useStore();
 
@@ -75,15 +74,6 @@ export default function MobileDock() {
             )}
           </div>
           <span className="text-[10px] font-bold">Cart</span>
-        </button>
-
-        {/* 6. Admin */}
-        <button
-          onClick={() => setIsAdminOpen(true)}
-          className="flex flex-col items-center gap-0.5 text-stone-800 hover:text-maroon-700 transition"
-        >
-          <Shield className="w-4 h-4 text-gold-600" />
-          <span className="text-[10px] font-bold">Admin</span>
         </button>
 
       </div>

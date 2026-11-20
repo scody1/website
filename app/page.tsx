@@ -21,10 +21,9 @@ import WriteReviewModal from '@/components/WriteReviewModal';
 import PolicyModals from '@/components/PolicyModals';
 import MobileDock from '@/components/MobileDock';
 import WhatsAppFloatingButton from '@/components/WhatsAppFloatingButton';
-import AdminSuite from '@/components/AdminSuite';
 
 export default function Home() {
-  const { isAdminOpen, state } = useStore();
+  const { state } = useStore();
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
 
   // Dynamic JSON-LD Structured Data Schema for Products & Organization
@@ -80,13 +79,10 @@ export default function Home() {
         />
       )}
 
-      {/* VIEW SWITCHER: ADMIN SUITE VS CUSTOMER STOREFRONT */}
-      {isAdminOpen ? (
-        <AdminSuite />
-      ) : (
-        <div className="min-h-screen flex flex-col bg-parchment-100 text-espresso">
+      {/* Customer Storefront Flow */}
+      <div className="min-h-screen flex flex-col bg-parchment-100 text-espresso">
 
-          {/* 1. Header (Announcement + Floating Glass Header) */}
+        {/* 1. Header (Announcement + Floating Glass Header) */}
           <Header />
 
           {/* 2. Main Storefront Flow */}
@@ -137,7 +133,6 @@ export default function Home() {
           <MobileDock />
           <WhatsAppFloatingButton />
         </div>
-      )}
-    </>
-  );
-}
+      </>
+    );
+  }

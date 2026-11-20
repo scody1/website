@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { useStore } from '@/lib/storeContext';
-import { HardDrive, CheckSquare, Bell, ArrowLeft, Download, Upload, Shield } from 'lucide-react';
+import { HardDrive, CheckSquare, Bell, ArrowLeft, Download, Upload, LogOut } from 'lucide-react';
 
 interface AdminHeaderProps {
   activeTab: string;
@@ -12,11 +13,25 @@ interface AdminHeaderProps {
 export default function AdminHeader({ activeTab, setActiveTab }: AdminHeaderProps) {
   const {
     state,
-    setIsAdminOpen,
+    setAdminUnlocked,
+    showToast,
     storageUsage,
     exportJsonBackup,
     importJsonBackup
   } = useStore();
+
+  const handleLockAdmin = async () => {
+    try {
+      await fetch('/api/admin/logout', { method: 'POST' });
+    } catch (err) {
+      console.warn('Logout API notice:', err);
+    }
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('admin_token');
+    }
+    setAdminUnlocked(false);
+    showToast('Admin Session Locked', 'You have been safely signed out.', 'info');
+  };
 
   // Calculate 7-step checklist progress
   const checklistSteps = [
@@ -115,12 +130,23 @@ export default function AdminHeader({ activeTab, setActiveTab }: AdminHeaderProp
           </label>
 
           {/* Return to Storefront */}
-          <button
-            onClick={() => setIsAdminOpen(false)}
+          <Link
+            href="/"
             className="bg-saffron-500 hover:bg-saffron-600 text-white font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow-md active:scale-95"
+            title="Return to Customer Storefront"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>View Storefront</span>
+          </Link>
+
+          {/* Lock / Sign Out */}
+          <button
+            onClick={handleLockAdmin}
+            className="bg-stone-800 hover:bg-rose-900/80 border border-stone-700 hover:border-rose-600 text-stone-300 hover:text-rose-200 font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow-md active:scale-95"
+            title="Lock Admin Control Center"
+          >
+            <LogOut className="w-3.5 h-3.5 text-stone-400 group-hover:text-rose-300" />
+            <span>Lock</span>
           </button>
         </div>
 

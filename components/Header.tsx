@@ -4,14 +4,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import Logo from './Logo';
 import { useStore } from '@/lib/storeContext';
 import { Product } from '@/lib/types';
-import { Search, ShoppingBag, Truck, MapPin, Lock, Instagram, X } from 'lucide-react';
+import { Search, ShoppingBag, Truck, MapPin, Instagram, X } from 'lucide-react';
 
 export default function Header() {
   const {
     state,
     cart,
     setIsCartOpen,
-    setIsAdminOpen,
     setIsTrackingModalOpen,
     setSelectedProductForQuickView,
     pincodeResult
@@ -77,7 +76,7 @@ export default function Header() {
       {/* 2. Floating Glassmorphic Header */}
       <header className="sticky top-2 z-40 px-3 sm:px-6">
         <div className="max-w-7xl mx-auto bg-parchment-100/90 backdrop-blur-md border border-gold-500/40 rounded-2xl shadow-luxury px-3 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-3">
-          
+
           {/* Left: Brand Logo & Title */}
           <div className="flex items-center gap-2">
             <a href="#" className="flex items-center focus:outline-none">
@@ -193,16 +192,6 @@ export default function Header() {
                   {totalCartCount}
                 </span>
               )}
-            </button>
-
-            {/* Admin Suite Trigger */}
-            <button
-              onClick={() => setIsAdminOpen(true)}
-              className="bg-stone-900 hover:bg-stone-800 border border-gold-500/40 text-gold-300 hover:text-white px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition shadow-sm"
-              title="Admin Management Suite"
-            >
-              <Lock className="w-3 h-3 text-gold-400" />
-              <span className="hidden md:inline">Admin</span>
             </button>
           </div>
         </div>

@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useStore } from '@/lib/storeContext';
 import { Lock, KeyRound, X, Loader2 } from 'lucide-react';
 
 export default function AdminPasscodeModal() {
-  const { setAdminUnlocked, setIsAdminOpen } = useStore();
+  const { setAdminUnlocked } = useStore();
   const [passcode, setPasscode] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -52,12 +53,13 @@ export default function AdminPasscodeModal() {
       <div className="flex min-h-full items-center justify-center p-4 text-center">
         <div className="w-full max-w-sm transform overflow-hidden rounded-3xl bg-white p-6 sm:p-8 text-left align-middle shadow-2xl transition-all border border-gold-500/50 relative z-10">
           
-          <button
-            onClick={() => setIsAdminOpen(false)}
+          <Link
+            href="/"
             className="absolute top-4 right-4 text-stone-400 hover:text-stone-600 p-1 rounded-lg"
+            title="Return to Storefront"
           >
             <X className="w-5 h-5" />
-          </button>
+          </Link>
 
           <div className="text-center space-y-4">
             <div className="w-16 h-16 rounded-2xl bg-maroon-700 text-gold-300 flex items-center justify-center mx-auto shadow-md">

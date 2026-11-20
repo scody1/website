@@ -22,7 +22,7 @@ export default function WhatsAppFloatingButton() {
         onClick={(e) => {
           if (!hasPhone) {
             e.preventDefault();
-            alert('WhatsApp number can be dynamically configured in Admin Panel -> Tab 1.');
+            alert('WhatsApp support is currently unavailable. Please reach us via our support helpline or email.');
           }
         }}
         target="_blank"

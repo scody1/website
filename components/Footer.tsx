@@ -49,40 +49,30 @@ export default function Footer() {
               Dispatch Hub & Support
             </h4>
             <div className="space-y-3 text-xs text-stone-400">
-              {state.storeConfig.supportPhone ? (
-                <div className="flex items-center gap-2">
-                  <Phone className="w-3.5 h-3.5 text-gold-400 flex-shrink-0" />
-                  <span>{state.storeConfig.supportPhone}</span>
-                </div>
-              ) : (
-                <p className="text-[11px] text-stone-500 italic">Support Phone configurable in Admin Panel</p>
-              )}
+              <div className="flex items-center gap-2">
+                <Phone className="w-3.5 h-3.5 text-gold-400 flex-shrink-0" />
+                <span>{state.storeConfig.supportPhone || '+91 98765 43210'}</span>
+              </div>
 
-              {state.storeConfig.supportEmail ? (
-                <div className="flex items-center gap-2">
-                  <Mail className="w-3.5 h-3.5 text-gold-400 flex-shrink-0" />
-                  <span>{state.storeConfig.supportEmail}</span>
-                </div>
-              ) : (
-                <p className="text-[11px] text-stone-500 italic">Support Email configurable in Admin Panel</p>
-              )}
+              <div className="flex items-center gap-2">
+                <Mail className="w-3.5 h-3.5 text-gold-400 flex-shrink-0" />
+                <span>{state.storeConfig.supportEmail || 'care@rajeshwarpooja.com'}</span>
+              </div>
 
-              {state.pickupAddress.street || state.pickupAddress.city ? (
-                <div className="flex items-start gap-2">
-                  <MapPin className="w-3.5 h-3.5 text-gold-400 flex-shrink-0 mt-0.5" />
-                  <span>
-                    {[
-                      state.pickupAddress.shopHouseNo,
-                      state.pickupAddress.street,
-                      state.pickupAddress.city,
-                      state.pickupAddress.state,
-                      state.pickupAddress.pincode
-                    ].filter(Boolean).join(', ')}
-                  </span>
-                </div>
-              ) : (
-                <p className="text-[11px] text-stone-500 italic">Dispatch Hub Address configurable in Admin Panel</p>
-              )}
+              <div className="flex items-start gap-2">
+                <MapPin className="w-3.5 h-3.5 text-gold-400 flex-shrink-0 mt-0.5" />
+                <span>
+                  {state.pickupAddress.street || state.pickupAddress.city
+                    ? [
+                        state.pickupAddress.shopHouseNo,
+                        state.pickupAddress.street,
+                        state.pickupAddress.city,
+                        state.pickupAddress.state,
+                        state.pickupAddress.pincode
+                      ].filter(Boolean).join(', ')
+                    : 'Varanasi, Uttar Pradesh, India'}
+                </span>
+              </div>
 
               {state.storeConfig.instagramUrl && (
                 <div className="pt-2">
