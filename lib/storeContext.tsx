@@ -42,7 +42,7 @@ export interface PincodeResult {
   message: string;
 }
 
-interface CartItem extends OrderItem {}
+interface CartItem extends OrderItem { }
 
 interface StoreContextType {
   state: StoreState;
@@ -60,7 +60,7 @@ interface StoreContextType {
   activePolicyModal: 'privacy' | 'terms' | 'refund' | null;
   pincodeResult: PincodeResult | null;
   storageUsage: { usedKb: number; maxKb: number; percentage: number };
-  
+
   // Setters & UI controls
   setIsAdminOpen: (val: boolean) => void;
   setAdminUnlocked: (val: boolean) => void;
@@ -72,7 +72,7 @@ interface StoreContextType {
   setTrackingQuery: (q: string) => void;
   setActivePolicyModal: (modal: 'privacy' | 'terms' | 'refund' | null) => void;
   showToast: (title: string, message: string, type?: 'success' | 'warn' | 'error' | 'info') => void;
-  
+
   // Cart Actions
   addToCart: (product: Product, quantity?: number) => void;
   removeFromCart: (productId: string) => void;
@@ -105,7 +105,7 @@ interface StoreContextType {
   addCoupon: (coupon: Omit<Coupon, 'id'>) => void;
   toggleCoupon: (couponId: string) => void;
   deleteCoupon: (couponId: string) => void;
-  
+
   // Admin Config Updates
   updateStoreConfig: (cfg: Partial<StoreConfig>) => void;
   updatePickupAddress: (addr: Partial<PickupAddress>) => void;
@@ -113,7 +113,7 @@ interface StoreContextType {
   updatePaymentShipping: (cfg: Partial<PaymentShippingConfig>) => void;
   updatePoliciesSeo: (cfg: Partial<PoliciesSeo>) => void;
   updateSupabaseConfig: (cfg: Partial<SupabaseConfig>) => void;
-  
+
   // Data Tools
   exportJsonBackup: () => void;
   importJsonBackup: (jsonString: string) => boolean;
@@ -128,7 +128,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [activeCoupon, setActiveCoupon] = useState<Coupon | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
-  
+
   // Modals & Drawers
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [adminUnlocked, setAdminUnlocked] = useState(false);
@@ -286,7 +286,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const qualifiesForFreeShipping = subtotal >= state.paymentShipping.freeShippingThreshold;
   const amountNeededForFreeShipping = Math.max(0, state.paymentShipping.freeShippingThreshold - subtotal);
   const shippingFee = subtotal > 0 ? (qualifiesForFreeShipping ? 0 : state.paymentShipping.standardShippingFee) : 0;
-  
+
   let discount = 0;
   if (activeCoupon) {
     if (activeCoupon.discountType === 'PERCENT') {
