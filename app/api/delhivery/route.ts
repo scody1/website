@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyAdminRequest } from '@/lib/adminAuth';
 
 export async function POST(req: NextRequest) {
   try {
+    // Protect courier booking endpoint with server-side admin check
+    const isAdmin = verifyAdminRequest(req);
+    if (!isAdmin) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized. Admin session token is required to dispatch via Delhivery.' },
+        { status: 401 }
+      );
+    }
+
     const body = await req.json();
     const { token, order } = body;
 
@@ -12,6 +22,7 @@ export async function POST(req: NextRequest) {
       success: true,
       booking: {
         courierName: 'Delhivery',
+        orderId: order?.id || 'RPS-DL',
         awbCode: waybill,
         courierPartner: 'Delhivery Express Surface',
         trackingUrl: `https://www.delhivery.com/track/package/${waybill}`,

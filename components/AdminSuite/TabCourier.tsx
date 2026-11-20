@@ -36,10 +36,17 @@ export default function TabCourier({ onOpenPrintModal }: TabCourierProps) {
     setIsProcessing(true);
     addLog(`Initiating Shiprocket Authentication (${cfg.execMode})...`);
 
+    const adminToken = typeof window !== 'undefined' ? sessionStorage.getItem('admin_token') || '' : '';
+    const authHeaders: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(adminToken ? { 'x-admin-token': adminToken } : {})
+    };
+
     try {
       const res = await fetch('/api/shiprocket', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders,
+        credentials: 'include',
         body: JSON.stringify({
           action: 'auth',
           email: cfg.srEmail,
@@ -73,22 +80,43 @@ export default function TabCourier({ onOpenPrintModal }: TabCourierProps) {
   const handleBookCourierForOrder = async (order: Order) => {
     setIsProcessing(true);
     setActiveBookingOrderId(order.id);
-    addLog(`Starting 1-Click Courier Booking for Order #${order.id}...`);
+    addLog(`Starting 1-Click Courier Booking via ${cfg.primaryCourier} for Order #${order.id}...`);
+
+    const adminToken = typeof window !== 'undefined' ? sessionStorage.getItem('admin_token') || '' : '';
+    const authHeaders: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(adminToken ? { 'x-admin-token': adminToken } : {})
+    };
 
     try {
-      const res = await fetch('/api/shiprocket', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'book_shipment',
-          order,
-          pickupAddress: state.pickupAddress,
-          token: cfg.srToken,
-          email: cfg.srEmail,
-          password: cfg.srPassword,
-          execMode: cfg.execMode
-        })
-      });
+      let res: Response;
+      if (cfg.primaryCourier === 'Delhivery') {
+        res = await fetch('/api/delhivery', {
+          method: 'POST',
+          headers: authHeaders,
+          credentials: 'include',
+          body: JSON.stringify({
+            token: cfg.dlToken,
+            order,
+            pickupAddress: state.pickupAddress
+          })
+        });
+      } else {
+        res = await fetch('/api/shiprocket', {
+          method: 'POST',
+          headers: authHeaders,
+          credentials: 'include',
+          body: JSON.stringify({
+            action: 'book_shipment',
+            order,
+            pickupAddress: state.pickupAddress,
+            token: cfg.srToken,
+            email: cfg.srEmail,
+            password: cfg.srPassword,
+            execMode: cfg.execMode
+          })
+        });
+      }
 
       const data = await res.json();
 

@@ -151,12 +151,13 @@ export interface Order {
   codFee: number;
   totalAmount: number;
   paymentMethod: 'COD' | 'ONLINE_PREPAID';
-  paymentStatus: 'PENDING' | 'PAID' | 'REFUNDED';
+  paymentStatus: 'PENDING' | 'PENDING_VERIFICATION' | 'PAID' | 'REFUNDED';
   orderStatus: OrderStatus;
   statusNotes?: string;
   cancelReason?: string;
   refundNotes?: string;
   courierBooking?: CourierBookingDetails;
+  utrNumber?: string;
 }
 
 export interface Review {

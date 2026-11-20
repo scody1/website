@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyAdminRequest } from '@/lib/adminAuth';
 
 interface ShiprocketAuthResponse {
   token?: string;
@@ -30,7 +31,38 @@ interface ShiprocketAwbResponse {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { action, email, password, token, order, pickupAddress, execMode } = body;
+    const { action, email, password, token, order, pickupAddress, execMode, pickupPincode, deliveryPincode } = body;
+
+    // Public serviceability check
+    if (action === 'check_pincode') {
+      const authToken = token || process.env.SHIPROCKET_API_TOKEN;
+      if (authToken && pickupPincode && deliveryPincode) {
+        try {
+          const sRes = await fetch(
+            `https://apiv2.shiprocket.in/v1/external/courier/serviceability/?pickup_postcode=${pickupPincode}&delivery_postcode=${deliveryPincode}&cod=1&weight=0.5`,
+            {
+              headers: { Authorization: `Bearer ${authToken}` }
+            }
+          );
+          if (sRes.ok) {
+            const sData = await sRes.json();
+            return NextResponse.json({ success: true, live: true, data: sData });
+          }
+        } catch (fetchErr) {
+          console.warn('Shiprocket live serviceability check failed, using fallback:', fetchErr);
+        }
+      }
+      return NextResponse.json({ success: false, fallback: true });
+    }
+
+    // Protect all admin dispatch & authentication actions
+    const isAdmin = verifyAdminRequest(req);
+    if (!isAdmin) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized. Admin session token is required to manage courier dispatch.' },
+        { status: 401 }
+      );
+    }
 
     // Simulation fallback handler
     if (execMode === 'SIMULATION' || (!token && (!email || !password))) {

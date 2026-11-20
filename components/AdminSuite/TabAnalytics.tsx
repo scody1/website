@@ -33,7 +33,8 @@ export default function TabAnalytics() {
   const estimatedCourierExpenses = activeOrders.length * 75; // Approx ₹75 average courier charge
 
   // Net Profit = Gross Revenue - Total COGS - Estimated Courier Expenses
-  const netProfit = Math.max(0, grossRevenue - totalCogs - estimatedCourierExpenses);
+  const netProfit = grossRevenue - totalCogs - estimatedCourierExpenses;
+  const isLoss = netProfit < 0;
   const profitMarginPercent = grossRevenue > 0 ? Math.round((netProfit / grossRevenue) * 100) : 0;
 
   // COD vs Prepaid breakdown
@@ -109,18 +110,20 @@ export default function TabAnalytics() {
         </div>
 
         {/* KPI 3: Net Profit & Margin */}
-        <div className="bg-white p-5 rounded-3xl border border-gold-500/40 shadow-sm flex items-start justify-between">
+        <div className={`bg-white p-5 rounded-3xl border shadow-sm flex items-start justify-between ${isLoss ? 'border-rose-400' : 'border-gold-500/40'}`}>
           <div>
-            <span className="text-[10px] text-stone-400 uppercase font-bold tracking-wider">Estimated Net Profit</span>
-            <h4 className="font-serif text-2xl sm:text-3xl font-extrabold text-emerald-700 mt-1">
-              ₹{netProfit.toLocaleString('en-IN')}
+            <span className="text-[10px] text-stone-400 uppercase font-bold tracking-wider">
+              {isLoss ? 'Estimated Net Loss' : 'Estimated Net Profit'}
+            </span>
+            <h4 className={`font-serif text-2xl sm:text-3xl font-extrabold mt-1 ${isLoss ? 'text-rose-700' : 'text-emerald-700'}`}>
+              {isLoss ? `-₹${Math.abs(netProfit).toLocaleString('en-IN')}` : `₹${netProfit.toLocaleString('en-IN')}`}
             </h4>
-            <p className="text-[11px] text-emerald-800 font-bold mt-1">
-              Net Profit Margin: {profitMarginPercent}%
+            <p className={`text-[11px] font-bold mt-1 ${isLoss ? 'text-rose-700' : 'text-emerald-800'}`}>
+              {isLoss ? `Net Margin Deficit: ${profitMarginPercent}%` : `Net Profit Margin: ${profitMarginPercent}%`}
             </p>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-            <TrendingUp className="w-6 h-6" />
+          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isLoss ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}>
+            <TrendingUp className={`w-6 h-6 ${isLoss ? 'rotate-180 text-rose-600' : ''}`} />
           </div>
         </div>
 

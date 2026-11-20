@@ -18,7 +18,8 @@ export default function ProductQuickViewModal() {
   if (!selectedProductForQuickView) return null;
 
   const prod = selectedProductForQuickView;
-  const discountPercent = Math.round(((prod.mrp - prod.sellingPrice) / prod.mrp) * 100);
+  const hasDiscount = prod.mrp > prod.sellingPrice && prod.mrp > 0;
+  const discountPercent = hasDiscount ? Math.round(((prod.mrp - prod.sellingPrice) / prod.mrp) * 100) : 0;
 
   const handleBuyNow = () => {
     addToCart(prod, quantity);
@@ -41,7 +42,7 @@ export default function ProductQuickViewModal() {
 
       <div className="flex min-h-full items-center justify-center p-3 sm:p-6 text-center">
         <div className="w-full max-w-3xl transform overflow-hidden rounded-3xl bg-white text-left align-middle shadow-2xl transition-all border border-gold-500/50 relative z-10">
-          
+
           {/* Close button */}
           <button
             onClick={() => setSelectedProductForQuickView(null)}
@@ -51,7 +52,7 @@ export default function ProductQuickViewModal() {
           </button>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 sm:p-8">
-            
+
             {/* Left: Gallery */}
             <div>
               <div className="aspect-square rounded-2xl overflow-hidden border border-gold-400/60 shadow-md bg-parchment-100">
@@ -69,9 +70,8 @@ export default function ProductQuickViewModal() {
                     <button
                       key={idx}
                       onClick={() => setSelectedImgIndex(idx)}
-                      className={`w-14 h-14 rounded-xl overflow-hidden border-2 transition-all ${
-                        selectedImgIndex === idx ? 'border-maroon-700 ring-2 ring-gold-300' : 'border-stone-200 opacity-70'
-                      }`}
+                      className={`w-14 h-14 rounded-xl overflow-hidden border-2 transition-all ${selectedImgIndex === idx ? 'border-maroon-700 ring-2 ring-gold-300' : 'border-stone-200 opacity-70'
+                        }`}
                     >
                       <img src={img} alt="Thumb" className="w-full h-full object-cover" />
                     </button>
@@ -114,12 +114,16 @@ export default function ProductQuickViewModal() {
                   <span className="text-2xl sm:text-3xl font-extrabold text-maroon-700 font-serif">
                     ₹{prod.sellingPrice}
                   </span>
-                  <span className="text-sm text-stone-400 line-through">
-                    ₹{prod.mrp}
-                  </span>
-                  <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-                    {discountPercent}% OFF
-                  </span>
+                  {hasDiscount && (
+                    <>
+                      <span className="text-sm text-stone-400 line-through">
+                        ₹{prod.mrp}
+                      </span>
+                      <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                        {discountPercent}% OFF
+                      </span>
+                    </>
+                  )}
                 </div>
 
                 <p className="text-xs text-espresso-muted mt-3 leading-relaxed">

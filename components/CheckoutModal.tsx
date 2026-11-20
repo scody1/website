@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useStore } from '@/lib/storeContext';
 import { CustomerDetails, Order } from '@/lib/types';
+import { formatWhatsAppUrl } from '@/lib/formatters';
 import { X, ShieldCheck, CheckCircle2, QrCode, CreditCard, Banknote, Send, Check } from 'lucide-react';
 
 export default function CheckoutModal() {
@@ -29,6 +30,7 @@ export default function CheckoutModal() {
 
   const [paymentMode, setPaymentMode] = useState<'COD' | 'ONLINE_PREPAID'>('COD');
   const [onlineType, setOnlineType] = useState<'UPI_QR' | 'RAZORPAY'>('UPI_QR');
+  const [utrNumber, setUtrNumber] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
 
@@ -68,9 +70,22 @@ export default function CheckoutModal() {
       return;
     }
 
+    let cleanUtr = '';
+    if (paymentMode === 'ONLINE_PREPAID' && onlineType === 'UPI_QR') {
+      cleanUtr = utrNumber.replace(/\D/g, '').trim();
+      if (cleanUtr.length !== 12) {
+        alert('Please enter a valid 12-digit UPI UTR / Transaction Reference ID from your payment receipt.');
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     try {
+      const initialPaymentStatus = paymentMode === 'ONLINE_PREPAID'
+        ? (onlineType === 'UPI_QR' ? 'PENDING_VERIFICATION' : 'PAID')
+        : 'PENDING';
+
       const order = createOrder({
         customer,
         items: cart,
@@ -80,8 +95,9 @@ export default function CheckoutModal() {
         codFee: currentCodFee,
         totalAmount: grandTotal,
         paymentMethod: paymentMode,
-        paymentStatus: paymentMode === 'ONLINE_PREPAID' ? 'PAID' : 'PENDING',
-        orderStatus: 'New Order'
+        paymentStatus: initialPaymentStatus,
+        orderStatus: 'New Order',
+        utrNumber: cleanUtr || undefined
       });
 
       setCompletedOrder(order);
@@ -96,12 +112,16 @@ export default function CheckoutModal() {
   // WhatsApp Order Confirmation Link
   const generateWhatsAppConfirmationUrl = (order: Order) => {
     const phone = state.storeConfig.whatsapp || state.storeConfig.supportPhone || '';
-    const cleanPhone = phone.replace(/\D/g, '');
     const itemsSummary = order.items.map((it) => `${it.name} (Qty: ${it.quantity}) - ₹${it.price * it.quantity}`).join('\n• ');
-    
-    const message = `🙏 *Order Confirmation - Rajeshwar Pooja Samagri*\n\n*Order ID:* #${order.id}\n*Customer Name:* ${order.customer.name}\n*Delivery Address:* ${order.customer.streetAddress}, ${order.customer.city}, ${order.customer.pincode}\n*Items Ordered:*\n• ${itemsSummary}\n\n*Total Amount:* ₹${order.totalAmount} (${order.paymentMethod})\n\nPlease share the dispatch & tracking link when ready. Dhanyawad!`;
-    
-    return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+
+    let utrNote = '';
+    if (order.utrNumber) {
+      utrNote = `\n*UPI UTR / Ref:* ${order.utrNumber} (Verification Pending)`;
+    }
+
+    const message = `🙏 *Order Confirmation - Rajeshwar Pooja Samagri*\n\n*Order ID:* #${order.id}\n*Customer Name:* ${order.customer.name}\n*Delivery Address:* ${order.customer.streetAddress}, ${order.customer.city}, ${order.customer.pincode}\n*Items Ordered:*\n• ${itemsSummary}\n\n*Total Amount:* ₹${order.totalAmount} (${order.paymentMethod})${utrNote}\n\nPlease share the dispatch & tracking link when ready. Dhanyawad!`;
+
+    return formatWhatsAppUrl(phone, message);
   };
 
   // Dynamic UPI QR Code generator URL
@@ -120,7 +140,7 @@ export default function CheckoutModal() {
 
       <div className="flex min-h-full items-center justify-center p-3 sm:p-6 text-center">
         <div className="w-full max-w-2xl transform overflow-hidden rounded-3xl bg-white text-left align-middle shadow-2xl transition-all border border-gold-500/50 relative z-10">
-          
+
           {/* Top Bar */}
           <div className="bg-gradient-to-r from-maroon-700 to-maroon-800 p-5 text-parchment-100 flex items-center justify-between">
             <div>
@@ -144,7 +164,7 @@ export default function CheckoutModal() {
 
           {/* Modal Body */}
           <div className="p-5 sm:p-8">
-            
+
             {/* SUCCESS STATE */}
             {completedOrder ? (
               <div className="text-center space-y-6 py-4 animate-fadeIn">
@@ -172,8 +192,17 @@ export default function CheckoutModal() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-stone-500">Payment Mode:</span>
-                    <span className="font-bold text-maroon-700">{completedOrder.paymentMethod}</span>
+                    <span className="font-bold text-maroon-700">
+                      {completedOrder.paymentMethod}
+                      {completedOrder.paymentStatus === 'PENDING_VERIFICATION' && ' (Verification Pending)'}
+                    </span>
                   </div>
+                  {completedOrder.utrNumber && (
+                    <div className="flex justify-between">
+                      <span className="text-stone-500">UPI Ref / UTR:</span>
+                      <span className="font-mono font-bold text-purple-800">{completedOrder.utrNumber}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-stone-500">Delivery Address:</span>
                     <span className="font-semibold text-espresso text-right max-w-[200px] truncate">
@@ -208,7 +237,7 @@ export default function CheckoutModal() {
             ) : (
               /* CHECKOUT FORM */
               <form onSubmit={handleSubmitOrder} className="space-y-6">
-                
+
                 {/* 1. Customer Delivery Details */}
                 <div>
                   <h4 className="font-serif text-sm font-bold text-maroon-700 uppercase tracking-wider mb-3 flex items-center gap-2">
@@ -323,16 +352,15 @@ export default function CheckoutModal() {
                   </h4>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                    
+
                     {/* COD Option */}
                     {state.paymentShipping.enableCod && (
                       <div
                         onClick={() => setPaymentMode('COD')}
-                        className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-start gap-3 ${
-                          paymentMode === 'COD'
-                            ? 'border-saffron-500 bg-saffron-50/50 shadow-md ring-2 ring-saffron-200'
-                            : 'border-stone-200 hover:border-stone-300'
-                        }`}
+                        className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-start gap-3 ${paymentMode === 'COD'
+                          ? 'border-saffron-500 bg-saffron-50/50 shadow-md ring-2 ring-saffron-200'
+                          : 'border-stone-200 hover:border-stone-300'
+                          }`}
                       >
                         <Banknote className="w-5 h-5 text-saffron-600 flex-shrink-0 mt-0.5" />
                         <div>
@@ -351,11 +379,10 @@ export default function CheckoutModal() {
                     {state.paymentShipping.enablePrepaid && (
                       <div
                         onClick={() => setPaymentMode('ONLINE_PREPAID')}
-                        className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-start gap-3 ${
-                          paymentMode === 'ONLINE_PREPAID'
-                            ? 'border-maroon-700 bg-maroon-50/50 shadow-md ring-2 ring-maroon-200'
-                            : 'border-stone-200 hover:border-stone-300'
-                        }`}
+                        className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-start gap-3 ${paymentMode === 'ONLINE_PREPAID'
+                          ? 'border-maroon-700 bg-maroon-50/50 shadow-md ring-2 ring-maroon-200'
+                          : 'border-stone-200 hover:border-stone-300'
+                          }`}
                       >
                         <CreditCard className="w-5 h-5 text-maroon-700 flex-shrink-0 mt-0.5" />
                         <div>
@@ -376,11 +403,10 @@ export default function CheckoutModal() {
                         <button
                           type="button"
                           onClick={() => setOnlineType('UPI_QR')}
-                          className={`px-3 py-1.5 rounded-lg font-bold text-xs ${
-                            onlineType === 'UPI_QR'
-                              ? 'bg-maroon-700 text-white'
-                              : 'bg-white text-stone-700 border border-stone-300'
-                          }`}
+                          className={`px-3 py-1.5 rounded-lg font-bold text-xs ${onlineType === 'UPI_QR'
+                            ? 'bg-maroon-700 text-white'
+                            : 'bg-white text-stone-700 border border-stone-300'
+                            }`}
                         >
                           Scan UPI QR Code
                         </button>
@@ -388,11 +414,10 @@ export default function CheckoutModal() {
                           <button
                             type="button"
                             onClick={() => setOnlineType('RAZORPAY')}
-                            className={`px-3 py-1.5 rounded-lg font-bold text-xs ${
-                              onlineType === 'RAZORPAY'
-                                ? 'bg-maroon-700 text-white'
-                                : 'bg-white text-stone-700 border border-stone-300'
-                            }`}
+                            className={`px-3 py-1.5 rounded-lg font-bold text-xs ${onlineType === 'RAZORPAY'
+                              ? 'bg-maroon-700 text-white'
+                              : 'bg-white text-stone-700 border border-stone-300'
+                              }`}
                           >
                             Razorpay Gateway
                           </button>
@@ -400,23 +425,44 @@ export default function CheckoutModal() {
                       </div>
 
                       {onlineType === 'UPI_QR' && (
-                        <div className="flex flex-col sm:flex-row items-center gap-4 bg-white p-4 rounded-xl border border-stone-200">
-                          <img
-                            src={upiQrCodeUrl}
-                            alt="UPI QR Code"
-                            className="w-36 h-36 rounded-lg border border-gold-400/50 shadow-inner"
-                          />
-                          <div className="space-y-1 text-center sm:text-left">
-                            <p className="font-bold text-espresso">Scan with any UPI App</p>
-                            <p className="text-[11px] text-stone-500">Google Pay, PhonePe, Paytm, BHIM</p>
-                            <p className="text-xs font-mono font-bold text-maroon-700 pt-1">
-                              UPI ID: {merchantUpi}
-                            </p>
-                            <p className="text-xs font-bold text-espresso">
-                              Pay Amount: ₹{grandTotal}
-                            </p>
-                            <p className="text-[10px] text-stone-400 pt-1">
-                              After completing payment, click "Confirm Order" below.
+                        <div className="space-y-3">
+                          <div className="flex flex-col sm:flex-row items-center gap-4 bg-white p-4 rounded-xl border border-stone-200">
+                            <img
+                              src={upiQrCodeUrl}
+                              alt="UPI QR Code"
+                              className="w-36 h-36 rounded-lg border border-gold-400/50 shadow-inner"
+                            />
+                            <div className="space-y-1 text-center sm:text-left">
+                              <p className="font-bold text-espresso">Scan with any UPI App</p>
+                              <p className="text-[11px] text-stone-500">Google Pay, PhonePe, Paytm, BHIM</p>
+                              <p className="text-xs font-mono font-bold text-maroon-700 pt-1">
+                                UPI ID: {merchantUpi}
+                              </p>
+                              <p className="text-xs font-bold text-espresso">
+                                Pay Amount: ₹{grandTotal}
+                              </p>
+                              <p className="text-[10px] text-stone-400 pt-1">
+                                After payment, enter your 12-digit UTR number below to confirm.
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* 12-digit UTR Input */}
+                          <div className="bg-white p-3 rounded-xl border border-gold-400/70">
+                            <label className="block font-bold text-maroon-700 text-xs mb-1">
+                              12-Digit UPI Transaction Reference / UTR Number *
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              maxLength={12}
+                              value={utrNumber}
+                              onChange={(e) => setUtrNumber(e.target.value.replace(/\D/g, '').slice(0, 12))}
+                              placeholder="e.g. 431209876543 (from UPI receipt)"
+                              className="w-full border-2 border-stone-300 focus:border-maroon-700 rounded-lg px-3 py-2 font-mono text-xs tracking-widest text-espresso font-bold focus:outline-none"
+                            />
+                            <p className="text-[10px] text-stone-500 mt-1">
+                              Mandatory 12-digit reference number found on your UPI app receipt to verify payment.
                             </p>
                           </div>
                         </div>

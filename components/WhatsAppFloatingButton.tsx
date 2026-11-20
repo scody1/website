@@ -2,28 +2,25 @@
 
 import React from 'react';
 import { useStore } from '@/lib/storeContext';
+import { formatWhatsAppUrl } from '@/lib/formatters';
 import { MessageCircle } from 'lucide-react';
 
 export default function WhatsAppFloatingButton() {
   const { state } = useStore();
 
   const phone = state.storeConfig.whatsapp || state.storeConfig.supportPhone || '';
-  const cleanPhone = phone.replace(/\D/g, '');
-  const greeting = encodeURIComponent(
-    state.storeConfig.whatsappGreeting ||
-      'Namaste Rajeshwar Pooja Samagri! I would like to inquire about your Sacred Pooja Essentials.'
-  );
+  const greeting = state.storeConfig.whatsappGreeting ||
+    'Namaste Rajeshwar Pooja Samagri! I would like to inquire about your Sacred Pooja Essentials.';
 
-  const whatsappUrl = cleanPhone
-    ? `https://wa.me/${cleanPhone}?text=${greeting}`
-    : '#';
+  const whatsappUrl = formatWhatsAppUrl(phone, greeting);
+  const hasPhone = whatsappUrl !== '#';
 
   return (
     <div className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-40">
       <a
-        href={cleanPhone ? whatsappUrl : '#'}
+        href={hasPhone ? whatsappUrl : '#'}
         onClick={(e) => {
-          if (!cleanPhone) {
+          if (!hasPhone) {
             e.preventDefault();
             alert('WhatsApp number can be dynamically configured in Admin Panel -> Tab 1.');
           }

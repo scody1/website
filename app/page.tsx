@@ -60,6 +60,10 @@ export default function Home() {
     },
   };
 
+  const validGaId = state.policiesSeo?.gaMeasurementId && /^G-[A-Z0-9]+$/i.test(state.policiesSeo.gaMeasurementId.trim())
+    ? state.policiesSeo.gaMeasurementId.trim()
+    : null;
+
   return (
     <>
       {/* Dynamic JSON-LD injection */}
@@ -68,11 +72,11 @@ export default function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchema) }}
       />
 
-      {/* Dynamic GA4 tag if configured in Admin */}
-      {state.policiesSeo.gaMeasurementId && (
+      {/* Dynamic GA4 tag if safely validated */}
+      {validGaId && (
         <script
           async
-          src={`https://www.googletagmanager.com/gtag/js?id=${state.policiesSeo.gaMeasurementId}`}
+          src={`https://www.googletagmanager.com/gtag/js?id=${validGaId}`}
         />
       )}
 

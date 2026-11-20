@@ -12,7 +12,8 @@ export default function BestsellerSpotlight() {
 
   if (!bestseller) return null;
 
-  const discountPercent = Math.round(((bestseller.mrp - bestseller.sellingPrice) / bestseller.mrp) * 100);
+  const hasDiscount = bestseller.mrp > bestseller.sellingPrice && bestseller.mrp > 0;
+  const discountPercent = hasDiscount ? Math.round(((bestseller.mrp - bestseller.sellingPrice) / bestseller.mrp) * 100) : 0;
 
   const handleBuyNow = () => {
     addToCart(bestseller, 1);
@@ -108,12 +109,16 @@ export default function BestsellerSpotlight() {
               <span className="text-3xl sm:text-4xl font-extrabold text-maroon-700 font-serif">
                 ₹{bestseller.sellingPrice}
               </span>
-              <span className="text-base sm:text-lg text-stone-400 line-through">
-                ₹{bestseller.mrp}
-              </span>
-              <span className="text-xs sm:text-sm font-bold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full">
-                Save ₹{bestseller.mrp - bestseller.sellingPrice} ({discountPercent}% OFF)
-              </span>
+              {hasDiscount && (
+                <>
+                  <span className="text-base sm:text-lg text-stone-400 line-through">
+                    ₹{bestseller.mrp}
+                  </span>
+                  <span className="text-xs sm:text-sm font-bold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full">
+                    Save ₹{bestseller.mrp - bestseller.sellingPrice} ({discountPercent}% OFF)
+                  </span>
+                </>
+              )}
             </div>
             <p className="text-[11px] text-stone-500 mt-1">
               Inclusive of all taxes • Ready for immediate courier dispatch

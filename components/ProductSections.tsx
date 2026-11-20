@@ -56,7 +56,7 @@ export default function ProductSections({ activeCategoryFilter }: ProductSection
 
   return (
     <section id="catalog-sections" className="max-w-7xl mx-auto px-3 sm:px-6 mt-14 sm:mt-20">
-      
+
       {/* Section Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
         <div>
@@ -68,7 +68,7 @@ export default function ProductSections({ activeCategoryFilter }: ProductSection
           </h2>
           <div className="w-16 h-0.5 bg-gradient-to-r from-maroon-700 to-gold-500 mt-2" />
         </div>
-        
+
         {/* Count pill */}
         <div className="text-xs font-semibold text-espresso-muted">
           Showing <span className="text-maroon-700 font-bold">{filteredProducts.length}</span> authentic items
@@ -83,11 +83,10 @@ export default function ProductSections({ activeCategoryFilter }: ProductSection
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all shadow-sm ${
-                isActive
-                  ? 'bg-maroon-700 text-parchment-100 shadow-md ring-2 ring-gold-400'
-                  : 'bg-parchment-200 text-espresso hover:bg-gold-100 hover:text-maroon-700'
-              }`}
+              className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all shadow-sm ${isActive
+                ? 'bg-maroon-700 text-parchment-100 shadow-md ring-2 ring-gold-400'
+                : 'bg-parchment-200 text-espresso hover:bg-gold-100 hover:text-maroon-700'
+                }`}
             >
               {tab.label}
             </button>
@@ -111,7 +110,8 @@ export default function ProductSections({ activeCategoryFilter }: ProductSection
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 sm:gap-6 mt-6">
           {filteredProducts.map((product) => {
             const isWishlisted = wishlist.includes(product.id);
-            const discount = Math.round(((product.mrp - product.sellingPrice) / product.mrp) * 100);
+            const hasDiscount = product.mrp > product.sellingPrice && product.mrp > 0;
+            const discount = hasDiscount ? Math.round(((product.mrp - product.sellingPrice) / product.mrp) * 100) : 0;
             const isAdded = addedAnimationId === product.id;
 
             return (
@@ -129,9 +129,11 @@ export default function ProductSections({ activeCategoryFilter }: ProductSection
                   />
 
                   {/* Discount Badge */}
-                  <div className="absolute top-2.5 left-2.5 bg-saffron-500 text-white text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full shadow-md">
-                    {discount}% OFF
-                  </div>
+                  {hasDiscount && (
+                    <div className="absolute top-2.5 left-2.5 bg-saffron-500 text-white text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full shadow-md">
+                      {discount}% OFF
+                    </div>
+                  )}
 
                   {/* Stock Status Badge */}
                   {product.stock <= 5 && product.stock > 0 && (
@@ -151,11 +153,10 @@ export default function ProductSections({ activeCategoryFilter }: ProductSection
                   <div className="absolute top-2.5 right-2.5 flex flex-col gap-1.5 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={(e) => toggleWishlist(product.id, e)}
-                      className={`w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-md transition-colors shadow-md ${
-                        isWishlisted
-                          ? 'bg-rose-50 text-rose-600'
-                          : 'bg-white/90 hover:bg-rose-50 text-stone-600 hover:text-rose-600'
-                      }`}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-md transition-colors shadow-md ${isWishlisted
+                        ? 'bg-rose-50 text-rose-600'
+                        : 'bg-white/90 hover:bg-rose-50 text-stone-600 hover:text-rose-600'
+                        }`}
                       title="Add to Wishlist"
                     >
                       <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-rose-600' : ''}`} />
@@ -201,21 +202,22 @@ export default function ProductSections({ activeCategoryFilter }: ProductSection
                       <span className="text-lg font-extrabold text-maroon-700 font-serif">
                         ₹{product.sellingPrice}
                       </span>
-                      <span className="text-xs text-stone-400 line-through">
-                        ₹{product.mrp}
-                      </span>
+                      {hasDiscount && (
+                        <span className="text-xs text-stone-400 line-through">
+                          ₹{product.mrp}
+                        </span>
+                      )}
                     </div>
 
                     <button
                       onClick={(e) => handleAdd(product, e)}
                       disabled={product.stock <= 0}
-                      className={`w-full py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all shadow-md ${
-                        isAdded
-                          ? 'bg-emerald-600 text-white'
-                          : product.stock <= 0
+                      className={`w-full py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all shadow-md ${isAdded
+                        ? 'bg-emerald-600 text-white'
+                        : product.stock <= 0
                           ? 'bg-stone-300 text-stone-500 cursor-not-allowed'
                           : 'bg-saffron-500 hover:bg-saffron-600 text-white active:scale-98'
-                      }`}
+                        }`}
                     >
                       {isAdded ? (
                         <>

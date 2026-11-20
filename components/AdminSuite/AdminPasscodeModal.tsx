@@ -2,22 +2,46 @@
 
 import React, { useState } from 'react';
 import { useStore } from '@/lib/storeContext';
-import { Lock, KeyRound, X } from 'lucide-react';
+import { Lock, KeyRound, X, Loader2 } from 'lucide-react';
 
 export default function AdminPasscodeModal() {
-  const { state, setAdminUnlocked, setIsAdminOpen } = useStore();
+  const { setAdminUnlocked, setIsAdminOpen } = useStore();
   const [passcode, setPasscode] = useState('');
-  const [error, setError] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
 
-  const handleUnlock = (e: React.FormEvent) => {
+  const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
-    const correctPin = state.storeConfig.adminPasscode || '1234';
-    if (passcode === correctPin) {
-      setAdminUnlocked(true);
-      setError(false);
-    } else {
-      setError(true);
-      setPasscode('');
+    if (!passcode.trim()) return;
+
+    setIsVerifying(true);
+    setErrorMsg(null);
+
+    try {
+      const res = await fetch('/api/admin/verify-pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: passcode.trim() }),
+        credentials: 'include'
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        if (data.token) {
+          sessionStorage.setItem('admin_token', data.token);
+        }
+        setAdminUnlocked(true);
+        setErrorMsg(null);
+      } else {
+        setErrorMsg(data.message || 'Incorrect Passcode. Access denied.');
+        setPasscode('');
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Connection failed';
+      setErrorMsg(`Verification error: ${msg}`);
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -45,7 +69,7 @@ export default function AdminPasscodeModal() {
                 Admin Management Suite
               </h3>
               <p className="text-xs text-stone-500 mt-1">
-                Enter your secure Admin Passcode to access store settings, orders, and courier dispatch.
+                Enter your secure Admin Passcode to access store controls, orders, and courier dispatch.
               </p>
             </div>
 
@@ -58,29 +82,37 @@ export default function AdminPasscodeModal() {
                   value={passcode}
                   onChange={(e) => {
                     setPasscode(e.target.value);
-                    setError(false);
+                    setErrorMsg(null);
                   }}
-                  placeholder="Enter Passcode (Default: 1234)"
+                  placeholder="Enter Admin Passcode"
                   className="w-full border-2 border-stone-300 rounded-xl px-4 py-3 text-center text-lg font-mono tracking-widest text-espresso focus:border-maroon-700 focus:outline-none"
                 />
                 <KeyRound className="w-4 h-4 absolute right-3.5 top-4 text-stone-400" />
               </div>
 
-              {error && (
+              {errorMsg && (
                 <p className="text-xs text-red-600 font-bold animate-shake">
-                  Incorrect Passcode. Try default "1234" or check settings.
+                  {errorMsg}
                 </p>
               )}
 
               <button
                 type="submit"
-                className="w-full bg-saffron-500 hover:bg-saffron-600 text-white font-bold py-3 rounded-xl shadow-lg transition-all text-sm active:scale-98"
+                disabled={isVerifying}
+                className="w-full bg-saffron-500 hover:bg-saffron-600 disabled:bg-stone-400 text-white font-bold py-3 rounded-xl shadow-lg transition-all text-sm active:scale-98 flex items-center justify-center gap-2"
               >
-                Unlock Control Center
+                {isVerifying ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Verifying Passcode...</span>
+                  </>
+                ) : (
+                  <span>Unlock Control Center</span>
+                )}
               </button>
 
               <p className="text-[10px] text-stone-400">
-                Tip: The default passcode is <strong>1234</strong>. You can change it anytime in Tab 1 (Store Setup).
+                Protected by server-side session token verification.
               </p>
             </form>
           </div>

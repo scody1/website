@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useStore } from '@/lib/storeContext';
 import { Order, OrderStatus } from '@/lib/types';
+import { formatWhatsAppUrl } from '@/lib/formatters';
 import { Download, MessageCircle, Truck, RefreshCw, XCircle, Users, Package } from 'lucide-react';
 
 interface TabOrdersProps {
@@ -47,15 +48,16 @@ export default function TabOrders({ onOpenShiprocketModal, onOpenPrintModal }: T
 
   // 1-Click WhatsApp customer alert generator
   const sendWhatsAppAlert = (order: Order) => {
-    const cleanPhone = order.customer.phone.replace(/\D/g, '');
     let text = '';
     if (order.courierBooking) {
       text = `🙏 *Namaste ${order.customer.name}!* Your sacred parcel from *${state.storeConfig.storeName}* has been dispatched via *${order.courierBooking.courierPartner}*.\n\n*AWB Tracking:* ${order.courierBooking.awbCode}\n*Live Tracking:* ${order.courierBooking.trackingUrl}\n\nThank you for choosing authentic devotional essentials!`;
     } else {
       text = `🙏 *Namaste ${order.customer.name}!* Your order *#${order.id}* for ₹${order.totalAmount} is confirmed and currently under *${order.orderStatus}*.\n\nWe will share live courier tracking once dispatched. Dhanyawad!`;
     }
-    const url = `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank');
+    const url = formatWhatsAppUrl(order.customer.phone, text);
+    if (url !== '#') {
+      window.open(url, '_blank');
+    }
   };
 
   // CSV Export for Orders
@@ -289,9 +291,22 @@ export default function TabOrders({ onOpenShiprocketModal, onOpenPrintModal }: T
                         >
                           {ord.paymentMethod}
                         </span>
-                        <span className="block text-[10px] text-stone-400 mt-0.5">
-                          {ord.paymentStatus}
+                        <span
+                          className={`block text-[10px] font-semibold mt-0.5 ${
+                            ord.paymentStatus === 'PENDING_VERIFICATION'
+                              ? 'text-purple-700 font-bold'
+                              : ord.paymentStatus === 'PAID'
+                              ? 'text-emerald-700'
+                              : 'text-stone-400'
+                          }`}
+                        >
+                          {ord.paymentStatus === 'PENDING_VERIFICATION' ? 'VERIFY UTR' : ord.paymentStatus}
                         </span>
+                        {ord.utrNumber && (
+                          <span className="block font-mono text-[9px] text-purple-800 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200 mt-1 max-w-fit">
+                            UTR: {ord.utrNumber}
+                          </span>
+                        )}
                       </td>
 
                       {/* Status Workflow Dropdown */}
@@ -395,7 +410,7 @@ export default function TabOrders({ onOpenShiprocketModal, onOpenPrintModal }: T
                       <td className="p-3.5 font-bold text-maroon-700">₹{c.totalSpent}</td>
                       <td className="p-3.5 text-right">
                         <a
-                          href={`https://wa.me/91${c.phone.replace(/\D/g, '')}`}
+                          href={formatWhatsAppUrl(c.phone)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-emerald-600 hover:text-emerald-700 font-bold"

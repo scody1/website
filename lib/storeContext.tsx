@@ -142,12 +142,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [pincodeResult, setPincodeResult] = useState<PincodeResult | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load state from localStorage on initial client mount
+  // Load state from localStorage on initial client mount, then hydrate from Supabase
   useEffect(() => {
+    let localLoadedState: StoreState | null = null;
     try {
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
+        localLoadedState = parsed;
         setState((prev) => ({
           ...prev,
           ...parsed,
@@ -174,17 +176,50 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       console.error('Failed to load local store state:', err);
     }
     setIsLoaded(true);
-  }, []);
 
-  // Save state to localStorage whenever state changes
-  useEffect(() => {
-    if (!isLoaded) return;
-    try {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state));
-    } catch (err) {
-      console.warn('LocalStorage limit reached or error:', err);
+    // Hydrate latest store_state from Supabase
+    const cloudUrl = localLoadedState?.supabaseConfig?.url || defaultStoreState.supabaseConfig.url || process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const cloudKey = localLoadedState?.supabaseConfig?.anonKey || defaultStoreState.supabaseConfig.anonKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const client = getSupabaseClient(cloudUrl, cloudKey);
+
+    if (client) {
+      (async () => {
+        try {
+          const { data, error } = await client
+            .from('store_settings')
+            .select('store_state, updated_at')
+            .eq('id', 'current_store')
+            .maybeSingle();
+
+          if (!error && data?.store_state) {
+            const cloud = data.store_state as Partial<StoreState>;
+            setState((prev) => ({
+              ...prev,
+              ...cloud,
+              storeConfig: { ...prev.storeConfig, ...(cloud.storeConfig || {}) },
+              pickupAddress: { ...prev.pickupAddress, ...(cloud.pickupAddress || {}) },
+              courierConfig: { ...prev.courierConfig, ...(cloud.courierConfig || {}) },
+              paymentShipping: { ...prev.paymentShipping, ...(cloud.paymentShipping || {}) },
+              policiesSeo: { ...prev.policiesSeo, ...(cloud.policiesSeo || {}) },
+              supabaseConfig: {
+                ...prev.supabaseConfig,
+                ...(cloud.supabaseConfig || {}),
+                syncEnabled: true,
+                lastSyncedAt: data.updated_at || new Date().toISOString()
+              },
+              categories: cloud.categories && cloud.categories.length > 0 ? cloud.categories : prev.categories,
+              products: cloud.products && cloud.products.length > 0 ? cloud.products : prev.products,
+              coupons: cloud.coupons && cloud.coupons.length > 0 ? cloud.coupons : prev.coupons,
+              orders: cloud.orders && cloud.orders.length > 0 ? cloud.orders : prev.orders,
+              reviews: cloud.reviews && cloud.reviews.length > 0 ? cloud.reviews : prev.reviews
+            }));
+          }
+        } catch (syncErr) {
+          console.warn('Supabase cloud hydration notice (fallback to local state):', syncErr);
+        }
+      })();
     }
-  }, [state, isLoaded]);
+  }, []);
 
   // Toast notification helper
   const showToast = useCallback((title: string, message: string, type: 'success' | 'warn' | 'error' | 'info' = 'success') => {
@@ -195,6 +230,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }, 4500);
   }, []);
 
+  // Save state to localStorage whenever state changes
+  useEffect(() => {
+    if (!isLoaded) return;
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state));
+    } catch (err) {
+      console.warn('LocalStorage limit reached or error:', err);
+      showToast('Storage Warning', 'Local browser storage quota exceeded. Some changes may not persist.', 'warn');
+    }
+  }, [state, isLoaded, showToast]);
+
   // Calculate storage usage
   const storageUsage = {
     usedKb: typeof window !== 'undefined' ? Math.round((localStorage.getItem(LOCAL_STORAGE_KEY)?.length || 0) * 2 / 1024) : 0,
@@ -204,17 +250,43 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Cart operations
+  // Cart operations with stock limit enforcement
   const addToCart = (product: Product, quantity = 1) => {
+    if (product.stock <= 0) {
+      showToast('Out of Stock', `${product.name} is currently out of stock.`, 'warn');
+      return;
+    }
+
     setCart((prev) => {
       const existing = prev.find((item) => item.productId === product.id);
       if (existing) {
+        const availableStockToAdd = Math.max(0, product.stock - existing.quantity);
+        if (availableStockToAdd <= 0) {
+          showToast('Stock Limit Reached', `Only ${product.stock} units of ${product.name} are available.`, 'warn');
+          return prev;
+        }
+
+        const addQty = Math.min(quantity, availableStockToAdd);
+        if (addQty < quantity) {
+          showToast('Stock Adjusted', `Added ${addQty} unit(s) to reach available stock limit (${product.stock}).`, 'info');
+        } else {
+          showToast('Added to Sacred Cart', `${product.name} (Qty: ${addQty}) has been added.`);
+        }
+
         return prev.map((item) =>
           item.productId === product.id
-            ? { ...item, quantity: item.quantity + quantity }
+            ? { ...item, quantity: item.quantity + addQty }
             : item
         );
       }
+
+      const addQty = Math.min(quantity, product.stock);
+      if (addQty < quantity) {
+        showToast('Stock Adjusted', `Quantity capped at ${product.stock} (available stock limit).`, 'info');
+      } else {
+        showToast('Added to Sacred Cart', `${product.name} (Qty: ${addQty}) has been added.`);
+      }
+
       return [
         ...prev,
         {
@@ -223,12 +295,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           sku: product.sku,
           price: product.sellingPrice,
           cogs: product.cogs || Math.round(product.sellingPrice * 0.45),
-          quantity,
+          quantity: addQty,
           image: product.images[0] || ''
         }
       ];
     });
-    showToast('Added to Sacred Cart', `${product.name} (Qty: ${quantity}) has been added.`);
+
     setIsCartOpen(true);
   };
 
@@ -241,9 +313,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       removeFromCart(productId);
       return;
     }
+
+    const prod = state.products.find((p) => p.id === productId);
+    let targetQty = quantity;
+    if (prod && quantity > prod.stock) {
+      targetQty = Math.max(1, prod.stock);
+      showToast('Stock Limit Reached', `Only ${prod.stock} units available for ${prod.name}.`, 'warn');
+    }
+
     setCart((prev) =>
       prev.map((item) =>
-        item.productId === productId ? { ...item, quantity } : item
+        item.productId === productId ? { ...item, quantity: targetQty } : item
       )
     );
   };
@@ -281,7 +361,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     showToast('Coupon Removed', 'Applied coupon discount removed.', 'info');
   };
 
-  // Cart calculations
+  // Cart calculations with strict coupon threshold re-validation
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const qualifiesForFreeShipping = subtotal >= state.paymentShipping.freeShippingThreshold;
   const amountNeededForFreeShipping = Math.max(0, state.paymentShipping.freeShippingThreshold - subtotal);
@@ -289,12 +369,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   let discount = 0;
   if (activeCoupon) {
-    if (activeCoupon.discountType === 'PERCENT') {
-      discount = Math.round((subtotal * activeCoupon.discountValue) / 100);
+    if (subtotal < activeCoupon.minOrderValue) {
+      discount = 0; // Invalidate discount if subtotal drops below coupon minimum
     } else {
-      discount = activeCoupon.discountValue;
+      if (activeCoupon.discountType === 'PERCENT') {
+        discount = Math.round((subtotal * activeCoupon.discountValue) / 100);
+      } else {
+        discount = activeCoupon.discountValue;
+      }
+      discount = Math.min(discount, subtotal);
     }
-    discount = Math.min(discount, subtotal);
   }
 
   const codFee = state.paymentShipping.enableCod ? state.paymentShipping.codFee : 0;
@@ -383,10 +467,49 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       createdAt: new Date().toISOString()
     };
 
-    setState((prev) => ({
-      ...prev,
-      orders: [newOrder, ...prev.orders]
-    }));
+    setState((prev) => {
+      const updatedProducts = prev.products.map((p) => {
+        const orderedItem = orderData.items.find((it) => it.productId === p.id);
+        if (!orderedItem) return p;
+        return {
+          ...p,
+          stock: Math.max(0, p.stock - orderedItem.quantity)
+        };
+      });
+
+      const nextOrders = [newOrder, ...prev.orders];
+      const nextState: StoreState = {
+        ...prev,
+        orders: nextOrders,
+        products: updatedProducts
+      };
+
+      // Asynchronously sync the updated state (orders and stock) to Supabase cloud
+      const cloudUrl = prev.supabaseConfig.url || process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const cloudKey = prev.supabaseConfig.anonKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      const client = getSupabaseClient(cloudUrl, cloudKey);
+      if (client) {
+        (async () => {
+          try {
+            const { error } = await client
+              .from('store_settings')
+              .upsert(
+                {
+                  id: 'current_store',
+                  store_state: nextState,
+                  updated_at: new Date().toISOString()
+                },
+                { onConflict: 'id' }
+              );
+            if (error) console.warn('Supabase auto-sync notice on order creation:', error.message);
+          } catch (err) {
+            console.warn('Supabase auto-sync failed:', err);
+          }
+        })();
+      }
+
+      return nextState;
+    });
 
     // Trigger audible notification chime
     playTempleBellChime();
@@ -490,10 +613,26 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         year: 'numeric'
       })
     };
-    setState((prev) => ({
-      ...prev,
-      reviews: [newRev, ...prev.reviews]
-    }));
+    setState((prev) => {
+      const updatedProducts = prev.products.map((p) => {
+        if (p.id !== reviewData.productId) return p;
+        const currentCount = p.reviewCount || 0;
+        const currentRating = p.rating || 5;
+        const newCount = currentCount + 1;
+        const newRating = Number((((currentRating * currentCount) + reviewData.rating) / newCount).toFixed(1));
+        return {
+          ...p,
+          rating: newRating,
+          reviewCount: newCount
+        };
+      });
+
+      return {
+        ...prev,
+        reviews: [newRev, ...prev.reviews],
+        products: updatedProducts
+      };
+    });
     showToast('Review Submitted', 'Thank you for sharing your devotional experience! 🙏');
   };
 

@@ -5,15 +5,37 @@ import { useStore } from '@/lib/storeContext';
 import { MapPin, Truck, CheckCircle2, AlertCircle, Clock, ShieldCheck } from 'lucide-react';
 
 export default function PincodeBar() {
-  const { checkPincode, pincodeResult } = useStore();
+  const { checkPincode, pincodeResult, state } = useStore();
   const [inputVal, setInputVal] = useState('');
   const [hasChecked, setHasChecked] = useState(false);
+  const [isLiveChecking, setIsLiveChecking] = useState(false);
 
-  const handleCheck = (e: React.FormEvent) => {
+  const handleCheck = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputVal) return;
-    checkPincode(inputVal);
+    const cleanPin = inputVal.replace(/\D/g, '').slice(0, 6);
+    checkPincode(cleanPin);
     setHasChecked(true);
+
+    if (cleanPin.length === 6 && state.courierConfig.srToken && state.courierConfig.execMode === 'LIVE_API') {
+      setIsLiveChecking(true);
+      try {
+        await fetch('/api/shiprocket', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'check_pincode',
+            token: state.courierConfig.srToken,
+            pickupPincode: state.pickupAddress.pincode || '221001',
+            deliveryPincode: cleanPin
+          })
+        });
+      } catch (liveErr) {
+        console.warn('Live serviceability check notice (fallback retained):', liveErr);
+      } finally {
+        setIsLiveChecking(false);
+      }
+    }
   };
 
   return (
