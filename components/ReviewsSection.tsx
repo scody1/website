@@ -10,7 +10,7 @@ export default function ReviewsSection() {
   const totalReviews = state.reviews.length;
   const avgRating = totalReviews > 0
     ? (state.reviews.reduce((acc, r) => acc + r.rating, 0) / totalReviews).toFixed(1)
-    : '5.0';
+    : null;
 
   return (
     <section id="reviews-section" className="max-w-7xl mx-auto px-3 sm:px-6 mt-14 sm:mt-20">
@@ -23,28 +23,30 @@ export default function ReviewsSection() {
               Devotee Experiences
             </span>
             <h2 className="font-serif text-2xl sm:text-3xl font-extrabold text-maroon-700 mt-1">
-              Verified Devotee Reviews & Blessings
+              Customer Reviews
             </h2>
             <p className="text-xs sm:text-sm text-espresso-muted mt-1">
-              Read how thousands of Indian households and temples venerate with Rajeshwar Pooja Samagri.
+              Honest feedback from our customers. Every review is checked before it is published.
             </p>
           </div>
 
           {/* Average Rating Score & Action Button */}
           <div className="flex flex-wrap items-center gap-4">
+            {avgRating && (
             <div className="bg-white px-5 py-3 rounded-2xl border border-gold-400/50 shadow-sm flex items-center gap-3">
               <span className="font-serif text-3xl font-extrabold text-maroon-700">{avgRating}</span>
               <div>
                 <div className="flex text-amber-500">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                    <Star key={i} className={`w-4 h-4 ${i < Math.round(Number(avgRating)) ? 'fill-amber-400 text-amber-400' : 'text-stone-300'}`} />
                   ))}
                 </div>
                 <span className="text-[11px] text-stone-500 font-semibold">
-                  Based on {totalReviews} reviews
+                  Based on {totalReviews} review{totalReviews === 1 ? '' : 's'}
                 </span>
               </div>
             </div>
+            )}
 
             <button
               onClick={() => setIsReviewModalOpen(true)}
@@ -57,6 +59,9 @@ export default function ReviewsSection() {
         </div>
 
         {/* Reviews Cards Wall */}
+        {totalReviews === 0 && (
+          <p className="mt-6 text-sm text-stone-500 text-center">No reviews yet — be the first to share your experience.</p>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-6">
           {state.reviews.map((rev) => (
             <div
@@ -75,7 +80,7 @@ export default function ReviewsSection() {
 
                 {/* Review Title */}
                 <h4 className="font-serif text-sm font-bold text-maroon-700 leading-snug">
-                  {rev.title}
+                  {rev.title || 'Customer review'}
                 </h4>
 
                 {/* Comment */}

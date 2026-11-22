@@ -1,0 +1,301 @@
+{
+  "categories": [
+    {
+      "name": "Pooja Samagri",
+      "slug": "pooja-samagri",
+      "imageUrl": "https://images.unsplash.com/photo-1609710228159-0fa9bd7c0827?auto=format&fit=crop&w=400&q=80",
+      "description": "Pure Vedic Hawan & Daily Ritual Essentials",
+      "sortOrder": 0
+    },
+    {
+      "name": "Divine Shankh",
+      "slug": "shankh",
+      "imageUrl": "https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=400&q=80",
+      "description": "Natural Blowing & Vamavarti Conches",
+      "sortOrder": 1
+    },
+    {
+      "name": "Brass Idols",
+      "slug": "brass-idols",
+      "imageUrl": "https://images.unsplash.com/photo-1567591414240-e9c1e59f3e06?auto=format&fit=crop&w=400&q=80",
+      "description": "Handcrafted Deities in Pure Ashtadhatu & Brass",
+      "sortOrder": 2
+    },
+    {
+      "name": "Dhoop & Incense",
+      "slug": "dhoop-incense",
+      "imageUrl": "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&w=400&q=80",
+      "description": "Sambrani Cups, Charcoal Burners & Fragrances",
+      "sortOrder": 3
+    },
+    {
+      "name": "Deepam & Diya",
+      "slug": "deepam",
+      "imageUrl": "https://images.unsplash.com/photo-1604608672516-f1b9b1d37076?auto=format&fit=crop&w=400&q=80",
+      "description": "Kamakshi, Kuthu Vilakku & Akhand Brass Diyas",
+      "sortOrder": 4
+    },
+    {
+      "name": "Brass Urli",
+      "slug": "brass-urli",
+      "imageUrl": "https://images.unsplash.com/photo-1611591472159-259f7ce81187?auto=format&fit=crop&w=400&q=80",
+      "description": "Traditional Floral Floating Bowls",
+      "sortOrder": 5
+    }
+  ],
+  "products": [
+    {
+      "name": "Royal Handcrafted Pure Brass Dhoop Dani / Loban Burner with Wooden Handle",
+      "sku": "RPS-DD-01",
+      "category": "Dhoop & Incense",
+      "section": "BESTSELLER",
+      "sellingPrice": 799,
+      "mrp": 1499,
+      "costPrice": 340,
+      "stock": 45,
+      "images": [
+        "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1609710228159-0fa9bd7c0827?auto=format&fit=crop&w=800&q=80"
+      ],
+      "description": "Authentic heavy-gauge solid brass Loban and Dhoop burner featuring a heat-resistant teakwood handle, ornate lattice cutouts for smooth fragrance diffusion, and a secure lid. Ideal for purifying negative energy and filling your temple with soothing Vedic aroma.",
+      "benefits": [
+        "Pure brass lattice distributes purifying herbal smoke evenly across all corners",
+        "Natural wood handle ensures 100% heat-insulated holding during Aarti",
+        "Clears negative energies, insects, and stale air with pure Sambrani",
+        "Easy-clean removable brass perforated ash plate inside"
+      ],
+      "tags": [
+        "Bestseller",
+        "Brassware",
+        "Dhoop Dani"
+      ],
+      "weightKg": 0.65,
+      "lengthCm": 22,
+      "breadthCm": 12,
+      "heightCm": 14,
+      "isBestseller": true
+    },
+    {
+      "name": "Sacred Natural Vamavarti Blowing Shankh (Loud Acoustic Resonance)",
+      "sku": "RPS-SH-02",
+      "category": "Divine Shankh",
+      "section": "SHANKH",
+      "sellingPrice": 1299,
+      "mrp": 2499,
+      "costPrice": 520,
+      "stock": 28,
+      "images": [
+        "https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=800&q=80"
+      ],
+      "description": "Natural oceanic Vamavarti Shankh selected for its flawless spiral and powerful, crisp acoustic vibrations. Blowing the Shankh during morning Pooja dispels lethargy, cleanses ambient prana, and activates respiratory health.",
+      "benefits": [
+        "Tested for rich, sonorous 100dB+ resonant Om vibration",
+        "100% genuine sea shell with smooth polished mouthpiece",
+        "Vedic blessing for prosperity, clarity, and obstacle removal",
+        "Includes sacred yellow velvet aasan and brass stand"
+      ],
+      "tags": [],
+      "weightKg": 0.85,
+      "lengthCm": 18,
+      "breadthCm": 10,
+      "heightCm": 9,
+      "isBestseller": false
+    },
+    {
+      "name": "Mangalavar Kamakshi Vilakku Traditional Brass Temple Deepam (Height 7.5 Inches)",
+      "sku": "RPS-DP-03",
+      "category": "Deepam & Diya",
+      "section": "DEEPAM",
+      "sellingPrice": 1149,
+      "mrp": 1899,
+      "costPrice": 480,
+      "stock": 35,
+      "images": [
+        "https://images.unsplash.com/photo-1604608672516-f1b9b1d37076?auto=format&fit=crop&w=800&q=80"
+      ],
+      "description": "Auspicious South Indian brass Kamakshi Deepam with intricate Goddess Kamakshi embossing and Gajalakshmi motifs. Traditional oil capacity holds oil for continuous 12-hour Jyoti during festive poojas.",
+      "benefits": [
+        "Goddess Kamakshi blessing invokes everlasting domestic harmony and wealth",
+        "Cast in heavyweight pure brass with high antique golden gloss finish",
+        "Deep reservoir bowl prevents oil overflow and wick burning",
+        "Sturdy base prevents tilting during daily Archana"
+      ],
+      "tags": [],
+      "weightKg": 0.95,
+      "lengthCm": 14,
+      "breadthCm": 14,
+      "heightCm": 19,
+      "isBestseller": false
+    },
+    {
+      "name": "Shri Ram Darbar Brass Idol Ensemble (Ram, Sita, Lakshman & Hanuman)",
+      "sku": "RPS-MU-04",
+      "category": "Brass Idols",
+      "section": "MURTI",
+      "sellingPrice": 3499,
+      "mrp": 5999,
+      "costPrice": 1450,
+      "stock": 14,
+      "images": [
+        "https://images.unsplash.com/photo-1567591414240-e9c1e59f3e06?auto=format&fit=crop&w=800&q=80"
+      ],
+      "description": "Magnificent complete Ram Darbar brass sculpture hand-finished by master sthapatis. Features Maryada Purushottam Lord Ram with bow, Mata Sita, Lakshman, and devout Bhakt Hanuman with folded hands.",
+      "benefits": [
+        "Brings dharma, protection, and unconditional devotion into your residence",
+        "Solid cast Ashtadhatu-grade brass with exquisite facial serenity",
+        "Permanent anti-tarnish protective lacquer treatment",
+        "Vedic energization ritual completed before final dispatch"
+      ],
+      "tags": [],
+      "weightKg": 2.4,
+      "lengthCm": 24,
+      "breadthCm": 12,
+      "heightCm": 22,
+      "isBestseller": false
+    },
+    {
+      "name": "Antique Peacock Brass Urli with Floating Diya Holders (12-Inch Diameter)",
+      "sku": "RPS-UR-05",
+      "category": "Brass Urli",
+      "section": "URLI",
+      "sellingPrice": 2199,
+      "mrp": 3899,
+      "costPrice": 950,
+      "stock": 22,
+      "images": [
+        "https://images.unsplash.com/photo-1611591472159-259f7ce81187?auto=format&fit=crop&w=800&q=80"
+      ],
+      "description": "Regal centerpiece Urli bowl adorned with majestic peacocks along the rim and integrated brass diya slots. Fill with fresh water, rose petals, and floating candles to elevate temple and foyer vastu vibrations.",
+      "benefits": [
+        "Water element in Urli enhances positive vastu flow at entrance and mandir",
+        "Twin handcrafted peacocks symbolize beauty, grace, and prosperity",
+        "Heavy-bottom brass vessel maintains balance effortlessly",
+        "Dual-tone antique golden polish suited for luxury traditional decor"
+      ],
+      "tags": [],
+      "weightKg": 1.85,
+      "lengthCm": 30,
+      "breadthCm": 30,
+      "heightCm": 16,
+      "isBestseller": false
+    },
+    {
+      "name": "Navgrah Shanti Zodiac Brass Yantra Diya for Planetary Harmony",
+      "sku": "RPS-ZD-06",
+      "category": "Pooja Samagri",
+      "section": "ZODIAC",
+      "sellingPrice": 899,
+      "mrp": 1699,
+      "costPrice": 380,
+      "stock": 40,
+      "images": [
+        "https://images.unsplash.com/photo-1609710228159-0fa9bd7c0827?auto=format&fit=crop&w=800&q=80"
+      ],
+      "description": "Specially consecrated Navagraha oil lamp featuring engraved planetary symbols for all 12 Rashi/Zodiac houses. Helps balance planetary doshas and attract auspicious cosmic alignments.",
+      "benefits": [
+        "Engraved with 9 sacred Navagraha geometric seed mantras",
+        "Neutralizes Shani, Rahu, and Ketu malefic planetary influences",
+        "Ideal for lighting on Tuesdays, Saturdays, and Ekadashi",
+        "Accompanied by a sacred energized red thread and Kalawa"
+      ],
+      "tags": [],
+      "weightKg": 0.5,
+      "lengthCm": 15,
+      "breadthCm": 15,
+      "heightCm": 10,
+      "isBestseller": false
+    },
+    {
+      "name": "Vedic Panchamrit Pooja Thali Set (11-Piece Solid Pure Brass Set)",
+      "sku": "RPS-TH-07",
+      "category": "Pooja Samagri",
+      "section": "EXPLORE",
+      "sellingPrice": 1799,
+      "mrp": 2999,
+      "costPrice": 780,
+      "stock": 31,
+      "images": [
+        "https://images.unsplash.com/photo-1604608672516-f1b9b1d37076?auto=format&fit=crop&w=800&q=80"
+      ],
+      "description": "Complete royal pooja thali set including engraved Gayatri Mantra plate, bell with Garuda finial, Panchamrit bowl, spoon, agarbatti stand, dhoop cup, and dual oil diyas.",
+      "benefits": [
+        "Every essential implement forged in coordinated sacred brass",
+        "Gayatri mantra engraving creates protective aura in the prayer room",
+        "Clear acoustic brass ghanti with piercing pure frequencies",
+        "Comes safely packed in a velvet gift presentation box"
+      ],
+      "tags": [],
+      "weightKg": 1.35,
+      "lengthCm": 28,
+      "breadthCm": 28,
+      "heightCm": 6,
+      "isBestseller": false
+    },
+    {
+      "name": "Organic Guggal & Natural Cow Ghee Sambrani Hawan Cups (Pack of 24)",
+      "sku": "RPS-HC-08",
+      "category": "Dhoop & Incense",
+      "section": "EXPLORE",
+      "sellingPrice": 399,
+      "mrp": 699,
+      "costPrice": 140,
+      "stock": 75,
+      "images": [
+        "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&w=800&q=80"
+      ],
+      "description": "Handmade Hawan cups crafted with Desi Gir cow dung charcoal base, pure Guggal resin, Loban crystals, and aromatic Ayurvedic herbs infused with desi ghee. Clean, smokeless burning that purifies temple air.",
+      "benefits": [
+        "100% natural, charcoal-chemical-free traditional preparation",
+        "Burns completely in 25 minutes releasing authentic temple fragrance",
+        "Equivalent spiritual virtue of performing a mini daily Agnihotra",
+        "Natural fiber packaging keeps moisture away"
+      ],
+      "tags": [],
+      "weightKg": 0.45,
+      "lengthCm": 20,
+      "breadthCm": 14,
+      "heightCm": 5,
+      "isBestseller": false
+    }
+  ],
+  "coupons": [
+    {
+      "code": "DIVINE10",
+      "description": "10% OFF on spiritual orders above ₹500",
+      "discountType": "PERCENT",
+      "discountValue": 10,
+      "minOrderValue": 500
+    },
+    {
+      "code": "RAMRAJYA150",
+      "description": "Flat ₹150 OFF on brassware orders above ₹1299",
+      "discountType": "FLAT",
+      "discountValue": 150,
+      "minOrderValue": 1299
+    }
+  ],
+  "policies": {
+    "privacyPolicy": "At Rajeshwar Pooja Samagri, we respect your privacy and are committed to protecting the personal information you share with us. We collect necessary details such as customer name, shipping address, mobile number, and email solely for order fulfillment, courier delivery via partners like Shiprocket and Delhivery, and WhatsApp dispatch alerts. Your payment data is never stored on our servers and is processed via secure encrypted payment gateways.",
+    "termsConditions": "By accessing or purchasing from Rajeshwar Pooja Samagri, you agree to our terms of service. All handcrafted brassware and sacred samagri are subject to natural artisan variations. Orders are fulfilled within 24–48 hours of placement. Standard transit time across India ranges between 3 to 6 business days.",
+    "refundPolicy": "We offer a 7-day hassle-free replacement or refund policy for items that arrive damaged, defective, or incorrect during transit. Customers must provide an unboxing video or photographs within 48 hours of delivery to our support team on WhatsApp or Email."
+  },
+  "seo": {
+    "metaTitle": "Rajeshwar Pooja Samagri | Sacred Pooja Essentials & Divine Brassware",
+    "metaDescription": "Shop authentic Vedic Pooja Samagri, pure brass idols, handcrafted deepams, divine shankhs, brass urlis, and natural dhoop incense with pan-India delivery.",
+    "metaKeywords": "pooja samagri, brass idols, dhoop burner, shankh, brass urli, deepam, spiritual items, temple decor, vedic rituals",
+    "ogImage": "https://images.unsplash.com/photo-1604608672516-f1b9b1d37076?auto=format&fit=crop&w=1200&q=80",
+    "gaMeasurementId": ""
+  },
+  "store": {
+    "storeName": "Rajeshwar Pooja Samagri",
+    "tagline": "Sacred Pooja Essentials & Divine Brassware",
+    "announcement": "🙏 India's Trusted Pooja Essentials & Brassware Brand | Free Express Shipping on Orders Above ₹999",
+    "whatsapp": "",
+    "supportPhone": "",
+    "supportEmail": "",
+    "instagramUrl": "",
+    "whatsappGreeting": "Namaste Rajeshwar Pooja Samagri! I would like to inquire about your Sacred Pooja Essentials & Brassware.",
+    "heroHeadline": "India's Largest Pooja Accessories Store",
+    "heroSubheadline": "Bring divine vibrations and positive energies home with Vedic-energized brassware, pure dhoop samagri, and authentic spiritual essentials."
+  }
+}

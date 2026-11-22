@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Logo from './Logo';
 import { useStore } from '@/lib/storeContext';
-import { Product } from '@/lib/types';
+import { Product } from '@/lib/shared/types';
 import { Search, ShoppingBag, Truck, MapPin, Instagram, X } from 'lucide-react';
 
 export default function Header() {
@@ -61,6 +61,8 @@ export default function Header() {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       const input = el.querySelector('input');
       if (input) input.focus();
+    } else {
+      window.location.href = '/#pincode-service-bar';
     }
   };
 
@@ -79,7 +81,7 @@ export default function Header() {
 
           {/* Left: Brand Logo & Title */}
           <div className="flex items-center gap-2">
-            <a href="#" className="flex items-center focus:outline-none">
+            <a href="/" className="flex items-center focus:outline-none">
               <Logo size="md" />
             </a>
           </div>

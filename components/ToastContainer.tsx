@@ -1,11 +1,11 @@
 'use client';
 
 import React from 'react';
-import { useStore } from '@/lib/storeContext';
+import { useToast } from '@/lib/toast';
 import { CheckCircle2, AlertTriangle, AlertCircle, Info } from 'lucide-react';
 
 export default function ToastContainer() {
-  const { toasts } = useStore();
+  const { toasts, dismissToast } = useToast();
 
   if (toasts.length === 0) return null;
 
@@ -37,6 +37,8 @@ export default function ToastContainer() {
         return (
           <div
             key={t.id}
+            role="status"
+            onClick={() => dismissToast(t.id)}
             className={`pointer-events-auto rounded-2xl p-4 border shadow-2xl backdrop-blur-md flex items-start gap-3 animate-fadeIn ${
               colors[t.type || 'success']
             }`}

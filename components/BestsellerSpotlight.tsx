@@ -68,15 +68,17 @@ export default function BestsellerSpotlight() {
               <span className="text-xs font-bold uppercase tracking-wider text-saffron-600 bg-saffron-50 border border-saffron-200 px-3 py-0.5 rounded-full">
                 {bestseller.category}
               </span>
-              <div className="flex items-center gap-1.5 text-amber-500 text-xs sm:text-sm font-bold">
-                <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                  ))}
+              {bestseller.reviewCount > 0 && (
+                <div className="flex items-center gap-1.5 text-amber-500 text-xs sm:text-sm font-bold">
+                  <div className="flex">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className={`w-4 h-4 ${i < Math.round(bestseller.rating) ? 'fill-amber-400 text-amber-400' : 'text-stone-300'}`} />
+                    ))}
+                  </div>
+                  <span className="text-espresso font-extrabold">{bestseller.rating}</span>
+                  <span className="text-stone-400">({bestseller.reviewCount} review{bestseller.reviewCount === 1 ? '' : 's'})</span>
                 </div>
-                <span className="text-espresso font-extrabold">{bestseller.rating}</span>
-                <span className="text-stone-400">({bestseller.reviewCount} Verified Devotees)</span>
-              </div>
+              )}
             </div>
 
             {/* Product Title */}

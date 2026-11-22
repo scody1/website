@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useStore } from '@/lib/storeContext';
-import { formatWhatsAppUrl } from '@/lib/formatters';
+import { formatWhatsAppUrl } from '@/lib/shared/format';
 import { MessageCircle } from 'lucide-react';
 
 export default function WhatsAppFloatingButton() {

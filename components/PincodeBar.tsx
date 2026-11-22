@@ -5,37 +5,19 @@ import { useStore } from '@/lib/storeContext';
 import { MapPin, Truck, CheckCircle2, AlertCircle, Clock, ShieldCheck } from 'lucide-react';
 
 export default function PincodeBar() {
-  const { checkPincode, pincodeResult, state } = useStore();
+  const { checkPincode, pincodeResult } = useStore();
   const [inputVal, setInputVal] = useState('');
   const [hasChecked, setHasChecked] = useState(false);
   const [isLiveChecking, setIsLiveChecking] = useState(false);
 
   const handleCheck = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputVal) return;
     const cleanPin = inputVal.replace(/\D/g, '').slice(0, 6);
-    checkPincode(cleanPin);
-    setHasChecked(true);
-
-    if (cleanPin.length === 6 && state.courierConfig.srToken && state.courierConfig.execMode === 'LIVE_API') {
-      setIsLiveChecking(true);
-      try {
-        await fetch('/api/shiprocket', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'check_pincode',
-            token: state.courierConfig.srToken,
-            pickupPincode: state.pickupAddress.pincode || '221001',
-            deliveryPincode: cleanPin
-          })
-        });
-      } catch (liveErr) {
-        console.warn('Live serviceability check notice (fallback retained):', liveErr);
-      } finally {
-        setIsLiveChecking(false);
-      }
-    }
+    if (!cleanPin) return;
+    setIsLiveChecking(true);
+    const res = await checkPincode(cleanPin);
+    setIsLiveChecking(false);
+    setHasChecked(Boolean(res));
   };
 
   return (
@@ -76,9 +58,10 @@ export default function PincodeBar() {
             </div>
             <button
               type="submit"
-              className="bg-maroon-700 hover:bg-maroon-800 text-parchment-100 font-bold px-5 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md flex items-center justify-center gap-1.5 whitespace-nowrap"
+              disabled={isLiveChecking}
+              className="bg-maroon-700 hover:bg-maroon-800 disabled:opacity-60 text-parchment-100 font-bold px-5 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md flex items-center justify-center gap-1.5 whitespace-nowrap"
             >
-              <span>Check Now</span>
+              <span>{isLiveChecking ? 'Checking…' : 'Check Now'}</span>
             </button>
           </form>
 
@@ -93,10 +76,10 @@ export default function PincodeBar() {
                   <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
                   <div>
                     <p className="text-xs sm:text-sm font-bold">
-                      Delivery Available in {pincodeResult.city} ({pincodeResult.pincode})
+                      Delivery Available to {pincodeResult.pincode} · {pincodeResult.region}
                     </p>
                     <p className="text-xs text-emerald-800">
-                      Standard dispatch in 24 hours. Estimated delivery by <strong>{pincodeResult.estimatedDeliveryDate}</strong> ({pincodeResult.estimatedDeliveryDays}-{pincodeResult.estimatedDeliveryDays + 1} days).
+                      {pincodeResult.live ? 'Confirmed with our courier partners.' : 'Estimated.'} Expected delivery by <strong>{pincodeResult.estimatedDeliveryDate}</strong>.
                     </p>
                   </div>
                 </div>
@@ -108,7 +91,7 @@ export default function PincodeBar() {
                   </span>
                   <span className="inline-flex items-center gap-1 bg-parchment-100 border border-gold-400 text-amber-900 text-xs font-semibold px-2.5 py-1 rounded-full">
                     <Clock className="w-3.5 h-3.5 text-saffron-600" />
-                    Express Flight / Surface
+                    {pincodeResult.estimatedDeliveryDays}+ days
                   </span>
                 </div>
               </div>

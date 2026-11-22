@@ -97,17 +97,24 @@ export default function ProductQuickViewModal() {
                 <h3 className="font-serif text-xl sm:text-2xl font-bold text-maroon-700 mt-2 leading-tight">
                   {prod.name}
                 </h3>
+                <a href={`/product/${prod.slug}`} className="inline-block mt-1 text-xs font-bold text-saffron-700 hover:underline">
+                  View full product page →
+                </a>
 
                 {/* Rating */}
-                <div className="flex items-center gap-1.5 text-amber-500 text-xs mt-2 font-bold">
-                  <div className="flex">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                    ))}
+                {prod.reviewCount > 0 ? (
+                  <div className="flex items-center gap-1.5 text-amber-500 text-xs mt-2 font-bold">
+                    <div className="flex">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className={`w-3.5 h-3.5 ${i < Math.round(prod.rating) ? 'fill-amber-400 text-amber-400' : 'text-stone-300'}`} />
+                      ))}
+                    </div>
+                    <span className="text-espresso">{prod.rating}</span>
+                    <span className="text-stone-400">({prod.reviewCount} review{prod.reviewCount === 1 ? '' : 's'})</span>
                   </div>
-                  <span className="text-espresso">{prod.rating}</span>
-                  <span className="text-stone-400">({prod.reviewCount} Reviews)</span>
-                </div>
+                ) : (
+                  <p className="text-[11px] text-stone-400 mt-2">No reviews yet</p>
+                )}
 
                 {/* Price */}
                 <div className="mt-4 flex items-baseline gap-2.5">

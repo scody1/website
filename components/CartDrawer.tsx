@@ -19,13 +19,16 @@ export default function CartDrawer() {
   } = useStore();
 
   const [couponInput, setCouponInput] = useState('');
+  const [applying, setApplying] = useState(false);
 
   if (!isCartOpen) return null;
 
-  const handleApplyCoupon = (e: React.FormEvent) => {
+  const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!couponInput.trim()) return;
-    const ok = applyCoupon(couponInput);
+    if (!couponInput.trim() || applying) return;
+    setApplying(true);
+    const ok = await applyCoupon(couponInput.trim());
+    setApplying(false);
     if (ok) setCouponInput('');
   };
 

@@ -1,21 +1,13 @@
-import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { ADMIN_COOKIE, clearSessionCookie, revokeSession } from '@/lib/server/auth';
+import { json, route } from '@/lib/server/http';
 
-export async function POST() {
-  const response = NextResponse.json({
-    success: true,
-    message: 'Admin session terminated successfully.'
-  });
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
-  // Expire the admin session cookie immediately
-  response.cookies.set({
-    name: 'admin_session',
-    value: '',
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 0
-  });
-
-  return response;
-}
+export const POST = route(async (req: NextRequest) => {
+  await revokeSession(req.cookies.get(ADMIN_COOKIE)?.value);
+  const res = json({ ok: true });
+  clearSessionCookie(res);
+  return res;
+});

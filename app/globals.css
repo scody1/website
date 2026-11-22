@@ -101,3 +101,10 @@ body {
 .animate-scaleUp {
   animation: scaleUp 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
+
+/* Print only the invoice when the admin prints an order document */
+@media print {
+  body * { visibility: hidden; }
+  #print-area, #print-area * { visibility: visible; }
+  #print-area { position: absolute; left: 0; top: 0; width: 100%; padding: 0; }
+}

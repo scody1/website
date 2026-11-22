@@ -1,56 +1,28 @@
-'use client';
+import type { Metadata } from 'next';
+import { currentAdmin, needsFirstUser, setupKeyProblem } from '@/lib/server/auth';
+import { isDbConfigured } from '@/lib/server/db';
+import AdminLogin from '@/components/admin/AdminLogin';
+import AdminSetup from '@/components/admin/AdminSetup';
+import AdminApp from '@/components/admin/AdminApp';
+import SetupRequired from '@/components/SetupRequired';
 
-import React, { useEffect, useState } from 'react';
-import { useStore } from '@/lib/storeContext';
-import AdminSuite from '@/components/AdminSuite';
-import AdminPasscodeModal from '@/components/AdminSuite/AdminPasscodeModal';
-import { Loader2 } from 'lucide-react';
+export const dynamic = 'force-dynamic';
 
-export default function AdminPage() {
-  const { adminUnlocked, setAdminUnlocked } = useStore();
-  const [checkingSession, setCheckingSession] = useState(true);
+export const metadata: Metadata = {
+  title: 'Admin | Rajeshwar Pooja Samagri',
+  robots: { index: false, follow: false }
+};
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const storedToken = typeof window !== 'undefined' ? sessionStorage.getItem('admin_token') : null;
-        const res = await fetch('/api/admin/check-session', {
-          headers: storedToken ? { 'x-admin-token': storedToken } : {},
-          credentials: 'include'
-        });
-        const data = await res.json();
-        if (data.authenticated) {
-          setAdminUnlocked(true);
-        } else {
-          setAdminUnlocked(false);
-          if (typeof window !== 'undefined') {
-            sessionStorage.removeItem('admin_token');
-          }
-        }
-      } catch (err) {
-        setAdminUnlocked(false);
-      } finally {
-        setCheckingSession(false);
-      }
-    };
-
-    checkAuth();
-  }, [setAdminUnlocked]);
-
-  if (checkingSession) {
-    return (
-      <div className="min-h-screen bg-stone-950 flex flex-col items-center justify-center text-parchment-100 space-y-4">
-        <Loader2 className="w-8 h-8 animate-spin text-gold-400" />
-        <p className="text-sm font-serif tracking-widest text-gold-300">
-          Verifying Admin Authorization...
-        </p>
-      </div>
-    );
+export default async function AdminPage() {
+  if (!isDbConfigured()) return <SetupRequired reason="DATABASE_URL is not set." />;
+  let firstRun = false;
+  try {
+    firstRun = await needsFirstUser();
+  } catch {
+    return <SetupRequired reason="The database could not be reached or has not been migrated. Run `npm run db:migrate`." />;
   }
-
-  if (!adminUnlocked) {
-    return <AdminPasscodeModal />;
-  }
-
-  return <AdminSuite />;
+  if (firstRun) return <AdminSetup configProblem={setupKeyProblem()} />;
+  const user = await currentAdmin();
+  if (!user) return <AdminLogin />;
+  return <AdminApp />;
 }

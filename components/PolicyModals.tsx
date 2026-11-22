@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useStore } from '@/lib/storeContext';
-import { X, ShieldCheck, FileText, RefreshCw } from 'lucide-react';
+import { X, ShieldCheck, FileText, RefreshCw, Truck } from 'lucide-react';
 
 export default function PolicyModals() {
   const { activePolicyModal, setActivePolicyModal, state } = useStore();
@@ -12,13 +12,15 @@ export default function PolicyModals() {
   const titles = {
     privacy: 'Privacy Policy',
     terms: 'Terms & Conditions',
-    refund: 'Return, Refund & Shipping Policy'
+    refund: 'Return & Refund Policy',
+    shipping: 'Shipping Policy'
   };
 
   const icons = {
     privacy: ShieldCheck,
     terms: FileText,
-    refund: RefreshCw
+    refund: RefreshCw,
+    shipping: Truck
   };
 
   const Icon = icons[activePolicyModal];
@@ -26,7 +28,8 @@ export default function PolicyModals() {
   const content = {
     privacy: state.policiesSeo.privacyPolicy,
     terms: state.policiesSeo.termsConditions,
-    refund: state.policiesSeo.refundPolicy
+    refund: state.policiesSeo.refundPolicy,
+    shipping: state.policiesSeo.shippingPolicy
   }[activePolicyModal];
 
   return (

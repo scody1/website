@@ -1,138 +1,99 @@
-'use client';
+import type { Metadata } from 'next';
+import Script from 'next/script';
+import { getPublicStoreState } from '@/lib/server/catalog';
+import { getSettingsSection } from '@/lib/server/settings';
+import { isDbConfigured } from '@/lib/server/db';
+import { StoreProvider } from '@/lib/storeContext';
+import Storefront from '@/components/Storefront';
+import SetupRequired from '@/components/SetupRequired';
 
-import React, { useState } from 'react';
-import { useStore } from '@/lib/storeContext';
-import Header from '@/components/Header';
-import HeroBanner from '@/components/HeroBanner';
-import PincodeBar from '@/components/PincodeBar';
-import CategoryCarousel from '@/components/CategoryCarousel';
-import SpiritualBento from '@/components/SpiritualBento';
-import BestsellerSpotlight from '@/components/BestsellerSpotlight';
-import ProductSections from '@/components/ProductSections';
-import DevotionalBanner from '@/components/DevotionalBanner';
-import ReviewsSection from '@/components/ReviewsSection';
-import OrderTrackerSection from '@/components/OrderTrackerSection';
-import Footer from '@/components/Footer';
-import CartDrawer from '@/components/CartDrawer';
-import CheckoutModal from '@/components/CheckoutModal';
-import TrackingModal from '@/components/TrackingModal';
-import ProductQuickViewModal from '@/components/ProductQuickViewModal';
-import WriteReviewModal from '@/components/WriteReviewModal';
-import PolicyModals from '@/components/PolicyModals';
-import MobileDock from '@/components/MobileDock';
-import WhatsAppFloatingButton from '@/components/WhatsAppFloatingButton';
+export const dynamic = 'force-dynamic';
 
-export default function Home() {
-  const { state } = useStore();
-  const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
+export async function generateMetadata(): Promise<Metadata> {
+  if (!isDbConfigured()) return { title: 'Setup required' };
+  try {
+    const seo = await getSettingsSection('seo');
+    return {
+      title: seo.metaTitle,
+      description: seo.metaDescription,
+      keywords: seo.metaKeywords,
+      openGraph: {
+        title: seo.metaTitle,
+        description: seo.metaDescription,
+        type: 'website',
+        images: seo.ogImage ? [seo.ogImage] : undefined
+      }
+    };
+  } catch {
+    return {};
+  }
+}
 
-  // Dynamic JSON-LD Structured Data Schema for Products & Organization
-  const jsonLdSchema = {
+/** JSON for a <script> tag, escaped so text like "</script>" in product names cannot break out. */
+function safeJsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+}
+
+export default async function Home() {
+  if (!isDbConfigured()) return <SetupRequired reason="DATABASE_URL is not set." />;
+
+  let state;
+  try {
+    state = await getPublicStoreState();
+  } catch (err) {
+    console.error('[home] failed to load store data', err);
+    return <SetupRequired reason="The database could not be reached or has not been migrated. Run `npm run db:migrate`." />;
+  }
+
+  const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Store',
     name: state.storeConfig.storeName,
     description: state.storeConfig.heroSubheadline,
-    telephone: state.storeConfig.supportPhone,
+    telephone: state.storeConfig.supportPhone || undefined,
     address: {
       '@type': 'PostalAddress',
-      streetAddress: state.pickupAddress.street,
-      addressLocality: state.pickupAddress.city,
-      postalCode: state.pickupAddress.pincode,
-      addressCountry: 'IN',
+      streetAddress: state.pickupAddress.street || undefined,
+      addressLocality: state.pickupAddress.city || undefined,
+      postalCode: state.pickupAddress.pincode || undefined,
+      addressCountry: 'IN'
     },
     hasOfferCatalog: {
       '@type': 'OfferCatalog',
-      name: 'Pooja Samagri & Divine Brassware',
+      name: state.storeConfig.storeName,
       itemListElement: state.products.map((p) => ({
         '@type': 'Product',
         name: p.name,
         image: p.images[0],
         description: p.description,
         sku: p.sku,
+        ...(p.reviewCount > 0 ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: p.rating, reviewCount: p.reviewCount } } : {}),
         offers: {
           '@type': 'Offer',
           price: p.sellingPrice,
           priceCurrency: 'INR',
-          availability: p.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-        },
-      })),
-    },
+          availability: p.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'
+        }
+      }))
+    }
   };
 
-  const validGaId = state.policiesSeo?.gaMeasurementId && /^G-[A-Z0-9]+$/i.test(state.policiesSeo.gaMeasurementId.trim())
-    ? state.policiesSeo.gaMeasurementId.trim()
-    : null;
+  const gaId = /^G-[A-Z0-9]{4,20}$/.test(state.policiesSeo.gaMeasurementId) ? state.policiesSeo.gaMeasurementId : null;
 
   return (
     <>
-      {/* Dynamic JSON-LD injection */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchema) }}
-      />
-
-      {/* Dynamic GA4 tag if safely validated */}
-      {validGaId && (
-        <script
-          async
-          src={`https://www.googletagmanager.com/gtag/js?id=${validGaId}`}
-        />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
+      {gaId && (
+        <>
+          <Script src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} strategy="afterInteractive" />
+          <Script id="ga-init" strategy="afterInteractive">
+            {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${gaId}');`}
+          </Script>
+        </>
       )}
-
-      {/* Customer Storefront Flow */}
-      <div className="min-h-screen flex flex-col bg-parchment-100 text-espresso">
-
-        {/* 1. Header (Announcement + Floating Glass Header) */}
-          <Header />
-
-          {/* 2. Main Storefront Flow */}
-          <main className="flex-1">
-            {/* Hero Carousel Banner */}
-            <HeroBanner />
-
-            {/* Live 6-Digit Pincode Serviceability Bar */}
-            <PincodeBar />
-
-            {/* Shop By Category (Circular Gold-Rimmed Icon Carousel) */}
-            <CategoryCarousel
-              selectedCategory={selectedCategory}
-              onSelectCategory={setSelectedCategory}
-            />
-
-            {/* Complete Spiritual Ecosystem (Architectural Bento Grid) */}
-            <SpiritualBento />
-
-            {/* #1 Bestseller Spotlight Card (Modeled after Dhoop Dani Burner) */}
-            <BestsellerSpotlight />
-
-            {/* Dynamic Sectioned Product Collections */}
-            <ProductSections activeCategoryFilter={selectedCategory} />
-
-            {/* Devotional Campaign Banner ("Ek Diya, Ram Ke Naam") */}
-            <DevotionalBanner />
-
-            {/* Verified Customer Reviews & Ratings Wall */}
-            <ReviewsSection />
-
-            {/* Live 5-Step Order Tracking Section */}
-            <OrderTrackerSection />
-          </main>
-
-          {/* 3. Luxury Spiritual Footer */}
-          <Footer />
-
-          {/* 4. Drawers & Modals */}
-          <CartDrawer />
-          <CheckoutModal />
-          <TrackingModal />
-          <ProductQuickViewModal />
-          <WriteReviewModal />
-          <PolicyModals />
-
-          {/* 5. Mobile Floating Dock & Floating WhatsApp Chat */}
-          <MobileDock />
-          <WhatsAppFloatingButton />
-        </div>
-      </>
-    );
-  }
+      <StoreProvider initialState={state}>
+        <Storefront />
+      </StoreProvider>
+    </>
+  );
+}

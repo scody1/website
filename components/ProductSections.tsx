@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useStore } from '@/lib/storeContext';
-import { Product, HomepageSection } from '@/lib/types';
+import { Product, HomepageSection } from '@/lib/shared/types';
 import { Star, Heart, Eye, ShoppingBag, Check } from 'lucide-react';
 
 interface ProductSectionsProps {
@@ -183,16 +183,20 @@ export default function ProductSections({ activeCategoryFilter }: ProductSection
                       <span className="font-semibold text-stone-500 uppercase tracking-wider text-[10px]">
                         {product.category}
                       </span>
-                      <div className="flex items-center gap-1 text-amber-500 font-bold">
-                        <Star className="w-3 h-3 fill-amber-400" />
-                        <span>{product.rating}</span>
-                        <span className="text-stone-400">({product.reviewCount})</span>
-                      </div>
+                      {product.reviewCount > 0 && (
+                        <div className="flex items-center gap-1 text-amber-500 font-bold">
+                          <Star className="w-3 h-3 fill-amber-400" />
+                          <span>{product.rating}</span>
+                          <span className="text-stone-400">({product.reviewCount})</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Title */}
                     <h3 className="font-serif text-sm font-bold text-espresso line-clamp-2 leading-snug group-hover:text-maroon-700 transition-colors">
-                      {product.name}
+                      <a href={`/product/${product.slug}`} onClick={(e) => e.stopPropagation()} className="hover:underline">
+                        {product.name}
+                      </a>
                     </h3>
                   </div>
 

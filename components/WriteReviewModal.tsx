@@ -2,10 +2,11 @@
 
 import React, { useState } from 'react';
 import { useStore } from '@/lib/storeContext';
+import { apiFetch, errorMessage } from '@/lib/api';
 import { X, Star, Send } from 'lucide-react';
 
 export default function WriteReviewModal() {
-  const { isReviewModalOpen, setIsReviewModalOpen, state, addReview } = useStore();
+  const { isReviewModalOpen, setIsReviewModalOpen, state, showToast } = useStore();
 
   const [authorName, setAuthorName] = useState('');
   const [location, setLocation] = useState('');
@@ -13,30 +14,42 @@ export default function WriteReviewModal() {
   const [title, setTitle] = useState('');
   const [comment, setComment] = useState('');
   const [selectedProductId, setSelectedProductId] = useState('');
+  const [orderNumber, setOrderNumber] = useState('');
+  const [phone, setPhone] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   if (!isReviewModalOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const reset = () => {
+    setAuthorName(''); setLocation(''); setRating(5); setTitle(''); setComment('');
+    setSelectedProductId(''); setOrderNumber(''); setPhone('');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!authorName.trim() || !comment.trim()) {
-      alert('Please enter your name and feedback.');
+    if (authorName.trim().length < 2 || comment.trim().length < 5) {
+      showToast('Review incomplete', 'Please enter your name and a few words of feedback.', 'warn');
       return;
     }
-
-    const prod = state.products.find((p) => p.id === selectedProductId);
-
-    addReview({
-      authorName,
-      location: location || 'India',
-      rating,
-      title: title || 'Sacred Devotional Experience',
-      comment,
-      productId: prod?.id,
-      productName: prod?.name,
-      isVerifiedBuyer: true
-    });
-
-    setIsReviewModalOpen(false);
+    setSubmitting(true);
+    try {
+      const res = await apiFetch<{ message: string; verified: boolean }>('/api/reviews', {
+        method: 'POST',
+        json: {
+          authorName, location, rating, title, comment,
+          productId: selectedProductId || null,
+          orderNumber: orderNumber || null,
+          phone: phone || null
+        }
+      });
+      showToast('Review Submitted 🙏', res.verified ? `${res.message} (verified purchase)` : res.message);
+      reset();
+      setIsReviewModalOpen(false);
+    } catch (err) {
+      showToast('Could not submit review', errorMessage(err), 'error');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -154,14 +167,35 @@ export default function WriteReviewModal() {
               />
             </div>
 
+            <div className="grid grid-cols-2 gap-3 bg-parchment-50 border border-gold-300/40 rounded-xl p-3">
+              <p className="col-span-2 text-[11px] text-stone-600">
+                Optional: add your order number and mobile number to get a <strong>Verified Buyer</strong> badge (delivered orders only).
+              </p>
+              <input
+                type="text"
+                value={orderNumber}
+                onChange={(e) => setOrderNumber(e.target.value.toUpperCase())}
+                placeholder="Order no. e.g. RPS-100001"
+                className="w-full border border-stone-300 rounded-xl px-3 py-2 text-espresso focus:border-maroon-700 focus:outline-none"
+              />
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                placeholder="Mobile number"
+                className="w-full border border-stone-300 rounded-xl px-3 py-2 text-espresso focus:border-maroon-700 focus:outline-none"
+              />
+            </div>
+
             {/* Submit */}
             <div className="pt-2">
               <button
                 type="submit"
-                className="w-full bg-maroon-700 hover:bg-maroon-800 text-parchment-100 font-bold py-3 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-xs sm:text-sm"
+                disabled={submitting}
+                className="w-full disabled:opacity-60 bg-maroon-700 hover:bg-maroon-800 text-parchment-100 font-bold py-3 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-xs sm:text-sm"
               >
                 <Send className="w-4 h-4 text-gold-300" />
-                <span>Submit Devotional Review</span>
+                <span>{submitting ? 'Submitting…' : 'Submit Review'}</span>
               </button>
             </div>
 

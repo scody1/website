@@ -34,12 +34,12 @@ export default function Footer() {
               Sacred Collections
             </h4>
             <ul className="space-y-2 text-xs text-stone-400">
-              <li><a href="#catalog-sections" className="hover:text-gold-200 transition-colors">Pure Brass Idols & Murtis</a></li>
-              <li><a href="#catalog-sections" className="hover:text-gold-200 transition-colors">Oceanic Blowing & Vamavarti Shankhs</a></li>
-              <li><a href="#catalog-sections" className="hover:text-gold-200 transition-colors">Brass Kamakshi & Akhand Deepams</a></li>
-              <li><a href="#catalog-sections" className="hover:text-gold-200 transition-colors">Handcrafted Brass Urlis & Floating Bowls</a></li>
-              <li><a href="#catalog-sections" className="hover:text-gold-200 transition-colors">Cow Ghee Hawan Cups & Loban Burners</a></li>
-              <li><a href="#catalog-sections" className="hover:text-gold-200 transition-colors">Navgrah & Zodiac Balance Yantras</a></li>
+              <li><a href="/#catalog-sections" className="hover:text-gold-200 transition-colors">Pure Brass Idols & Murtis</a></li>
+              <li><a href="/#catalog-sections" className="hover:text-gold-200 transition-colors">Oceanic Blowing & Vamavarti Shankhs</a></li>
+              <li><a href="/#catalog-sections" className="hover:text-gold-200 transition-colors">Brass Kamakshi & Akhand Deepams</a></li>
+              <li><a href="/#catalog-sections" className="hover:text-gold-200 transition-colors">Handcrafted Brass Urlis & Floating Bowls</a></li>
+              <li><a href="/#catalog-sections" className="hover:text-gold-200 transition-colors">Cow Ghee Hawan Cups & Loban Burners</a></li>
+              <li><a href="/#catalog-sections" className="hover:text-gold-200 transition-colors">Navgrah & Zodiac Balance Yantras</a></li>
             </ul>
           </div>
 
@@ -117,11 +117,19 @@ export default function Footer() {
                   onClick={() => setActivePolicyModal('refund')}
                   className="hover:text-gold-200 transition-colors text-left"
                 >
-                  Return, Refund & Shipping Policy
+                  Return & Refund Policy
                 </button>
               </li>
               <li>
-                <a href="#order-tracking-section" className="hover:text-gold-200 transition-colors">
+                <button
+                  onClick={() => setActivePolicyModal('shipping')}
+                  className="hover:text-gold-200 transition-colors text-left"
+                >
+                  Shipping Policy
+                </button>
+              </li>
+              <li>
+                <a href="/#order-tracking-section" className="hover:text-gold-200 transition-colors">
                   Live Courier Tracking
                 </a>
               </li>

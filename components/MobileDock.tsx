@@ -17,6 +17,8 @@ export default function MobileDock() {
     const el = document.getElementById(id);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      window.location.href = `/#${id}`;
     }
   };
 
@@ -26,7 +28,7 @@ export default function MobileDock() {
         
         {/* 1. Home */}
         <button
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          onClick={() => (window.location.pathname === '/' ? window.scrollTo({ top: 0, behavior: 'smooth' }) : (window.location.href = '/'))}
           className="flex flex-col items-center gap-0.5 text-stone-600 hover:text-maroon-700 transition"
         >
           <Home className="w-4 h-4 text-maroon-700" />
