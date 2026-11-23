@@ -39,7 +39,18 @@ const emptyCustomer = { name: '', phone: '', email: '', addressLine1: '', addres
 const inputCls = 'w-full border border-stone-300 rounded-xl px-3 py-2.5 text-espresso focus:border-maroon-700 focus:outline-none';
 
 export default function CheckoutModal() {
-  const { isCheckoutOpen, setIsCheckoutOpen, cart, activeCoupon, removeCoupon, state, clearCart, showToast } = useStore();
+  const {
+    isCheckoutOpen,
+    setIsCheckoutOpen,
+    cart,
+    activeCoupon,
+    removeCoupon,
+    state,
+    clearCart,
+    showToast,
+    customer: loggedInCustomer,
+    openAuthModal
+  } = useStore();
   const pay = state.paymentShipping;
 
   const availableMethods: PaymentMethod[] = [
@@ -65,6 +76,22 @@ export default function CheckoutModal() {
     if (!method || !availableMethods.includes(method)) setMethod(availableMethods[0] ?? null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pay.enableCod, pay.enableRazorpay, pay.enableUpi]);
+
+  // Auto-fill logged-in customer's details and saved delivery address
+  useEffect(() => {
+    if (loggedInCustomer && isCheckoutOpen) {
+      setCustomer((prev) => ({
+        name: prev.name || loggedInCustomer.name || '',
+        phone: prev.phone || loggedInCustomer.phone || '',
+        email: prev.email || loggedInCustomer.email || '',
+        addressLine1: prev.addressLine1 || loggedInCustomer.addressLine1 || '',
+        addressLine2: prev.addressLine2 || loggedInCustomer.addressLine2 || '',
+        city: prev.city || loggedInCustomer.city || '',
+        state: prev.state || loggedInCustomer.state || '',
+        pincode: prev.pincode || loggedInCustomer.pincode || '',
+      }));
+    }
+  }, [loggedInCustomer, isCheckoutOpen]);
 
   const cartKey = cart.map((c) => `${c.productId}:${c.quantity}`).join(',');
 
@@ -297,6 +324,28 @@ export default function CheckoutModal() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
+                {loggedInCustomer ? (
+                  <div className="bg-gold-50/90 border border-gold-400/70 rounded-2xl p-3 flex items-center justify-between text-xs text-espresso">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0 animate-pulse" />
+                      <span>
+                        Logged in as <strong>{loggedInCustomer.name}</strong> ({loggedInCustomer.phone}) — this order will be saved to your account.
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-parchment-200 border border-gold-400/40 rounded-2xl p-3 flex items-center justify-between text-xs text-stone-700">
+                    <span>Have an account with us?</span>
+                    <button
+                      type="button"
+                      onClick={() => openAuthModal('login')}
+                      className="text-maroon-700 font-bold hover:underline"
+                    >
+                      Sign in to auto-fill details →
+                    </button>
+                  </div>
+                )}
+
                 <div>
                   <h4 className="font-serif text-sm font-bold text-maroon-700 uppercase tracking-wider mb-3">1. Delivery details</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">

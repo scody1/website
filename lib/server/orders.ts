@@ -30,6 +30,7 @@ export const quoteSchema = z.object({
 });
 
 export const checkoutSchema = z.object({
+  customerId: z.string().uuid().nullish(),
   items: itemsSchema,
   couponCode: z.string().trim().toUpperCase().max(30).nullish(),
   paymentMethod: z.enum(['COD', 'UPI', 'RAZORPAY']),
@@ -240,13 +241,19 @@ export async function createOrder(input: CheckoutInput): Promise<CreatedOrder> {
     const paymentStatus: PaymentStatus = method === 'UPI' ? 'AWAITING_VERIFICATION' : 'PENDING';
     const c = input.customer;
 
+    let customerId = input.customerId || null;
+    if (!customerId) {
+      const [matched] = await tx`SELECT id FROM customers WHERE phone = ${c.phone} AND is_active LIMIT 1`;
+      if (matched) customerId = matched.id;
+    }
+
     const [order] = await tx`
       INSERT INTO orders (
-        customer_name, customer_phone, customer_email, address_line1, address_line2, city, state, pincode,
+        customer_id, customer_name, customer_phone, customer_email, address_line1, address_line2, city, state, pincode,
         subtotal, discount, coupon_code, shipping_fee, cod_fee, total,
         payment_method, payment_status, status, utr_number
       ) VALUES (
-        ${c.name}, ${c.phone}, ${c.email}, ${c.addressLine1}, ${c.addressLine2}, ${c.city}, ${c.state}, ${c.pincode},
+        ${customerId}, ${c.name}, ${c.phone}, ${c.email}, ${c.addressLine1}, ${c.addressLine2}, ${c.city}, ${c.state}, ${c.pincode},
         ${q.subtotal}, ${q.discount}, ${q.couponCode}, ${q.shippingFee}, ${q.codFee}, ${q.total},
         ${method}, ${paymentStatus}, ${status}, ${utr}
       ) RETURNING id, order_number

@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import Logo from './Logo';
 import { useStore } from '@/lib/storeContext';
 import { Product } from '@/lib/shared/types';
-import { Search, ShoppingBag, Truck, MapPin, Instagram, X } from 'lucide-react';
+import { Search, ShoppingBag, Truck, MapPin, Instagram, X, User, UserCheck } from 'lucide-react';
 
 export default function Header() {
   const {
@@ -13,7 +13,10 @@ export default function Header() {
     setIsCartOpen,
     setIsTrackingModalOpen,
     setSelectedProductForQuickView,
-    pincodeResult
+    pincodeResult,
+    customer,
+    openAuthModal,
+    setIsAccountDrawerOpen
   } = useStore();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -166,8 +169,29 @@ export default function Header() {
               className="text-xs sm:text-sm font-semibold text-maroon-700 bg-parchment-200 hover:bg-gold-100 border border-gold-500/40 px-3 py-1.5 rounded-full flex items-center gap-1.5 transition shadow-sm"
             >
               <Truck className="w-3.5 h-3.5 text-saffron-600" />
-              <span className="hidden sm:inline">Track Order</span>
+              <span className="hidden sm:inline">Track</span>
             </button>
+
+            {/* Customer Account Button */}
+            {customer ? (
+              <button
+                onClick={() => setIsAccountDrawerOpen(true)}
+                className="text-xs sm:text-sm font-semibold text-maroon-700 bg-gold-100 hover:bg-gold-200 border border-gold-500/50 px-3 py-1.5 rounded-full flex items-center gap-1.5 transition shadow-sm"
+                title="My Account & Orders"
+              >
+                <UserCheck className="w-3.5 h-3.5 text-maroon-700" />
+                <span className="hidden sm:inline font-medium max-w-[110px] truncate">{customer.name.split(' ')[0]}</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => openAuthModal('login')}
+                className="text-xs sm:text-sm font-semibold text-maroon-700 bg-parchment-200 hover:bg-gold-100 border border-gold-500/40 px-3 py-1.5 rounded-full flex items-center gap-1.5 transition shadow-sm"
+                title="Sign In / Register"
+              >
+                <User className="w-3.5 h-3.5 text-maroon-700" />
+                <span className="hidden sm:inline">Sign In</span>
+              </button>
+            )}
 
             {/* Instagram Link (dynamically populated or fallback) */}
             {state.storeConfig.instagramUrl && (

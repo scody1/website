@@ -13,6 +13,8 @@ import ReviewsSection from '@/components/ReviewsSection';
 import OrderTrackerSection from '@/components/OrderTrackerSection';
 import Footer from '@/components/Footer';
 import CartDrawer from '@/components/CartDrawer';
+import CustomerAuthModal from '@/components/CustomerAuthModal';
+import AccountDrawer from '@/components/AccountDrawer';
 import CheckoutModal from '@/components/CheckoutModal';
 import TrackingModal from '@/components/TrackingModal';
 import ProductQuickViewModal from '@/components/ProductQuickViewModal';
@@ -41,6 +43,8 @@ export default function Storefront() {
       <Footer />
 
       <CartDrawer />
+      <CustomerAuthModal />
+      <AccountDrawer />
       <CheckoutModal />
       <TrackingModal />
       <ProductQuickViewModal />

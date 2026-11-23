@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import type { CartItem, CartLine, PincodeResult, Product, PublicCoupon, PublicStoreState } from './shared/types';
+import type { CartItem, CartLine, CustomerOrderSummary, CustomerProfile, PincodeResult, Product, PublicCoupon, PublicStoreState } from './shared/types';
 import { computeQuote } from './shared/pricing';
 import { apiFetch, errorMessage } from './api';
 import { useToast, ToastType } from './toast';
@@ -10,6 +10,18 @@ const CART_KEY = 'rps_cart_v3';
 const COUPON_KEY = 'rps_coupon_v3';
 
 type PolicyModal = 'privacy' | 'terms' | 'refund' | 'shipping' | null;
+
+interface CustomerRegisterInput {
+  name: string;
+  phone: string;
+  email?: string;
+  password: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+}
 
 interface StoreContextType {
   state: PublicStoreState;
@@ -23,6 +35,22 @@ interface StoreContextType {
   trackingQuery: string;
   activePolicyModal: PolicyModal;
   pincodeResult: PincodeResult | null;
+
+  // Customer Account & Auth
+  customer: CustomerProfile | null;
+  isAuthModalOpen: boolean;
+  authModalMode: 'login' | 'signup';
+  isAccountDrawerOpen: boolean;
+  customerOrders: CustomerOrderSummary[];
+  isLoadingCustomerOrders: boolean;
+  openAuthModal: (mode?: 'login' | 'signup') => void;
+  closeAuthModal: () => void;
+  setIsAccountDrawerOpen: (v: boolean) => void;
+  loginCustomer: (identifier: string, password: string) => Promise<boolean>;
+  signupCustomer: (data: CustomerRegisterInput) => Promise<boolean>;
+  logoutCustomer: () => Promise<void>;
+  updateProfile: (data: Partial<CustomerProfile>) => Promise<boolean>;
+  loadCustomerOrders: () => Promise<void>;
 
   setIsCartOpen: (v: boolean) => void;
   setIsCheckoutOpen: (v: boolean) => void;
@@ -86,6 +114,127 @@ export function StoreProvider({ initialState, children }: { initialState: Public
   const [trackingQuery, setTrackingQuery] = useState('');
   const [activePolicyModal, setActivePolicyModal] = useState<PolicyModal>(null);
   const [pincodeResult, setPincodeResult] = useState<PincodeResult | null>(null);
+
+  // Customer Authentication & Account State
+  const [customer, setCustomer] = useState<CustomerProfile | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'signup'>('login');
+  const [isAccountDrawerOpen, setIsAccountDrawerOpen] = useState(false);
+  const [customerOrders, setCustomerOrders] = useState<CustomerOrderSummary[]>([]);
+  const [isLoadingCustomerOrders, setIsLoadingCustomerOrders] = useState(false);
+
+  const openAuthModal = useCallback((mode: 'login' | 'signup' = 'login') => {
+    setAuthModalMode(mode);
+    setIsAuthModalOpen(true);
+  }, []);
+
+  const closeAuthModal = useCallback(() => {
+    setIsAuthModalOpen(false);
+  }, []);
+
+  const loadCustomerOrders = useCallback(async () => {
+    setIsLoadingCustomerOrders(true);
+    try {
+      const res = await apiFetch<{ orders: CustomerOrderSummary[] }>('/api/customer/orders');
+      setCustomerOrders(res.orders || []);
+    } catch {
+      // not logged in or failed
+    } finally {
+      setIsLoadingCustomerOrders(false);
+    }
+  }, []);
+
+  // Fetch current customer profile on mount
+  useEffect(() => {
+    let unmounted = false;
+    apiFetch<{ customer: CustomerProfile | null }>('/api/customer/me')
+      .then((res) => {
+        if (!unmounted && res.customer) {
+          setCustomer(res.customer);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      unmounted = true;
+    };
+  }, []);
+
+  // Whenever customer is set, load their orders
+  useEffect(() => {
+    if (customer) {
+      loadCustomerOrders();
+    } else {
+      setCustomerOrders([]);
+    }
+  }, [customer, loadCustomerOrders]);
+
+  const loginCustomer = useCallback(
+    async (identifier: string, password: string): Promise<boolean> => {
+      try {
+        const res = await apiFetch<{ ok: boolean; customer: CustomerProfile }>('/api/customer/login', {
+          method: 'POST',
+          json: { identifier, password }
+        });
+        setCustomer(res.customer);
+        setIsAuthModalOpen(false);
+        showToast('Welcome back!', `Signed in as ${res.customer.name}`, 'info');
+        return true;
+      } catch (err) {
+        showToast('Sign In Failed', errorMessage(err), 'warn');
+        return false;
+      }
+    },
+    [showToast]
+  );
+
+  const signupCustomer = useCallback(
+    async (data: CustomerRegisterInput): Promise<boolean> => {
+      try {
+        const res = await apiFetch<{ ok: boolean; customer: CustomerProfile }>('/api/customer/signup', {
+          method: 'POST',
+          json: data
+        });
+        setCustomer(res.customer);
+        setIsAuthModalOpen(false);
+        showToast('Account Created!', `Welcome to Rajeshwar Pooja Samagri, ${res.customer.name}!`, 'info');
+        return true;
+      } catch (err) {
+        showToast('Registration Failed', errorMessage(err), 'warn');
+        return false;
+      }
+    },
+    [showToast]
+  );
+
+  const logoutCustomer = useCallback(async () => {
+    try {
+      await apiFetch('/api/customer/logout', { method: 'POST' });
+    } catch {
+      // continue clearing local state
+    }
+    setCustomer(null);
+    setCustomerOrders([]);
+    setIsAccountDrawerOpen(false);
+    showToast('Signed Out', 'You have been signed out successfully.', 'info');
+  }, [showToast]);
+
+  const updateProfile = useCallback(
+    async (data: Partial<CustomerProfile>): Promise<boolean> => {
+      try {
+        const res = await apiFetch<{ ok: boolean; customer: CustomerProfile }>('/api/customer/profile', {
+          method: 'PUT',
+          json: data
+        });
+        setCustomer(res.customer);
+        showToast('Profile Updated', 'Your profile details have been saved.', 'info');
+        return true;
+      } catch (err) {
+        showToast('Update Failed', errorMessage(err), 'warn');
+        return false;
+      }
+    },
+    [showToast]
+  );
 
   const productsById = useMemo(() => new Map(state.products.map((p) => [p.id, p])), [state.products]);
 
@@ -216,6 +365,23 @@ export function StoreProvider({ initialState, children }: { initialState: Public
         trackingQuery,
         activePolicyModal,
         pincodeResult,
+
+        // Customer Account & Auth
+        customer,
+        isAuthModalOpen,
+        authModalMode,
+        isAccountDrawerOpen,
+        customerOrders,
+        isLoadingCustomerOrders,
+        openAuthModal,
+        closeAuthModal,
+        setIsAccountDrawerOpen,
+        loginCustomer,
+        signupCustomer,
+        logoutCustomer,
+        updateProfile,
+        loadCustomerOrders,
+
         setIsCartOpen,
         setIsCheckoutOpen,
         setSelectedProductForQuickView,

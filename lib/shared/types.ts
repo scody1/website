@@ -317,3 +317,45 @@ export interface PincodeResult {
   codAvailable: boolean;
   message: string;
 }
+
+export interface CustomerProfile {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  state: string;
+  pincode: string;
+  createdAt: string;
+}
+
+export interface CustomerOrderItem {
+  id: string;
+  productId: string;
+  name: string;
+  imageUrl: string;
+  unitPrice: number;
+  quantity: number;
+  lineTotal: number;
+}
+
+export interface CustomerOrderSummary {
+  id: string;
+  orderNumber: string;
+  total: number;
+  subtotal: number;
+  discount: number;
+  shippingFee: number;
+  codFee: number;
+  paymentMethod: PaymentMethod;
+  paymentStatus: PaymentStatus;
+  status: OrderStatus;
+  trackingUrl: string | null;
+  awbCode: string | null;
+  courierName: string | null;
+  createdAt: string;
+  items: CustomerOrderItem[];
+}
+

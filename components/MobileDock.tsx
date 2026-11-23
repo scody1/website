@@ -2,13 +2,16 @@
 
 import React from 'react';
 import { useStore } from '@/lib/storeContext';
-import { Home, Grid, Truck, Star, ShoppingBag } from 'lucide-react';
+import { Home, Grid, Truck, User, UserCheck, ShoppingBag } from 'lucide-react';
 
 export default function MobileDock() {
   const {
     cart,
     setIsCartOpen,
-    setIsTrackingModalOpen
+    setIsTrackingModalOpen,
+    customer,
+    openAuthModal,
+    setIsAccountDrawerOpen
   } = useStore();
 
   const totalCartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -53,13 +56,28 @@ export default function MobileDock() {
           <span className="text-[10px] font-bold">Track</span>
         </button>
 
-        {/* 4. Reviews */}
+        {/* 4. Customer Account / Sign In */}
         <button
-          onClick={() => scrollToSection('reviews-section')}
+          onClick={() => {
+            if (customer) {
+              setIsAccountDrawerOpen(true);
+            } else {
+              openAuthModal('login');
+            }
+          }}
           className="flex flex-col items-center gap-0.5 text-stone-600 hover:text-maroon-700 transition"
         >
-          <Star className="w-4 h-4 text-amber-500" />
-          <span className="text-[10px] font-bold">Reviews</span>
+          {customer ? (
+            <>
+              <UserCheck className="w-4 h-4 text-maroon-700" />
+              <span className="text-[10px] font-bold text-maroon-700 truncate max-w-[50px]">{customer.name.split(' ')[0]}</span>
+            </>
+          ) : (
+            <>
+              <User className="w-4 h-4 text-stone-600" />
+              <span className="text-[10px] font-bold">Account</span>
+            </>
+          )}
         </button>
 
         {/* 5. Cart */}
