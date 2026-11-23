@@ -355,6 +355,9 @@ export interface CustomerOrderSummary {
   trackingUrl: string | null;
   awbCode: string | null;
   courierName: string | null;
+  cancelReason?: string | null;
+  refundNotes?: string | null;
+  refundAmount?: number | null;
   createdAt: string;
   items: CustomerOrderItem[];
 }

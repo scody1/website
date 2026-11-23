@@ -4,19 +4,40 @@ import React, { useState } from 'react';
 import { useStore } from '@/lib/storeContext';
 import { formatINR, formatDateTime, formatWhatsAppUrl } from '@/lib/shared/format';
 import { ORDER_STATUS_LABEL } from '@/lib/shared/orderStatus';
+import type { CustomerOrderSummary } from '@/lib/shared/types';
 import {
+  AlertCircle,
+  Check,
   ExternalLink,
   Loader2,
   LogOut,
   MapPin,
   MessageCircle,
   Package,
+  RotateCcw,
   ShieldCheck,
   ShoppingBag,
   Truck,
   User,
-  X
+  X,
+  XCircle
 } from 'lucide-react';
+
+const CANCEL_REASONS = [
+  'Ordered by mistake',
+  'Found a better price or alternative',
+  'Delivery time is too long',
+  'Want to change items or address',
+  'Other reason'
+];
+
+const REFUND_REASONS = [
+  'Item arrived damaged or broken',
+  'Substandard quality or defective',
+  'Incorrect or missing items in parcel',
+  'Package not received',
+  'Other issue'
+];
 
 export default function AccountDrawer() {
   const {
@@ -28,12 +49,21 @@ export default function AccountDrawer() {
     logoutCustomer,
     updateProfile,
     loadCustomerOrders,
+    cancelOrRefundOrder,
     state,
     setIsTrackingModalOpen,
     setTrackingQuery
   } = useStore();
 
   const [activeTab, setActiveTab] = useState<'orders' | 'profile'>('orders');
+
+  // Cancel & Refund Dialog state
+  const [actionOrder, setActionOrder] = useState<CustomerOrderSummary | null>(null);
+  const [actionType, setActionType] = useState<'cancel' | 'refund'>('cancel');
+  const [selectedReason, setSelectedReason] = useState(CANCEL_REASONS[0]);
+  const [customNote, setCustomNote] = useState('');
+  const [refundUpiId, setRefundUpiId] = useState('');
+  const [submittingAction, setSubmittingAction] = useState(false);
 
   // Profile form state
   const [name, setName] = useState(customer?.name || '');
@@ -101,6 +131,31 @@ export default function AccountDrawer() {
     setTrackingQuery(orderNumber);
     setIsAccountDrawerOpen(false);
     setIsTrackingModalOpen(true);
+  };
+
+  const handleOpenAction = (order: CustomerOrderSummary, type: 'cancel' | 'refund') => {
+    setActionOrder(order);
+    setActionType(type);
+    setSelectedReason(type === 'cancel' ? CANCEL_REASONS[0] : REFUND_REASONS[0]);
+    setCustomNote('');
+    setRefundUpiId('');
+  };
+
+  const handleCloseAction = () => {
+    if (submittingAction) return;
+    setActionOrder(null);
+  };
+
+  const handleSubmitAction = async () => {
+    if (!actionOrder || !selectedReason) return;
+    setSubmittingAction(true);
+    try {
+      const fullReason = customNote.trim() ? `${selectedReason} — ${customNote.trim()}` : selectedReason;
+      await cancelOrRefundOrder(actionOrder.id, fullReason, refundUpiId.trim() || undefined);
+      setActionOrder(null);
+    } finally {
+      setSubmittingAction(false);
+    }
   };
 
   return (
@@ -257,12 +312,33 @@ export default function AccountDrawer() {
                       </div>
 
                       {/* Bottom Total & Actions */}
-                      <div className="pt-3 border-t border-stone-100 flex items-center justify-between">
+                      <div className="pt-3 border-t border-stone-100 flex items-center justify-between flex-wrap gap-2">
                         <div>
                           <span className="text-[10px] text-stone-400 uppercase font-bold">Total Paid</span>
                           <p className="text-sm font-bold text-maroon-700">{formatINR(order.total)}</p>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {/* Cancel or Refund Button */}
+                          {['NEW', 'PROCESSING', 'PACKED', 'PENDING_PAYMENT'].includes(order.status) ? (
+                            <button
+                              onClick={() => handleOpenAction(order, 'cancel')}
+                              className="text-xs font-bold text-rose-700 hover:text-rose-800 hover:bg-rose-50 border border-rose-300 px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition shadow-xs"
+                              title="Cancel this order"
+                            >
+                              <XCircle className="w-3.5 h-3.5" />
+                              <span>Cancel</span>
+                            </button>
+                          ) : ['READY_TO_SHIP', 'PICKUP_SCHEDULED', 'SHIPPED', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(order.status) && !order.refundNotes?.includes('[Customer Return/Refund Request]') ? (
+                            <button
+                              onClick={() => handleOpenAction(order, 'refund')}
+                              className="text-xs font-bold text-amber-800 hover:text-amber-900 hover:bg-amber-50 border border-amber-400/80 px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition shadow-xs"
+                              title="Request Return & Refund"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5" />
+                              <span>Refund</span>
+                            </button>
+                          ) : null}
+
                           {order.trackingUrl ? (
                             <a
                               href={order.trackingUrl}
@@ -271,7 +347,7 @@ export default function AccountDrawer() {
                               className="text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition"
                             >
                               <ExternalLink className="w-3.5 h-3.5" />
-                              <span>Live Track</span>
+                              <span>Track</span>
                             </a>
                           ) : (
                             <button
@@ -297,6 +373,43 @@ export default function AccountDrawer() {
                           </a>
                         </div>
                       </div>
+
+                      {/* Status / Cancellation / Refund Banners */}
+                      {order.status === 'CANCELLED' ? (
+                        <div className="mt-2.5 bg-rose-50 border border-rose-200/80 rounded-xl p-2.5 text-xs text-rose-800">
+                          <div className="flex items-center justify-between font-bold">
+                            <span className="flex items-center gap-1">
+                              <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                              <span>Order Cancelled</span>
+                            </span>
+                            {order.paymentStatus === 'REFUNDED' && (
+                              <span className="text-emerald-700 bg-emerald-100/90 px-2 py-0.5 rounded text-[10px]">Refund Processed</span>
+                            )}
+                          </div>
+                          {order.cancelReason && <p className="text-[11px] text-rose-700 mt-1">{order.cancelReason}</p>}
+                          {order.refundNotes && <p className="text-[10px] text-stone-600 mt-0.5">{order.refundNotes}</p>}
+                        </div>
+                      ) : order.status === 'REFUNDED' ? (
+                        <div className="mt-2.5 bg-emerald-50 border border-emerald-200/80 rounded-xl p-2.5 text-xs text-emerald-800">
+                          <span className="font-bold flex items-center gap-1">
+                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>Refund Completed</span>
+                          </span>
+                          <p className="text-[11px] text-emerald-700 mt-0.5">
+                            Amount: {formatINR(order.refundAmount || order.total)}
+                          </p>
+                        </div>
+                      ) : order.refundNotes?.includes('[Customer Return/Refund Request]') ? (
+                        <div className="mt-2.5 bg-amber-50 border border-amber-300 rounded-xl p-2.5 text-xs text-amber-900">
+                          <div className="flex items-center gap-1.5 font-bold">
+                            <RotateCcw className="w-3.5 h-3.5 text-amber-600 animate-spin" />
+                            <span>Return & Refund Request Submitted</span>
+                          </div>
+                          <p className="text-[11px] text-amber-700 mt-0.5">
+                            Our team is reviewing your request. We will coordinate return and refund shortly.
+                          </p>
+                        </div>
+                      ) : null}
                     </div>
                   ))
                 )}
@@ -419,6 +532,140 @@ export default function AccountDrawer() {
           </div>
         </div>
       </div>
+
+      {/* Cancel & Refund Modal Dialog */}
+      {actionOrder && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4 bg-stone-950/75 backdrop-blur-xs animate-fadeIn">
+          <div className="w-full max-w-sm bg-white rounded-3xl border border-gold-500/60 shadow-2xl overflow-hidden text-espresso">
+            <div className="bg-gradient-to-r from-maroon-700 to-maroon-800 p-4 text-parchment-100 flex items-center justify-between">
+              <h4 className="font-serif font-bold text-sm flex items-center gap-1.5">
+                {actionType === 'cancel' ? (
+                  <>
+                    <XCircle className="w-4 h-4 text-rose-300" />
+                    <span>Cancel Order #{actionOrder.orderNumber}</span>
+                  </>
+                ) : (
+                  <>
+                    <RotateCcw className="w-4 h-4 text-gold-300" />
+                    <span>Request Return & Refund</span>
+                  </>
+                )}
+              </h4>
+              <button
+                onClick={handleCloseAction}
+                disabled={submittingAction}
+                className="text-parchment-200 hover:text-white p-1 rounded-lg transition"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-4 space-y-3.5 text-xs max-h-[80vh] overflow-y-auto">
+              <div className="bg-parchment-100 rounded-xl p-3 border border-gold-300/40 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] text-stone-500 uppercase font-bold">Total Paid</span>
+                  <p className="text-sm font-bold text-maroon-700">{formatINR(actionOrder.total)}</p>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] text-stone-500 uppercase font-bold">Payment</span>
+                  <p className="text-xs font-semibold text-stone-700">{actionOrder.paymentMethod} • {actionOrder.paymentStatus}</p>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-stone-700 mb-1.5">
+                  {actionType === 'cancel' ? 'Why do you want to cancel?' : 'Reason for Return & Refund'}
+                </label>
+                <div className="grid grid-cols-1 gap-1.5">
+                  {(actionType === 'cancel' ? CANCEL_REASONS : REFUND_REASONS).map((r) => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => setSelectedReason(r)}
+                      className={`p-2 rounded-xl border text-left text-xs transition flex items-center justify-between ${
+                        selectedReason === r
+                          ? 'border-maroon-700 bg-gold-50/80 font-bold text-maroon-800'
+                          : 'border-stone-200 hover:bg-stone-50 text-stone-700'
+                      }`}
+                    >
+                      <span>{r}</span>
+                      {selectedReason === r && <Check className="w-3.5 h-3.5 text-maroon-700" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-stone-700 mb-1">
+                  Additional Details (Optional)
+                </label>
+                <textarea
+                  value={customNote}
+                  onChange={(e) => setCustomNote(e.target.value)}
+                  placeholder="Tell us any more details..."
+                  rows={2}
+                  className="w-full border border-stone-300 rounded-xl p-2.5 focus:border-maroon-700 focus:outline-none"
+                />
+              </div>
+
+              {(actionOrder.paymentMethod === 'UPI' || actionOrder.paymentMethod === 'COD' || actionOrder.paymentStatus === 'PAID') && (
+                <div>
+                  <label className="block font-bold text-stone-700 mb-1">
+                    Your UPI ID for Refund (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={refundUpiId}
+                    onChange={(e) => setRefundUpiId(e.target.value)}
+                    placeholder="e.g. mobile@upi / yourname@okaxis"
+                    className="w-full border border-stone-300 rounded-xl p-2.5 focus:border-maroon-700 focus:outline-none"
+                  />
+                  <p className="text-[10px] text-stone-400 mt-1">
+                    For COD or UPI orders, refunds will be sent directly to this UPI ID.
+                  </p>
+                </div>
+              )}
+
+              <div className="pt-2 flex flex-col gap-2">
+                <button
+                  type="button"
+                  disabled={submittingAction || !selectedReason}
+                  onClick={handleSubmitAction}
+                  className="w-full bg-maroon-700 hover:bg-maroon-800 disabled:opacity-50 text-white font-bold py-2.5 rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1.5"
+                >
+                  {submittingAction && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>
+                    {actionType === 'cancel' ? 'Confirm Cancellation' : 'Submit Return & Refund Request'}
+                  </span>
+                </button>
+
+                <a
+                  href={formatWhatsAppUrl(
+                    state.storeConfig.whatsapp || state.storeConfig.supportPhone,
+                    `🙏 Namaste! I need help with ${actionType === 'cancel' ? 'cancelling' : 'returning'} Order #${actionOrder.orderNumber}. Reason: ${selectedReason}.`
+                  )}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold py-2 rounded-xl text-xs border border-emerald-300 transition text-center flex items-center justify-center gap-1.5"
+                >
+                  <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Help on WhatsApp</span>
+                </a>
+
+                <button
+                  type="button"
+                  disabled={submittingAction}
+                  onClick={handleCloseAction}
+                  className="w-full py-1 text-stone-500 hover:text-stone-700 text-xs font-semibold"
+                >
+                  Never mind, keep order
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -157,7 +157,7 @@ export async function quoteCart(input: z.infer<typeof quoteSchema>) {
   return { quote, problems };
 }
 
-async function restoreStockTx(tx: Tx, orderId: string) {
+export async function restoreStockTx(tx: Tx, orderId: string) {
   const [o] = await tx`SELECT stock_restored, coupon_code FROM orders WHERE id = ${orderId} FOR UPDATE`;
   if (!o || o.stock_restored) return;
   await tx`

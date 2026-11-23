@@ -5,6 +5,9 @@ import { db, iso, num } from './db';
 import { ApiError, clientIp } from './http';
 import { rateLimit, resetRateLimit } from './rateLimit';
 import { dummyPasswordHash, hashPassword, verifyPassword } from './crypto';
+import { addEvent, restoreStockTx } from './orders';
+import { cancelSrOrders } from './shiprocket';
+import { refundRazorpayPayment } from './razorpay';
 import type { CustomerOrderItem, CustomerOrderSummary, CustomerProfile, OrderStatus, PaymentMethod, PaymentStatus } from '../shared/types';
 
 export const CUSTOMER_COOKIE = 'rps_customer_session';
@@ -272,7 +275,9 @@ export async function getCustomerOrders(customerId: string, phone: string): Prom
     SELECT
       id, order_number, total, subtotal, discount, shipping_fee, cod_fee,
       payment_method, payment_status, status,
-      tracking_url, awb_code, courier_name, created_at
+      tracking_url, awb_code, courier_name,
+      cancel_reason, refund_notes, refund_amount,
+      created_at
     FROM orders
     WHERE customer_id = ${customerId} OR customer_phone = ${phone}
     ORDER BY created_at DESC
@@ -317,7 +322,132 @@ export async function getCustomerOrders(customerId: string, phone: string): Prom
     trackingUrl: o.tracking_url,
     awbCode: o.awb_code,
     courierName: o.courier_name,
+    cancelReason: o.cancel_reason || null,
+    refundNotes: o.refund_notes || null,
+    refundAmount: o.refund_amount ? num(o.refund_amount) : null,
     createdAt: iso(o.created_at),
     items: itemsByOrder.get(o.id) || []
   }));
+}
+
+export async function customerCancelOrRefundOrder(
+  customerId: string,
+  customerPhone: string,
+  orderId: string,
+  reason: string,
+  upiId?: string
+): Promise<{ success: boolean; action: 'cancelled' | 'refund_requested'; message: string }> {
+  const sql = db();
+  const [order] = await sql`
+    SELECT * FROM orders
+    WHERE id = ${orderId} AND (customer_id = ${customerId} OR customer_phone = ${customerPhone})
+  `;
+  if (!order) throw new ApiError(404, 'Order not found.');
+
+  if (order.status === 'CANCELLED') {
+    throw new ApiError(400, 'This order is already cancelled.');
+  }
+  if (order.status === 'REFUNDED' || order.payment_status === 'REFUNDED') {
+    throw new ApiError(400, 'This order is already refunded.');
+  }
+
+  const cancellableStatuses = ['NEW', 'PROCESSING', 'PACKED', 'PENDING_PAYMENT'];
+  const isDirectCancel = cancellableStatuses.includes(order.status);
+
+  if (isDirectCancel) {
+    if (order.sr_order_id) {
+      try {
+        await cancelSrOrders([Number(order.sr_order_id)]);
+      } catch (err) {
+        console.warn('[customer cancel] sr cancel warning:', (err as Error).message);
+      }
+    }
+
+    let rzpRefundId: string | null = null;
+    let rzpRefundOk = false;
+
+    if (order.payment_method === 'RAZORPAY' && order.payment_status === 'PAID' && order.razorpay_payment_id) {
+      try {
+        const ref = await refundRazorpayPayment(order.razorpay_payment_id, Number(order.total), {
+          order_number: order.order_number,
+          by: 'customer_cancel'
+        });
+        rzpRefundId = ref.id;
+        rzpRefundOk = true;
+      } catch (err) {
+        console.warn('[customer cancel] razorpay auto refund error:', (err as Error).message);
+      }
+    }
+
+    const wasPaidUpi = order.payment_method === 'UPI' && order.payment_status === 'PAID';
+
+    await sql.begin(async (tx) => {
+      const nextPaymentStatus = rzpRefundOk
+        ? 'REFUNDED'
+        : wasPaidUpi
+        ? 'REFUNDED'
+        : order.payment_method === 'COD' || order.payment_status === 'PENDING'
+        ? 'FAILED'
+        : order.payment_status;
+
+      const refundNoteText = rzpRefundOk
+        ? `Auto-refunded ₹${order.total} via Razorpay (${rzpRefundId})`
+        : wasPaidUpi
+        ? `Refund of ₹${order.total} required via UPI: ${upiId || 'Not provided'}`
+        : order.payment_status === 'PAID'
+        ? `Paid order cancelled. Refund pending store processing: ${upiId ? `UPI: ${upiId}` : ''}`
+        : '';
+
+      await tx`
+        UPDATE orders
+        SET
+          status = 'CANCELLED',
+          payment_status = ${nextPaymentStatus},
+          cancel_reason = ${reason},
+          refund_notes = ${refundNoteText ? [order.refund_notes, refundNoteText].filter(Boolean).join(' | ') : order.refund_notes},
+          refund_amount = ${rzpRefundOk ? order.total : order.refund_amount},
+          razorpay_refund_id = COALESCE(${rzpRefundId}, razorpay_refund_id),
+          refunded_at = CASE WHEN ${rzpRefundOk} THEN now() ELSE refunded_at END,
+          updated_at = now()
+        WHERE id = ${order.id}
+      `;
+
+      await restoreStockTx(tx, order.id);
+      await addEvent(tx, order.id, 'STATUS', `Order cancelled by customer. Reason: ${reason}`, 'customer');
+      if (rzpRefundOk) {
+        await addEvent(tx, order.id, 'PAYMENT', `Full refund of ₹${order.total} initiated automatically via Razorpay (${rzpRefundId}).`, 'customer');
+      } else if (wasPaidUpi || order.payment_status === 'PAID') {
+        await addEvent(tx, order.id, 'PAYMENT', `Customer cancelled paid order. ${refundNoteText}`, 'customer');
+      }
+    });
+
+    const msg = rzpRefundOk
+      ? `Order #${order.order_number} cancelled. Full refund of ₹${order.total} has been initiated to your original payment method.`
+      : wasPaidUpi
+      ? `Order #${order.order_number} cancelled. Refund of ₹${order.total} will be transferred to your UPI ID within 24-48 hours.`
+      : `Order #${order.order_number} has been cancelled successfully.`;
+
+    return {
+      success: true,
+      action: 'cancelled',
+      message: msg
+    };
+  }
+
+  // Not in direct cancel window (already READY_TO_SHIP, PICKUP_SCHEDULED, SHIPPED, IN_TRANSIT, OUT_FOR_DELIVERY, DELIVERED)
+  const reqNote = `[Customer Return/Refund Request]: ${reason}${upiId ? ` (Refund UPI: ${upiId})` : ''} - Submitted at ${new Date().toLocaleString('en-IN')}`;
+  const combinedNotes = [order.refund_notes, reqNote].filter(Boolean).join('\n');
+
+  await sql`
+    UPDATE orders
+    SET refund_notes = ${combinedNotes}, updated_at = now()
+    WHERE id = ${order.id}
+  `;
+  await addEvent(sql, order.id, 'STATUS', reqNote, 'customer');
+
+  return {
+    success: true,
+    action: 'refund_requested',
+    message: `Return & refund request received for Order #${order.order_number}. Our support team will review and contact you on WhatsApp/phone.`
+  };
 }

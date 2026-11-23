@@ -51,6 +51,7 @@ interface StoreContextType {
   logoutCustomer: () => Promise<void>;
   updateProfile: (data: Partial<CustomerProfile>) => Promise<boolean>;
   loadCustomerOrders: () => Promise<void>;
+  cancelOrRefundOrder: (orderId: string, reason: string, upiId?: string) => Promise<{ success: boolean; action: string; message: string }>;
 
   setIsCartOpen: (v: boolean) => void;
   setIsCheckoutOpen: (v: boolean) => void;
@@ -236,6 +237,27 @@ export function StoreProvider({ initialState, children }: { initialState: Public
     [showToast]
   );
 
+  const cancelOrRefundOrder = useCallback(
+    async (orderId: string, reason: string, upiId?: string) => {
+      try {
+        const res = await apiFetch<{ success: boolean; action: string; message: string }>(
+          `/api/customer/orders/${orderId}/cancel`,
+          {
+            method: 'POST',
+            json: { reason, upiId }
+          }
+        );
+        showToast(res.action === 'cancelled' ? 'Order Cancelled' : 'Request Submitted', res.message, 'success');
+        await loadCustomerOrders();
+        return res;
+      } catch (err) {
+        showToast('Action Failed', errorMessage(err), 'warn');
+        throw err;
+      }
+    },
+    [showToast, loadCustomerOrders]
+  );
+
   const productsById = useMemo(() => new Map(state.products.map((p) => [p.id, p])), [state.products]);
 
   // Restore the cart, dropping products that no longer exist and capping to current stock.
@@ -381,6 +403,7 @@ export function StoreProvider({ initialState, children }: { initialState: Public
         logoutCustomer,
         updateProfile,
         loadCustomerOrders,
+        cancelOrRefundOrder,
 
         setIsCartOpen,
         setIsCheckoutOpen,
