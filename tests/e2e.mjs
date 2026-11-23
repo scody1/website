@@ -514,7 +514,9 @@ r = await call('POST', `/api/admin/orders/${rzId}/refund`, { amount: 50, note: '
 check('partial Razorpay refund', r.status === 200 && r.data.order.refundAmount === 50 && r.data.order.paymentStatus === 'PAID' && /^rfnd_/.test(r.data.order.razorpayRefundId), r.data);
 const rest = r.data.order.total - 50;
 r = await call('POST', `/api/admin/orders/${rzId}/refund`, { amount: rest, note: '', method: 'razorpay' });
-check('full refund marks payment refunded', r.status === 200 && r.data.order.paymentStatus === 'REFUNDED' && r.data.order.refundAmount === r.data.order.total, r.data);
+check('full refund of an active order needs cancellation first', r.status === 400 && /cancel/i.test(r.data.error), r.data);
+r = await call('POST', `/api/admin/orders/${rzId}/status`, { status: 'CANCELLED', note: 'Damaged in stock' });
+check('cancelling refunds only the remaining amount automatically', r.status === 200 && r.data.refund === 'razorpay' && r.data.refundAmount === rest && r.data.order.paymentStatus === 'REFUNDED' && r.data.order.refundAmount === r.data.order.total, r.data);
 const upiOrderId = await idOf(upiOrder.orderNumber);
 r = await call('POST', `/api/admin/orders/${upiOrderId}/refund`, { amount: 10, note: '', method: 'manual' });
 check('manual refund requires a payment reference', r.status === 400);
@@ -532,6 +534,161 @@ r = await call('GET', '/', undefined, { admin: false });
 check('home links to product pages & has shipping policy', r.data.includes(`/product/${slug}`) && r.data.includes('shippingPolicy'));
 r = await call('GET', '/api/admin/status');
 check('status exposes order counter for alerts', typeof r.data.counts.placedTotal === 'number' && typeof r.data.latestOrder === 'string', r.data);
+
+console.log('\n== Customer accounts, auto-refund on cancel, returns');
+let cIp = 1;
+const cHeaders = (c) => ({ ...(c ? { cookie: c } : {}), 'x-real-ip': `10.20.${Math.floor(cIp / 250)}.${cIp++ % 250}` });
+const cust = (method, path, body, c) => call(method, path, body, { admin: false, keepCookie: false, headers: cHeaders(c) });
+const cookieOf = (res) => (res.headers.get('set-cookie') || '').split(';')[0];
+const mockState = () => fetch('http://127.0.0.1:4010/_log').then((x) => x.json());
+const payRazorpay = (rzOrder) => {
+  const pid = rzOrder.razorpay.orderId.replace('order_', 'pay_');
+  const s = crypto.createHmac('sha256', 'rzp-secret').update(`${rzOrder.razorpay.orderId}|${pid}`).digest('hex');
+  return call('POST', '/api/payments/razorpay/verify', { razorpay_order_id: rzOrder.razorpay.orderId, razorpay_payment_id: pid, razorpay_signature: s }, { admin: false, keepCookie: false });
+};
+
+r = await cust('POST', '/api/customer/signup', { name: 'Ramesh Kumar', phone: '9876543210', password: 'abcdefgh' });
+check('customer signup rejects weak password (no digits)', r.status === 400, r.data);
+r = await cust('POST', '/api/customer/signup', { name: 'Ramesh Kumar', phone: '9876543210', email: 'r@example.com', password: 'Bhakti-2026' });
+const ramesh = cookieOf(r);
+check('customer signup sets HttpOnly session cookie', r.status === 201 && ramesh.startsWith('rps_customer_session=') && /HttpOnly/i.test(r.headers.get('set-cookie') || ''), r.data);
+check('customer cookie not marked Secure over plain http (login works on LAN/IP)', !/;\s*Secure/i.test(r.headers.get('set-cookie') || ''));
+r = await cust('POST', '/api/customer/signup', { name: 'Imposter', phone: '9876543210', password: 'Bhakti-2026' });
+check('duplicate phone cannot register again', r.status === 409 || r.status === 400, r.data);
+r = await cust('POST', '/api/customer/signup', { name: 'Suresh', phone: '9811122233', password: 'Suresh-2026' });
+const suresh = cookieOf(r);
+check('second customer created', r.status === 201 && suresh.length > 30, r.data);
+r = await cust('POST', '/api/customer/login', { identifier: '9876543210', password: 'Bhakti-2026' }, undefined);
+check('customer login with mobile + password', r.status === 200 && cookieOf(r).startsWith('rps_customer_session='), r.data);
+r = await call('POST', '/api/customer/login', { identifier: '9876543210', password: 'x' }, { admin: false, keepCookie: false, headers: { ...cHeaders(), Origin: 'https://evil.example' } });
+check('cross-site customer login blocked (403)', r.status === 403, r.data);
+
+r = await cust('GET', '/api/customer/orders', undefined, ramesh);
+check('past guest orders are NOT auto-linked by phone (no account takeover)', r.status === 200 && r.data.orders.length === 0, r.data);
+r = await cust('POST', '/api/customer/orders/claim', { orderNumber: codOrder.orderNumber, pincode: '110001' }, ramesh);
+check('claim with wrong pincode refused', r.status === 404, r.data);
+r = await cust('POST', '/api/customer/orders/claim', { orderNumber: codOrder.orderNumber, pincode: '226001' }, suresh);
+check('another account cannot claim the order', r.status === 404, r.data);
+r = await cust('POST', '/api/customer/orders/claim', { orderNumber: codOrder.orderNumber, pincode: '226001' }, ramesh);
+check('owner claims past order with order no. + pincode', r.status === 200 && r.data.orders.some((o) => o.orderNumber === codOrder.orderNumber), r.data);
+r = await cust('GET', '/api/customer/orders', undefined, suresh);
+check('other customer sees none of these orders', r.data.orders.length === 0);
+
+const rlsCust = await sql`SELECT relname FROM pg_class WHERE relname IN ('customers','customer_sessions','customer_wishlist','return_requests') AND relrowsecurity`;
+check('row level security on all customer tables', rlsCust.length === 4, rlsCust);
+
+// Customer places a Razorpay order; customerId in the body must be ignored.
+const sureshId = (await sql`SELECT id FROM customers WHERE phone = '9811122233'`)[0].id;
+r = await call('POST', '/api/orders', { items: [{ productId: cups.id, quantity: 1 }], paymentMethod: 'RAZORPAY', customer, couponCode: null, customerId: sureshId }, { admin: false, keepCookie: false, headers: cHeaders(ramesh) });
+const custRz = r.data.order;
+check('signed-in customer order created', r.status === 201, r.data);
+const custRzRow = (await sql`SELECT customer_id FROM orders WHERE order_number = ${custRz.orderNumber}`)[0];
+check('order linked to the signed-in account, body customerId ignored', custRzRow.customer_id !== sureshId && custRzRow.customer_id !== null);
+const savedAddr = (await sql`SELECT address_line1, city, pincode FROM customers WHERE phone = '9876543210'`)[0];
+check('checkout address saved on the customer account for next time', savedAddr.address_line1 === customer.addressLine1 && savedAddr.city === customer.city && savedAddr.pincode === customer.pincode, savedAddr);
+r = await cust('GET', '/api/customer/me', undefined, ramesh);
+check('profile returns the saved address (checkout pre-fills it)', r.data.customer?.addressLine1 === customer.addressLine1, r.data);
+r = await payRazorpay(custRz);
+check('customer Razorpay order paid', r.status === 200, r.data);
+const custRzId = await idOf(custRz.orderNumber);
+r = await cust('GET', '/api/customer/orders', undefined, ramesh);
+check('paid order is cancellable by customer', r.data.orders.find((o) => o.id === custRzId)?.canCancel === true, r.data.orders);
+r = await cust('POST', `/api/customer/orders/${custRzId}/cancel`, { reason: 'Ordered by mistake' }, suresh);
+check('other customer cannot cancel it', r.status === 404);
+let before2 = (await mockState()).refundCalls;
+r = await cust('POST', `/api/customer/orders/${custRzId}/cancel`, { reason: 'Ordered by mistake' }, ramesh);
+let row = (await sql`SELECT status, payment_status, refund_amount, total, razorpay_refund_id FROM orders WHERE id = ${custRzId}`)[0];
+check('customer cancel → automatic full Razorpay refund', r.status === 200 && r.data.refund === 'razorpay' && row.status === 'CANCELLED' && row.payment_status === 'REFUNDED' && row.refund_amount === row.total && /^rfnd_/.test(row.razorpay_refund_id || ''), { res: r.data, row });
+check('exactly one refund call to Razorpay', (await mockState()).refundCalls === before2 + 1);
+r = await cust('POST', `/api/customer/orders/${custRzId}/cancel`, { reason: 'again' }, ramesh);
+check('second cancel does not refund twice', r.status >= 400 && (await mockState()).refundCalls === before2 + 1, r.data);
+
+// Admin cancels a paid Razorpay order → automatic refund
+r = await order([{ productId: cups.id, quantity: 1 }], 'RAZORPAY');
+const adminRz = r.data.order;
+await payRazorpay(adminRz);
+const adminRzId = await idOf(adminRz.orderNumber);
+r = await call('POST', `/api/admin/orders/${adminRzId}/status`, { status: 'CANCELLED', note: 'Out of stock' });
+row = (await sql`SELECT status, payment_status, refund_amount, total FROM orders WHERE id = ${adminRzId}`)[0];
+check('admin cancel of paid order → automatic Razorpay refund', r.status === 200 && r.data.refund === 'razorpay' && row.payment_status === 'REFUNDED' && row.refund_amount === row.total, { res: r.data, row });
+
+// Admin cancels a paid UPI order → refund due (manual), shown in alerts
+r = await order([{ productId: cups.id, quantity: 1 }], 'UPI', { utrNumber: '998877665544' });
+const upi2Id = await idOf(r.data.order.orderNumber);
+await call('POST', `/api/admin/orders/${upi2Id}/payment`, { approve: true, note: '' });
+r = await call('POST', `/api/admin/orders/${upi2Id}/status`, { status: 'CANCELLED', note: 'Customer asked' });
+check('cancel of paid UPI order → refund due (not falsely marked refunded)', r.status === 200 && r.data.refund === 'manual_due' && r.data.order.paymentStatus === 'PAID' && r.data.order.refundDue > 0, r.data);
+r = await call('GET', '/api/admin/status');
+check('admin alerts count refunds due', r.data.counts.refundsDue >= 1, r.data.counts);
+r = await call('GET', '/api/admin/orders?attention=refunds');
+check('orders filter "refund due" finds it', r.data.orders.some((o) => o.id === upi2Id));
+
+// Concurrent partial refunds on one payment never over-refund
+r = await order([{ productId: cups.id, quantity: 2 }], 'RAZORPAY');
+const conc = r.data.order;
+await payRazorpay(conc);
+const concId = await idOf(conc.orderNumber);
+const part = Math.ceil(conc.total * 0.6);
+const both = await Promise.all([1, 2].map(() => call('POST', `/api/admin/orders/${concId}/refund`, { amount: part, note: 'damaged', method: 'razorpay' })));
+row = (await sql`SELECT refund_amount, total FROM orders WHERE id = ${concId}`)[0];
+check('two simultaneous partial refunds: only one goes through', both.filter((x) => x.status === 200).length === 1 && row.refund_amount === part, { statuses: both.map((x) => x.status), row });
+r = await call('POST', `/api/admin/orders/${concId}/refund`, { amount: conc.total - part, note: '', method: 'razorpay' });
+check('full refund of an active order asks to cancel first', r.status === 400 && /cancel/i.test(r.data.error), r.data);
+
+// Return request after delivery (codOrder was delivered and claimed by Ramesh)
+r = await cust('GET', '/api/customer/orders', undefined, ramesh);
+check('delivered order offers a return request, not cancel', (() => { const o = r.data.orders.find((x) => x.orderNumber === codOrder.orderNumber); return o && o.canRequestReturn && !o.canCancel; })(), r.data.orders);
+r = await cust('POST', `/api/customer/orders/${codId}/cancel`, { reason: 'Diya arrived broken', upiId: 'ramesh@okaxis' }, ramesh);
+check('customer raises a return request', r.status === 200 && r.data.action !== 'cancelled', r.data);
+r = await cust('POST', `/api/customer/orders/${codId}/cancel`, { reason: 'again' }, ramesh);
+check('duplicate return request refused', r.status === 409, r.data);
+r = await call('GET', '/api/admin/status');
+check('admin alerts count open return requests', r.data.counts.openReturns >= 1, r.data.counts);
+r = await call('GET', `/api/admin/orders/${codId}`);
+const rr = r.data.order.returnRequests?.[0];
+check('admin sees return request with reason and UPI', rr && rr.status === 'OPEN' && rr.refundUpi === 'ramesh@okaxis' && /broken/.test(rr.reason), r.data.order.returnRequests);
+r = await call('POST', `/api/admin/orders/${codId}/returns/${rr.id}`, { status: 'REJECTED', note: '' });
+check('rejecting a return needs a reason', r.status === 400);
+r = await call('POST', `/api/admin/orders/${codId}/returns/${rr.id}`, { status: 'APPROVED', note: '' }, as(viewer));
+check('viewer cannot decide returns', r.status === 403);
+r = await call('POST', `/api/admin/orders/${codId}/returns/${rr.id}`, { status: 'APPROVED', note: '' });
+check('admin approves return request', r.status === 200 && r.data.order.returnRequests[0].status === 'APPROVED', r.data);
+r = await cust('GET', '/api/customer/orders', undefined, ramesh);
+check('customer sees return request status', r.data.orders.find((x) => x.orderNumber === codOrder.orderNumber)?.returnRequest?.status === 'APPROVED', r.data.orders);
+
+// Wishlist persisted in the database
+r = await cust('POST', '/api/customer/wishlist', { productIds: [dhoop.id, cups.id], on: true }, ramesh);
+r = await cust('POST', '/api/customer/wishlist', { productIds: [cups.id], on: false }, ramesh);
+r = await cust('GET', '/api/customer/wishlist', undefined, ramesh);
+check('wishlist saved in database per account', r.status === 200 && r.data.productIds.length === 1 && r.data.productIds[0] === dhoop.id, r.data);
+r = await cust('GET', '/api/customer/wishlist', undefined, suresh);
+check('wishlists are private per account', r.data.productIds.length === 0);
+r = await cust('GET', '/api/customer/wishlist');
+check('wishlist API needs sign-in', r.status === 401);
+
+console.log('\n== Shiprocket tracking & pincode eligibility');
+r = await call('POST', '/api/track', { awb: shipped.shipping.awbCode }, { admin: false, keepCookie: false });
+check('track by courier AWB number', r.status === 200 && r.data.tracking.orderNumber === codOrder.orderNumber && r.data.tracking.awbCode === shipped.shipping.awbCode, r.data);
+check('AWB tracking shows live Shiprocket scan history', r.data.tracking?.activities?.length >= 2 && /Lucknow hub/.test(r.data.tracking.activities[0].activity), r.data.tracking);
+check('AWB tracking hides name, address, phone and amount', !r.data.tracking?.firstName && !JSON.stringify(r.data).includes('Temple Road') && !JSON.stringify(r.data).includes('9876543210') && !r.data.tracking?.total);
+r = await call('POST', '/api/track', { awb: 'NOPE123456' }, { admin: false, keepCookie: false });
+check('unknown AWB → 404', r.status === 404);
+r = await call('POST', '/api/track', { orderNumber: dlOrderNum, phone: customer.phone }, { admin: false, keepCookie: false });
+check('Delhivery scans shown on tracking page', r.status === 200 && r.data.tracking.activities.some((a) => /Delivered/.test(a.activity)), r.data.tracking);
+
+r = await call('GET', '/api/pincode?pin=226001', undefined, { admin: false, keepCookie: false, headers: cHeaders() });
+check('pincode check is live from Shiprocket with courier count', r.data.result.isServiceable && r.data.result.source === 'shiprocket' && r.data.result.courierCount === 2 && r.data.result.codAvailable, r.data);
+r = await call('GET', '/api/pincode?pin=788001', undefined, { admin: false, keepCookie: false, headers: cHeaders() });
+check('prepaid-only pincode is serviceable but COD not available', r.data.result.isServiceable && !r.data.result.codAvailable, r.data);
+check('serviceability asked for ALL couriers (cod=0), not only COD ones', (await mockState()).serviceabilityQueries.some((q) => q.delivery_postcode === '788001' && q.cod === '0'));
+r = await call('POST', '/api/checkout/quote', { items: [{ productId: cups.id, quantity: 1 }], paymentMethod: 'COD', couponCode: null, pincode: '788001' }, { admin: false, keepCookie: false, headers: cHeaders() });
+check('checkout quote disables COD for that pincode', r.status === 200 && r.data.quote.codAllowed === false && r.data.delivery?.source === 'shiprocket', r.data);
+r = await order([{ productId: cups.id, quantity: 1 }], 'COD', { customer: { ...customer, pincode: '788001' } });
+check('COD order to a prepaid-only pincode refused', r.status === 400 && /cash on delivery|cod/i.test(r.data.error), r.data);
+r = await order([{ productId: cups.id, quantity: 1 }], 'COD', { customer: { ...customer, pincode: '799999' } });
+check('order to an unserviceable pincode refused', r.status === 400 && /deliver/i.test(r.data.error), r.data);
+r = await call('GET', '/api/health', undefined, { admin: false, keepCookie: false });
+check('health confirms all migrations applied', r.status === 200 && r.data.ok === true, r.data);
 
 console.log('\n== Supabase lockdown & sessions');
 const rls = await sql`SELECT relname FROM pg_class WHERE relname IN ('orders','products','settings') AND relrowsecurity`;

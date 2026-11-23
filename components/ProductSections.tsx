@@ -10,21 +10,9 @@ interface ProductSectionsProps {
 }
 
 export default function ProductSections({ activeCategoryFilter }: ProductSectionsProps) {
-  const { state, addToCart, setSelectedProductForQuickView, showToast } = useStore();
+  const { state, addToCart, setSelectedProductForQuickView, isWishlisted, toggleWishlist } = useStore();
   const [activeTab, setActiveTab] = useState<HomepageSection>('ALL');
-  const [wishlist, setWishlist] = useState<string[]>([]);
   const [addedAnimationId, setAddedAnimationId] = useState<string | null>(null);
-
-  const toggleWishlist = (productId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (wishlist.includes(productId)) {
-      setWishlist((prev) => prev.filter((id) => id !== productId));
-      showToast('Wishlist Updated', 'Item removed from your devotional wishlist.', 'info');
-    } else {
-      setWishlist((prev) => [...prev, productId]);
-      showToast('Added to Wishlist ❤️', 'Item saved to your sacred wishlist.');
-    }
-  };
 
   const handleAdd = (product: Product, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -109,7 +97,7 @@ export default function ProductSections({ activeCategoryFilter }: ProductSection
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 sm:gap-6 mt-6">
           {filteredProducts.map((product) => {
-            const isWishlisted = wishlist.includes(product.id);
+            const wishlisted = isWishlisted(product.id);
             const hasDiscount = product.mrp > product.sellingPrice && product.mrp > 0;
             const discount = hasDiscount ? Math.round(((product.mrp - product.sellingPrice) / product.mrp) * 100) : 0;
             const isAdded = addedAnimationId === product.id;
@@ -152,14 +140,14 @@ export default function ProductSections({ activeCategoryFilter }: ProductSection
                   {/* Action Icons: Wishlist & Quick View */}
                   <div className="absolute top-2.5 right-2.5 flex flex-col gap-1.5 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
-                      onClick={(e) => toggleWishlist(product.id, e)}
-                      className={`w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-md transition-colors shadow-md ${isWishlisted
+                      onClick={(e) => { e.stopPropagation(); toggleWishlist(product); }}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-md transition-colors shadow-md ${wishlisted
                         ? 'bg-rose-50 text-rose-600'
                         : 'bg-white/90 hover:bg-rose-50 text-stone-600 hover:text-rose-600'
                         }`}
                       title="Add to Wishlist"
                     >
-                      <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-rose-600' : ''}`} />
+                      <Heart className={`w-4 h-4 ${wishlisted ? 'fill-rose-600' : ''}`} />
                     </button>
 
                     <button

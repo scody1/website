@@ -12,6 +12,7 @@ export const GET = route(async (req: NextRequest) => {
   return json(await listOrders({
     status: p.get('status') || undefined,
     payment: p.get('payment') || undefined,
+    attention: ['refunds', 'returns'].includes(p.get('attention') || '') ? p.get('attention')! : undefined,
     q: p.get('q') || undefined,
     page: Number(p.get('page') || 1),
     pageSize: Number(p.get('pageSize') || 25)

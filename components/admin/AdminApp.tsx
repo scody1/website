@@ -15,7 +15,7 @@ import { Button, ErrorBox, Field, Input, Modal, Spinner } from './ui';
 import TabDashboard from './TabDashboard';
 import TabStoreSetup from './TabStoreSetup';
 import TabProducts from './TabProducts';
-import TabOrders from './TabOrders';
+import TabOrders, { openOrdersWith } from './TabOrders';
 import TabCustomers from './TabCustomers';
 import TabShipping from './TabShipping';
 import TabAnalytics from './TabAnalytics';
@@ -37,7 +37,7 @@ export interface AdminStatus {
     cron: boolean;
     siteUrl: string | null;
   };
-  counts: { products: number; newOrders: number; awaitingVerification: number; pendingReviews: number; lowStock: number; placedTotal: number };
+  counts: { products: number; newOrders: number; awaitingVerification: number; pendingReviews: number; lowStock: number; placedTotal: number; refundsDue: number; openReturns: number };
   latestOrder: string | null;
 }
 
@@ -194,7 +194,8 @@ export default function AdminApp() {
   const active = visibleTabs.some((t) => t.id === tab) ? tab : 'dashboard';
   const c = status?.counts;
   const badges: Record<string, number> = {
-    orders: (c?.newOrders || 0) + (can('payments.verify') ? c?.awaitingVerification || 0 : 0),
+    orders: (c?.newOrders || 0) + (can('payments.verify') ? c?.awaitingVerification || 0 : 0)
+      + (can('payments.refund') ? c?.refundsDue || 0 : 0) + (can('orders.status') ? c?.openReturns || 0 : 0),
     products: c?.lowStock || 0,
     reviews: c?.pendingReviews || 0
   };
@@ -214,6 +215,16 @@ export default function AdminApp() {
               {c && c.awaitingVerification > 0 && can('payments.verify') && (
                 <button onClick={() => setTab('orders')} className="bg-purple-600 text-white font-bold px-2 py-0.5 rounded-full text-[11px]">
                   {c.awaitingVerification} UPI to verify
+                </button>
+              )}
+              {c && c.refundsDue > 0 && can('payments.refund') && (
+                <button onClick={() => { openOrdersWith('refunds'); setTab('orders'); }} className="bg-amber-600 text-white font-bold px-2 py-0.5 rounded-full text-[11px]">
+                  {c.refundsDue} refund{c.refundsDue === 1 ? '' : 's'} due
+                </button>
+              )}
+              {c && c.openReturns > 0 && can('orders.status') && (
+                <button onClick={() => { openOrdersWith('returns'); setTab('orders'); }} className="bg-sky-700 text-white font-bold px-2 py-0.5 rounded-full text-[11px]">
+                  {c.openReturns} return request{c.openReturns === 1 ? '' : 's'}
                 </button>
               )}
             </div>

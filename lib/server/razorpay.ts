@@ -59,6 +59,8 @@ export interface RazorpayPayment {
   order_id: string;
   amount: number;
   status: 'created' | 'authorized' | 'captured' | 'refunded' | 'failed';
+  /** paise already refunded */
+  amount_refunded?: number;
   method?: string;
 }
 

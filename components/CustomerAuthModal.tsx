@@ -59,7 +59,7 @@ export default function CustomerAuthModal() {
     if (!/^[6-9][0-9]{9}$/.test(cleanedPhone)) {
       return setError('Please enter a valid 10-digit Indian mobile number.');
     }
-    if (signupPassword.length < 6) return setError('Password must be at least 6 characters long.');
+    if (signupPassword.length < 8 || !/[A-Za-z]/.test(signupPassword) || !/[0-9]/.test(signupPassword)) return setError('Password must be at least 8 characters, with letters and numbers.');
 
     setLoading(true);
     try {
@@ -270,7 +270,7 @@ export default function CustomerAuthModal() {
                       onChange={(e) => setSignupPassword(e.target.value)}
                       placeholder="Choose a password"
                       required
-                      minLength={6}
+                      minLength={8}
                       className="w-full bg-parchment-50 border border-gold-300/60 focus:border-maroon-700 rounded-xl py-2 pl-9 pr-3 text-xs sm:text-sm text-espresso focus:outline-none"
                     />
                     <Lock className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-2.5" />

@@ -15,6 +15,6 @@ export const POST = route(async (req: NextRequest) => {
   const { email, password } = await readJson(req, schema);
   const token = await loginAdmin(req, email, password);
   const res = json({ ok: true });
-  setSessionCookie(res, token);
+  setSessionCookie(req, res, token);
   return res;
 });

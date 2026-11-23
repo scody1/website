@@ -381,9 +381,11 @@ export async function syncTracking(orderId: string) {
   const o = await getOrderRow(sql, orderId);
   if (o.courier_provider === 'DELHIVERY' && o.awb_code) {
     const t = await delhiveryTrack(o.awb_code);
-    if (t) await applyCourierStatus(orderId, t.status, 'Delhivery tracking', mapDelhiveryStatus(t.status, t.statusType));
-    else await sql`UPDATE orders SET last_tracking_sync = now() WHERE id = ${orderId}`;
-    return { status: t?.status || null, activities: [] };
+    if (t) {
+      await sql`UPDATE orders SET tracking_activities = ${sql.json(t.activities as never)}, tracking_etd = ${t.etd} WHERE id = ${orderId}`;
+      await applyCourierStatus(orderId, t.status, 'Delhivery tracking', mapDelhiveryStatus(t.status, t.statusType));
+    } else await sql`UPDATE orders SET last_tracking_sync = now() WHERE id = ${orderId}`;
+    return { status: t?.status || null, activities: t?.activities || [] };
   }
   if (o.courier_provider !== 'SHIPROCKET' || !o.awb_code) throw new ApiError(400, 'Only Shiprocket or Delhivery shipments with an AWB can be tracked automatically.');
   const res = await trackAwb(o.awb_code);
@@ -391,6 +393,12 @@ export async function syncTracking(orderId: string) {
   if (t?.error) throw new ShiprocketError(t.error, 400);
   const latest = t?.shipment_track?.[0]?.current_status || t?.shipment_track_activities?.[0]?.['sr-status-label'] || t?.shipment_track_activities?.[0]?.activity;
   if (t?.track_url) await sql`UPDATE orders SET tracking_url = ${t.track_url} WHERE id = ${orderId}`;
+  const activities = (t?.shipment_track_activities || [])
+    .map((a) => ({ date: String(a.date || ''), activity: String(a.activity || a['sr-status-label'] || ''), location: String(a.location || '') }))
+    .filter((a) => a.activity)
+    .slice(0, 40);
+  const etd = t?.etd || t?.shipment_track?.[0]?.edd || null;
+  await sql`UPDATE orders SET tracking_activities = ${sql.json(activities as never)}, tracking_etd = ${etd} WHERE id = ${orderId}`;
   if (latest) await applyCourierStatus(orderId, latest, 'Shiprocket tracking');
   else await sql`UPDATE orders SET last_tracking_sync = now() WHERE id = ${orderId}`;
   return { status: latest || null, activities: (t?.shipment_track_activities || []).slice(0, 25) };
@@ -475,6 +483,18 @@ export async function handleTrackingWebhook(payload: Row) {
     LIMIT 1
   `;
   if (!o) return { matched: false };
+  // Keep the customer-facing timeline current with the scans sent in the webhook.
+  const scans = Array.isArray(payload.scans) ? payload.scans : [];
+  if (scans.length) {
+    const activities = scans
+      .map((x: Row) => ({ date: String(x.date || ''), activity: String(x.activity || x['sr-status-label'] || x.status || ''), location: String(x.location || '') }))
+      .filter((a: { activity: string }) => a.activity)
+      .reverse()
+      .slice(0, 40);
+    await sql`UPDATE orders SET tracking_activities = ${sql.json(activities as never)}, tracking_etd = COALESCE(${payload.etd ? String(payload.etd) : null}, tracking_etd) WHERE id = ${o.id}`;
+  } else if (payload.etd) {
+    await sql`UPDATE orders SET tracking_etd = ${String(payload.etd)} WHERE id = ${o.id}`;
+  }
   await applyCourierStatus(o.id, status, 'Shiprocket webhook');
   return { matched: true, orderId: o.id as string };
 }

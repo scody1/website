@@ -33,11 +33,14 @@ Next.js server (app/api/*)  ──►  PostgreSQL (orders, products, stock, sett
   * **Cash on Delivery**: optional COD fee and an optional maximum order value for COD.
   * **Razorpay**: real Razorpay Checkout, with the signature verified on the server and the payment double-checked with Razorpay. A webhook also confirms payments if the customer closes the browser early. Unpaid orders are cancelled after 30 minutes and their stock is returned.
   * **Manual UPI QR**: the QR shows the exact amount, the customer enters their UTR, and the admin verifies it before shipping. The same UTR can't be used twice.
-* **Order tracking needs both the order number and the phone number**, and shows no address or phone details.
+* **Order tracking** with the order number + phone, or with the courier **AWB number** alone. It shows the live Shiprocket/Delhivery scan history and expected delivery date (refreshed from the courier at most every 15 minutes and by the tracking webhook). AWB tracking shows no name, address, phone or amount.
+* **Customer accounts** (mobile number + password): order history, cancel before dispatch, return requests after delivery, a saved wishlist and saved address. Phone numbers are not OTP-verified, so past guest orders are never linked automatically; a customer adds one with its order number **and** delivery pincode. Passwords need 8+ characters with letters and numbers, and logins are rate-limited.
+* **Cancellation refunds automatically.** When the customer or the admin cancels a Razorpay-paid order, the remaining amount is refunded through Razorpay at once and any courier shipment is cancelled. UPI/manual payments are marked **refund due** and appear in the admin alerts until you record the refund.
 * Reviews are held until the admin approves them. A review is marked "Verified buyer" only when the order number and phone match a delivered order.
-* Pincode check uses Shiprocket's live serviceability when configured, otherwise a clearly-labelled estimate.
+* **Pincode & COD eligibility come live from Shiprocket** (all courier partners, prepaid and COD) when connected, else from Delhivery, else a clearly-labelled estimate. Checkout uses the same check: orders to unserviceable pincodes are refused, and COD is switched off where no courier offers it.
 
 ### Admin panel (`/admin`)
+* **Refunds & returns:** header badges and dashboard tiles show **refunds due** (cancelled, paid, not yet refunded) and **open return requests**; the Orders list filters by both. In an order, approve / reject / complete a customer's return request, and cancelling shows whether the money went back through Razorpay automatically or must be paid back by hand. A refund lock stops two people refunding the same order at once, and the amount already refunded is re-checked with Razorpay first.
 * **Personal accounts with roles.** Everyone signs in with their own email and password. Passwords are hashed with scrypt. Sessions are stored server-side in an HttpOnly, SameSite=Strict cookie. 5 wrong attempts lock sign-in for 15 minutes. Cross-site requests are blocked.
 * **First-time setup:** on a fresh install, `/admin` asks for `ADMIN_SETUP_KEY` and creates the first **Super Admin**. That screen never appears again.
 * **Dynamic roles (module → submodule permissions).** Roles live in the database and are managed in **Users & Roles**. The catalogue has 32 permissions in 9 modules:
@@ -147,7 +150,15 @@ Other checks: `npm run typecheck`, `npm run build`.
 7. **Scheduled job**: `vercel.json` runs `/api/cron` once a day (the Vercel Hobby plan limit). For prompt expiry of unpaid orders and tracking refresh, call it every 15–30 minutes. Use Vercel Pro, or a free scheduler such as cron-job.org, with the header `Authorization: Bearer <CRON_SECRET>`. Unpaid orders are also cleaned up automatically whenever a new order is placed or the admin opens Orders.
 
 ### Upgrading an existing install
-Run `npm run db:migrate`. Migration `004` moves roles into the database (existing users keep their role). Migration `003` adds product page URLs, refunds and e-mail tracking. Migration `002_users_roles.sql` adds user accounts, which signs out old password-only sessions. Set `APP_SECRET` and `ADMIN_SETUP_KEY`, then open `/admin` to create the Super Admin. Credentials in `SHIPROCKET_*` / `RAZORPAY_*` environment variables keep working and override the Integrations screen.
+Run `npm run db:migrate`. Migrations `005` and `006` add customer accounts, the wishlist, return requests, stored courier tracking and the refund lock (with row level security on every new table). Migration `004` moves roles into the database (existing users keep their role). Migration `003` adds product page URLs, refunds and e-mail tracking. Migration `002_users_roles.sql` adds user accounts, which signs out old password-only sessions. Set `APP_SECRET` and `ADMIN_SETUP_KEY`, then open `/admin` to create the Super Admin. Credentials in `SHIPROCKET_*` / `RAZORPAY_*` environment variables keep working and override the Integrations screen.
+
+### "Database not connected" — troubleshooting
+Open `/api/health` or the store page: it now says exactly what is wrong (no password is shown). On your computer run `npm run db:check` with the same `DATABASE_URL`. Common causes:
+* **Migrations not run** on the production database → `npm run db:migrate` (it applies only the missing files).
+* **Wrong or un-encoded password**: special characters in the password must be URL-encoded (`@` → `%40`, `#` → `%23`, `/` → `%2F`).
+* **Supabase project paused** (free plan, after 7 days idle) → Restore it in the Supabase dashboard.
+* **Wrong pooler user/host**: the Transaction pooler user is `postgres.<project-ref>`; copy the string from Supabase → Connect. Use port 6543 on Vercel.
+* **Region**: create the Supabase project in **Mumbai (ap-south-1)**, next to the Vercel `bom1` region; a far-away database makes every page slow.
 
 ### Moving from the old prototype
 The old version kept the whole store, including customer data and courier passwords, in a **publicly writable** `store_settings` row. Migration `001_init.sql` locks that table down. After you have copied anything you need from it, delete it in Supabase. Also **change the Shiprocket password** if it was ever entered into the old admin panel, because it was readable by anyone.
@@ -159,7 +170,7 @@ The old version kept the whole store, including customer data and courier passwo
 * Create the client's Super Admin account (or let them do it with `ADMIN_SETUP_KEY`) and give them any keys privately. Keep `APP_SECRET` safe and unchanged.
 * Replace the sample products and photos, and review all marketing claims on the homepage (e.g. "100% solid brass", "#1 bestseller", "India's largest"). The store owner is legally responsible for them.
 * Have the privacy, terms and refund policies reviewed for the business (Admin → SEO & Policies).
-* Do a real ₹1–2 test order with live Razorpay keys and one real Shiprocket booking (then cancel it from the order page) before announcing the store.
+* Do a real ₹1–2 test order with live Razorpay keys, then cancel it to see the automatic refund, and one real Shiprocket booking (then cancel it from the order page) before announcing the store.
 * Back-ups: Supabase takes daily backups on paid plans. On the free plan, export regularly (Admin → Orders → CSV, or `pg_dump`).
 
 ---

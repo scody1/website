@@ -5,7 +5,7 @@ import { getPublicProductBySlug, getPublicStoreState, listProductReviews } from 
 import { isDbConfigured } from '@/lib/server/db';
 import { StoreProvider } from '@/lib/storeContext';
 import ProductPage from '@/components/ProductPage';
-import SetupRequired from '@/components/SetupRequired';
+import SetupRequired, { databaseReady } from '@/components/SetupRequired';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 const safeJsonLd = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
 
 export default async function ProductRoute({ params }: Props) {
-  if (!isDbConfigured()) return <SetupRequired reason="DATABASE_URL is not set." />;
+  if (!isDbConfigured() || !(await databaseReady())) return <SetupRequired />;
   const product = await getPublicProductBySlug(params.slug);
   if (!product) notFound();
   const [state, reviews] = await Promise.all([getPublicStoreState(), listProductReviews(product.id)]);

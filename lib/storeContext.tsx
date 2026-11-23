@@ -51,7 +51,13 @@ interface StoreContextType {
   logoutCustomer: () => Promise<void>;
   updateProfile: (data: Partial<CustomerProfile>) => Promise<boolean>;
   loadCustomerOrders: () => Promise<void>;
+  /** Re-reads the signed-in customer's profile (e.g. after checkout saved a new address). */
+  refreshCustomer: () => Promise<void>;
   cancelOrRefundOrder: (orderId: string, reason: string, upiId?: string) => Promise<{ success: boolean; action: string; message: string }>;
+  claimOrder: (orderNumber: string, pincode: string) => Promise<boolean>;
+  wishlist: string[];
+  isWishlisted: (productId: string) => boolean;
+  toggleWishlist: (product: Product) => Promise<void>;
 
   setIsCartOpen: (v: boolean) => void;
   setIsCheckoutOpen: (v: boolean) => void;
@@ -142,6 +148,15 @@ export function StoreProvider({ initialState, children }: { initialState: Public
       // not logged in or failed
     } finally {
       setIsLoadingCustomerOrders(false);
+    }
+  }, []);
+
+  const refreshCustomer = useCallback(async () => {
+    try {
+      const res = await apiFetch<{ customer: CustomerProfile | null }>('/api/customer/me');
+      if (res.customer) setCustomer(res.customer);
+    } catch {
+      /* offline — keep what we have */
     }
   }, []);
 
@@ -257,6 +272,59 @@ export function StoreProvider({ initialState, children }: { initialState: Public
     },
     [showToast, loadCustomerOrders]
   );
+
+  // ---- Wishlist: saved in the database for signed-in customers, in the browser for guests.
+  const WISHLIST_KEY = 'rps_wishlist_v1';
+  const [wishlist, setWishlist] = useState<string[]>([]);
+  useEffect(() => {
+    if (customer) {
+      const local = readStorage<string[]>(WISHLIST_KEY, []);
+      const sync = local.length
+        ? apiFetch<{ productIds: string[] }>('/api/customer/wishlist', { method: 'POST', json: { productIds: local, on: true } })
+        : apiFetch<{ productIds: string[] }>('/api/customer/wishlist');
+      sync
+        .then((res) => {
+          setWishlist(res.productIds);
+          writeStorage(WISHLIST_KEY, null);
+        })
+        .catch(() => undefined);
+    } else {
+      const local = readStorage<string[]>(WISHLIST_KEY, []);
+      setWishlist(Array.isArray(local) ? local.filter((x) => typeof x === 'string') : []);
+    }
+  }, [customer]);
+
+  const isWishlisted = useCallback((productId: string) => wishlist.includes(productId), [wishlist]);
+
+  const toggleWishlist = useCallback(async (product: Product) => {
+    const on = !wishlist.includes(product.id);
+    if (customer) {
+      try {
+        const res = await apiFetch<{ productIds: string[] }>('/api/customer/wishlist', { method: 'POST', json: { productIds: [product.id], on } });
+        setWishlist(res.productIds);
+      } catch (err) {
+        showToast('Wishlist not updated', errorMessage(err), 'warn');
+        return;
+      }
+    } else {
+      const next = on ? [product.id, ...wishlist] : wishlist.filter((x) => x !== product.id);
+      setWishlist(next);
+      writeStorage(WISHLIST_KEY, next);
+    }
+    showToast(on ? 'Added to Wishlist ❤️' : 'Wishlist Updated', on ? `${product.name} saved${customer ? ' to your account' : ' (sign in to keep it on all devices)'}.` : 'Item removed from your wishlist.', on ? 'success' : 'info');
+  }, [wishlist, customer, showToast]);
+
+  const claimOrder = useCallback(async (orderNumber: string, pincode: string) => {
+    try {
+      const res = await apiFetch<{ orders: CustomerOrderSummary[] }>('/api/customer/orders/claim', { method: 'POST', json: { orderNumber, pincode } });
+      setCustomerOrders(res.orders);
+      showToast('Order added', 'The order is now in your account.');
+      return true;
+    } catch (err) {
+      showToast('Could not add order', errorMessage(err), 'warn');
+      return false;
+    }
+  }, [showToast]);
 
   const productsById = useMemo(() => new Map(state.products.map((p) => [p.id, p])), [state.products]);
 
@@ -403,7 +471,12 @@ export function StoreProvider({ initialState, children }: { initialState: Public
         logoutCustomer,
         updateProfile,
         loadCustomerOrders,
+        refreshCustomer,
         cancelOrRefundOrder,
+        claimOrder,
+        wishlist,
+        isWishlisted,
+        toggleWishlist,
 
         setIsCartOpen,
         setIsCheckoutOpen,

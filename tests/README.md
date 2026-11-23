@@ -1,4 +1,4 @@
-# End-to-end tests (170 checks)
+# End-to-end tests (222 checks)
 
 Runs the real production build against a throw-away database and mock Shiprocket/Razorpay APIs.
 

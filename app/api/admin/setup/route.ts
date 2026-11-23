@@ -18,6 +18,6 @@ export const POST = route(async (req: NextRequest) => {
   const input = await readJson(req, schema);
   const token = await createFirstSuperAdmin(req, input);
   const res = json({ ok: true }, { status: 201 });
-  setSessionCookie(res, token);
+  setSessionCookie(req, res, token);
   return res;
 });

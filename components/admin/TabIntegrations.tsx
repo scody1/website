@@ -8,6 +8,7 @@ import { formatDateTime } from '@/lib/shared/format';
 import { Badge, Button, Card, ErrorBox, Field, Input, Spinner } from './ui';
 
 interface Status {
+  unreadable: string[];
   encryptionReady: boolean;
   encryptionProblem: string | null;
   shiprocket: { connected: boolean; source: 'env' | 'database' | null; email: string | null; savedAt: string | null; savedBy: string | null; webhookTokenSet: boolean };
@@ -89,6 +90,9 @@ export default function TabIntegrations({ onChanged }: { onChanged: () => void }
   return (
     <div className="space-y-6">
       {!s.encryptionReady && <ErrorBox message={`${s.encryptionProblem} Credentials cannot be saved until this is fixed.`} />}
+      {s.encryptionReady && s.unreadable.length > 0 && (
+        <ErrorBox message={`Saved ${s.unreadable.join(', ')} credentials cannot be unlocked because APP_SECRET is different from when they were saved. Use ONE fixed APP_SECRET for Production (and Preview) in Vercel and never change it — otherwise you will have to enter credentials again after every change. Re-enter them below once.`} />
+      )}
 
       <Card
         title="Shiprocket"

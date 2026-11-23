@@ -79,7 +79,10 @@ export default function PincodeBar() {
                       Delivery Available to {pincodeResult.pincode} · {pincodeResult.region}
                     </p>
                     <p className="text-xs text-emerald-800">
-                      {pincodeResult.live ? 'Confirmed with our courier partners.' : 'Estimated.'} Expected delivery by <strong>{pincodeResult.estimatedDeliveryDate}</strong>.
+                      {pincodeResult.source === 'shiprocket'
+                        ? `Live from Shiprocket — ${pincodeResult.courierCount} courier partner${pincodeResult.courierCount === 1 ? '' : 's'} deliver here.`
+                        : pincodeResult.source === 'delhivery' ? 'Confirmed by Delhivery.' : 'Estimated delivery time.'}{' '}
+                      Expected delivery by <strong>{pincodeResult.estimatedDeliveryDate}</strong>.
                     </p>
                   </div>
                 </div>

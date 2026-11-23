@@ -14,8 +14,19 @@ interface StoredDelhivery { tokenEnc: string; environment: 'production' | 'stagi
 interface StoredEmail { apiKeyEnc: string; fromEmail: string; adminEmail: string; savedAt: string; savedBy: string }
 
 // Small in-process cache so every request does not hit the DB / decrypt.
-let cache: { at: number; sr: StoredShiprocket | null; rzp: StoredRazorpay | null; dl: StoredDelhivery | null; em: StoredEmail | null } | null = null;
+let cache: { at: number; sr: StoredShiprocket | null; rzp: StoredRazorpay | null; dl: StoredDelhivery | null; em: StoredEmail | null; unreadable: string[] } | null = null;
 const CACHE_MS = 30_000;
+
+/** True when a stored secret can be decrypted with the current APP_SECRET. */
+function readable(enc: string | undefined | null): boolean {
+  if (!enc) return true;
+  try {
+    decryptSecret(enc);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 async function load() {
   if (cache && Date.now() - cache.at < CACHE_MS) return cache;
@@ -25,7 +36,23 @@ async function load() {
     getPrivateValue<StoredDelhivery>('delhivery_credentials'),
     getPrivateValue<StoredEmail>('email_credentials')
   ]);
-  cache = { at: Date.now(), sr, rzp, dl, em };
+  // Credentials saved under a different APP_SECRET cannot be used: treat them as not connected
+  // (checkout then simply hides Razorpay instead of failing) and tell the admin to re-enter them.
+  const unreadable: string[] = [];
+  const keep = <T,>(v: T | null, enc: (x: T) => string, name: string): T | null => {
+    if (!v) return null;
+    if (readable(enc(v))) return v;
+    unreadable.push(name);
+    return null;
+  };
+  cache = {
+    at: Date.now(),
+    sr: keep(sr, (x) => x.passwordEnc, 'Shiprocket'),
+    rzp: keep(rzp, (x) => x.keySecretEnc, 'Razorpay'),
+    dl: keep(dl, (x) => x.tokenEnc, 'Delhivery'),
+    em: keep(em, (x) => x.apiKeyEnc, 'E-mail'),
+    unreadable
+  };
   return cache;
 }
 
@@ -147,13 +174,14 @@ export async function removeEmailCredentials() {
 // ---------------------------------------------------------------- status (safe to show to a Super Admin)
 
 export async function integrationStatus() {
-  const { sr, rzp, dl, em } = await load();
+  const { sr, rzp, dl, em, unreadable } = await load();
   const dlEnv = Boolean(process.env.DELHIVERY_API_TOKEN);
   const emEnv = Boolean(process.env.RESEND_API_KEY && process.env.EMAIL_FROM);
   const srEnv = Boolean(process.env.SHIPROCKET_EMAIL && process.env.SHIPROCKET_PASSWORD);
   const rzpEnv = Boolean(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET);
   const mask = (s: string) => (s.length <= 8 ? '••••' : `${s.slice(0, 8)}••••${s.slice(-4)}`);
   return {
+    unreadable,
     shiprocket: {
       connected: srEnv || Boolean(sr),
       source: (srEnv ? 'env' : sr ? 'database' : null) as CredentialSource,

@@ -81,3 +81,29 @@ export function siteOrigin(req: NextRequest): string {
   const proto = req.headers.get('x-forwarded-proto') || 'https';
   return `${proto}://${host}`;
 }
+
+/**
+ * True when the browser reached us over HTTPS. Used for the cookie `Secure` flag:
+ * marking cookies Secure on a plain-http site (e.g. testing on a LAN IP) makes the
+ * browser silently drop them, which looks like "login does not work".
+ */
+export function isHttps(req: NextRequest): boolean {
+  const fwd = req.headers.get('x-forwarded-proto');
+  if (fwd) return fwd.split(',')[0].trim() === 'https';
+  return req.nextUrl.protocol === 'https:';
+}
+
+/** Blocks cross-site form/fetch posts (CSRF defence for cookie-authenticated routes). */
+export function assertSameOrigin(req: NextRequest) {
+  if (req.method === 'GET' || req.method === 'HEAD') return;
+  const origin = req.headers.get('origin');
+  const host = req.headers.get('x-forwarded-host') || req.headers.get('host');
+  if (!origin || !host) return;
+  let originHost = '';
+  try {
+    originHost = new URL(origin).host;
+  } catch {
+    /* ignore */
+  }
+  if (originHost !== host) throw new ApiError(403, 'Cross-site request blocked.');
+}

@@ -20,7 +20,8 @@ import {
   Truck,
   User,
   X,
-  XCircle
+  XCircle,
+  Heart
 } from 'lucide-react';
 
 const CANCEL_REASONS = [
@@ -52,10 +53,17 @@ export default function AccountDrawer() {
     cancelOrRefundOrder,
     state,
     setIsTrackingModalOpen,
-    setTrackingQuery
+    setTrackingQuery,
+    claimOrder,
+    wishlist,
+    toggleWishlist,
+    addToCart
   } = useStore();
 
-  const [activeTab, setActiveTab] = useState<'orders' | 'profile'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'wishlist' | 'profile'>('orders');
+  const [claimNumber, setClaimNumber] = useState('');
+  const [claimPin, setClaimPin] = useState('');
+  const [claiming, setClaiming] = useState(false);
 
   // Cancel & Refund Dialog state
   const [actionOrder, setActionOrder] = useState<CustomerOrderSummary | null>(null);
@@ -201,7 +209,7 @@ export default function AccountDrawer() {
           </div>
 
           {/* Navigation Tabs */}
-          <div className="grid grid-cols-2 bg-parchment-100 border-b border-gold-300/40 text-xs sm:text-sm font-bold">
+          <div className="grid grid-cols-3 bg-parchment-100 border-b border-gold-300/40 text-xs sm:text-sm font-bold">
             <button
               onClick={() => setActiveTab('orders')}
               className={`py-3 flex items-center justify-center gap-2 transition-colors ${
@@ -214,6 +222,17 @@ export default function AccountDrawer() {
               <span>My Orders ({customerOrders.length})</span>
             </button>
             <button
+              onClick={() => setActiveTab('wishlist')}
+              className={`py-3 flex items-center justify-center gap-2 transition-colors ${
+                activeTab === 'wishlist'
+                  ? 'bg-white text-maroon-700 border-b-2 border-maroon-700 shadow-sm'
+                  : 'text-stone-500 hover:text-stone-800'
+              }`}
+            >
+              <Heart className="w-4 h-4" />
+              <span>Wishlist ({wishlist.length})</span>
+            </button>
+            <button
               onClick={() => setActiveTab('profile')}
               className={`py-3 flex items-center justify-center gap-2 transition-colors ${
                 activeTab === 'profile'
@@ -222,7 +241,7 @@ export default function AccountDrawer() {
               }`}
             >
               <User className="w-4 h-4" />
-              <span>Profile & Address</span>
+              <span>Profile</span>
             </button>
           </div>
 
@@ -241,6 +260,41 @@ export default function AccountDrawer() {
                     {isLoadingCustomerOrders ? 'Refreshing...' : 'Refresh'}
                   </button>
                 </div>
+
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!claimNumber.trim() || claimPin.length !== 6) return;
+                    setClaiming(true);
+                    const ok = await claimOrder(claimNumber.trim(), claimPin);
+                    setClaiming(false);
+                    if (ok) { setClaimNumber(''); setClaimPin(''); }
+                  }}
+                  className="bg-white rounded-2xl border border-gold-300/50 p-3 text-xs space-y-1.5"
+                >
+                  <p className="font-bold text-stone-700">Ordered before creating your account?</p>
+                  <div className="flex gap-2">
+                    <input
+                      value={claimNumber}
+                      onChange={(e) => setClaimNumber(e.target.value.toUpperCase())}
+                      placeholder="Order number, e.g. RPS-100001"
+                      className="flex-1 border border-stone-300 rounded-lg px-2.5 py-1.5 focus:border-maroon-700 focus:outline-none"
+                      aria-label="Order number to add"
+                    />
+                    <input
+                      value={claimPin}
+                      onChange={(e) => setClaimPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      inputMode="numeric"
+                      placeholder="Pincode"
+                      className="w-20 border border-stone-300 rounded-lg px-2.5 py-1.5 focus:border-maroon-700 focus:outline-none"
+                      aria-label="Delivery pincode of that order"
+                    />
+                    <button type="submit" disabled={claiming} className="bg-maroon-700 text-white font-bold px-3 py-1.5 rounded-lg disabled:opacity-60">
+                      {claiming ? 'Adding…' : 'Add'}
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-stone-500">Enter the order number and its delivery pincode. It must have been placed with your mobile number +91 {customer.phone}.</p>
+                </form>
 
                 {isLoadingCustomerOrders && customerOrders.length === 0 ? (
                   <div className="py-12 flex flex-col items-center justify-center text-stone-400">
@@ -319,7 +373,7 @@ export default function AccountDrawer() {
                         </div>
                         <div className="flex items-center gap-1.5 flex-wrap">
                           {/* Cancel or Refund Button */}
-                          {['NEW', 'PROCESSING', 'PACKED', 'PENDING_PAYMENT'].includes(order.status) ? (
+                          {order.canCancel ? (
                             <button
                               onClick={() => handleOpenAction(order, 'cancel')}
                               className="text-xs font-bold text-rose-700 hover:text-rose-800 hover:bg-rose-50 border border-rose-300 px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition shadow-xs"
@@ -328,14 +382,14 @@ export default function AccountDrawer() {
                               <XCircle className="w-3.5 h-3.5" />
                               <span>Cancel</span>
                             </button>
-                          ) : ['READY_TO_SHIP', 'PICKUP_SCHEDULED', 'SHIPPED', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(order.status) && !order.refundNotes?.includes('[Customer Return/Refund Request]') ? (
+                          ) : order.canRequestReturn ? (
                             <button
                               onClick={() => handleOpenAction(order, 'refund')}
                               className="text-xs font-bold text-amber-800 hover:text-amber-900 hover:bg-amber-50 border border-amber-400/80 px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition shadow-xs"
                               title="Request Return & Refund"
                             >
                               <RotateCcw className="w-3.5 h-3.5" />
-                              <span>Refund</span>
+                              <span>Return / Refund</span>
                             </button>
                           ) : null}
 
@@ -382,12 +436,16 @@ export default function AccountDrawer() {
                               <XCircle className="w-3.5 h-3.5 text-rose-600" />
                               <span>Order Cancelled</span>
                             </span>
-                            {order.paymentStatus === 'REFUNDED' && (
-                              <span className="text-emerald-700 bg-emerald-100/90 px-2 py-0.5 rounded text-[10px]">Refund Processed</span>
-                            )}
+                            {order.paymentStatus === 'REFUNDED' ? (
+                              <span className="text-emerald-700 bg-emerald-100/90 px-2 py-0.5 rounded text-[10px]">Refunded {formatINR(order.refundAmount || order.total)}</span>
+                            ) : order.refundDue ? (
+                              <span className="text-amber-800 bg-amber-100 px-2 py-0.5 rounded text-[10px]">Refund in progress</span>
+                            ) : null}
                           </div>
                           {order.cancelReason && <p className="text-[11px] text-rose-700 mt-1">{order.cancelReason}</p>}
-                          {order.refundNotes && <p className="text-[10px] text-stone-600 mt-0.5">{order.refundNotes}</p>}
+                          {order.refundDue && (
+                            <p className="text-[10px] text-stone-600 mt-0.5">The store will send your refund of {formatINR(order.total - (order.refundAmount || 0))} shortly. Contact us on WhatsApp if you have questions.</p>
+                          )}
                         </div>
                       ) : order.status === 'REFUNDED' ? (
                         <div className="mt-2.5 bg-emerald-50 border border-emerald-200/80 rounded-xl p-2.5 text-xs text-emerald-800">
@@ -399,19 +457,56 @@ export default function AccountDrawer() {
                             Amount: {formatINR(order.refundAmount || order.total)}
                           </p>
                         </div>
-                      ) : order.refundNotes?.includes('[Customer Return/Refund Request]') ? (
-                        <div className="mt-2.5 bg-amber-50 border border-amber-300 rounded-xl p-2.5 text-xs text-amber-900">
+                      ) : order.returnRequest ? (
+                        <div className={`mt-2.5 rounded-xl p-2.5 text-xs border ${order.returnRequest.status === 'REJECTED' ? 'bg-stone-50 border-stone-300 text-stone-700' : 'bg-amber-50 border-amber-300 text-amber-900'}`}>
                           <div className="flex items-center gap-1.5 font-bold">
-                            <RotateCcw className="w-3.5 h-3.5 text-amber-600 animate-spin" />
-                            <span>Return & Refund Request Submitted</span>
+                            <RotateCcw className="w-3.5 h-3.5 text-amber-600" />
+                            <span>
+                              {order.returnRequest.status === 'OPEN' ? 'Return request submitted — under review'
+                                : order.returnRequest.status === 'APPROVED' ? 'Return approved'
+                                : order.returnRequest.status === 'REJECTED' ? 'Return request declined'
+                                : 'Return completed'}
+                            </span>
                           </div>
-                          <p className="text-[11px] text-amber-700 mt-0.5">
-                            Our team is reviewing your request. We will coordinate return and refund shortly.
-                          </p>
+                          {order.returnRequest.adminNote && <p className="text-[11px] mt-0.5">{order.returnRequest.adminNote}</p>}
                         </div>
                       ) : null}
                     </div>
                   ))
+                )}
+              </div>
+            ) : activeTab === 'wishlist' ? (
+              /* WISHLIST TAB */
+              <div className="space-y-3">
+                {wishlist.length === 0 ? (
+                  <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-gold-300/60 p-6">
+                    <Heart className="w-10 h-10 text-rose-300 mx-auto mb-2" />
+                    <p className="text-xs text-stone-500">Tap the heart on any product to save it here.</p>
+                  </div>
+                ) : (
+                  wishlist.map((pid) => {
+                    const p = state.products.find((x) => x.id === pid);
+                    if (!p) return null;
+                    return (
+                      <div key={pid} className="bg-white rounded-2xl border border-gold-300/50 p-3 flex items-center gap-3">
+                        {p.images[0] ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={p.images[0]} alt="" className="w-14 h-14 rounded-xl object-cover border border-gold-200" />
+                        ) : (
+                          <div className="w-14 h-14 rounded-xl bg-parchment-100" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <a href={`/product/${p.slug}`} className="text-xs font-bold text-espresso hover:underline line-clamp-2">{p.name}</a>
+                          <p className="text-xs font-bold text-maroon-700 mt-0.5">{formatINR(p.sellingPrice)}</p>
+                          <p className={`text-[10px] ${p.stock > 0 ? 'text-emerald-700' : 'text-rose-700'}`}>{p.stock > 0 ? 'In stock' : 'Out of stock'}</p>
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <button disabled={p.stock <= 0} onClick={() => addToCart(p, 1)} className="text-[11px] font-bold bg-saffron-500 disabled:bg-stone-300 text-white px-2.5 py-1 rounded-lg">Add to cart</button>
+                          <button onClick={() => toggleWishlist(p)} className="text-[11px] font-bold text-rose-700 hover:underline">Remove</button>
+                        </div>
+                      </div>
+                    );
+                  })
                 )}
               </div>
             ) : (

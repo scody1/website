@@ -246,6 +246,10 @@ export interface AdminOrder {
   refundAmount: number | null;
   razorpayRefundId: string | null;
   refundedAt: string | null;
+  /** Cancelled/returned, paid, and not yet fully refunded. */
+  refundDue: number;
+  customerAccount: boolean;
+  returnRequests?: AdminReturnRequest[];
   shipping: ShippingInfo;
   events?: OrderEvent[];
 }
@@ -266,7 +270,18 @@ export interface PublicTracking {
   awbCode: string | null;
   trackingUrl: string | null;
   shippingStatus: string | null;
+  /** Expected delivery date from the courier (Shiprocket / Delhivery), if known */
+  etd: string | null;
+  /** Live courier scan history, newest first */
+  activities: TrackingActivity[];
+  lastSynced: string | null;
   events: { message: string; createdAt: string }[];
+}
+
+export interface TrackingActivity {
+  date: string;
+  activity: string;
+  location: string;
 }
 
 export interface Quote {
@@ -311,11 +326,26 @@ export interface PincodeResult {
   isServiceable: boolean;
   /** true when Shiprocket confirmed it, false for a postal-zone estimate */
   live: boolean;
+  /** where the answer came from */
+  source: 'shiprocket' | 'delhivery' | 'estimate';
+  /** number of courier partners serving this pincode (live checks only) */
+  courierCount: number;
   region: string;
   estimatedDeliveryDays: number;
   estimatedDeliveryDate: string;
   codAvailable: boolean;
   message: string;
+}
+
+export interface AdminReturnRequest {
+  id: string;
+  reason: string;
+  refundUpi: string;
+  status: 'OPEN' | 'APPROVED' | 'REJECTED' | 'COMPLETED';
+  adminNote: string;
+  resolvedBy: string | null;
+  createdAt: string;
+  resolvedAt: string | null;
 }
 
 export interface CustomerProfile {
@@ -358,6 +388,13 @@ export interface CustomerOrderSummary {
   cancelReason?: string | null;
   refundNotes?: string | null;
   refundAmount?: number | null;
+  /** Cancelled & paid but not yet fully refunded (UPI refunds are sent by the store). */
+  refundDue: boolean;
+  /** Not yet handed to the courier → the customer can cancel (auto-refund). */
+  canCancel: boolean;
+  /** Dispatched/delivered and no open request → a return can be requested. */
+  canRequestReturn: boolean;
+  returnRequest: { status: 'OPEN' | 'APPROVED' | 'REJECTED' | 'COMPLETED'; adminNote: string; createdAt: string } | null;
   createdAt: string;
   items: CustomerOrderItem[];
 }

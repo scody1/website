@@ -5,7 +5,7 @@ import { getSettingsSection } from '@/lib/server/settings';
 import { isDbConfigured } from '@/lib/server/db';
 import { StoreProvider } from '@/lib/storeContext';
 import Storefront from '@/components/Storefront';
-import SetupRequired from '@/components/SetupRequired';
+import SetupRequired, { databaseReady } from '@/components/SetupRequired';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,14 +35,14 @@ function safeJsonLd(data: unknown): string {
 }
 
 export default async function Home() {
-  if (!isDbConfigured()) return <SetupRequired reason="DATABASE_URL is not set." />;
+  if (!isDbConfigured() || !(await databaseReady())) return <SetupRequired />;
 
   let state;
   try {
     state = await getPublicStoreState();
   } catch (err) {
     console.error('[home] failed to load store data', err);
-    return <SetupRequired reason="The database could not be reached or has not been migrated. Run `npm run db:migrate`." />;
+    return <SetupRequired />;
   }
 
   const jsonLd = {

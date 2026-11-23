@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { json, readJson, route } from '@/lib/server/http';
+import { assertSameOrigin, json, readJson, route } from '@/lib/server/http';
 import { loginCustomer, setCustomerCookie } from '@/lib/server/customerAuth';
 
 export const dynamic = 'force-dynamic';
@@ -12,9 +12,10 @@ const schema = z.object({
 });
 
 export const POST = route(async (req: NextRequest) => {
+  assertSameOrigin(req);
   const { identifier, password } = await readJson(req, schema);
   const { token, customer } = await loginCustomer(req, identifier, password);
   const res = json({ ok: true, customer });
-  setCustomerCookie(res, token);
+  setCustomerCookie(req, res, token);
   return res;
 });

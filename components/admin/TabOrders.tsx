@@ -10,12 +10,23 @@ import { Badge, Button, Card, ErrorBox, Input, Select, Spinner } from './ui';
 import OrderDrawer from './OrderDrawer';
 import { useAdmin } from './AdminApp';
 
+/** Set by header badges / dashboard tiles before opening the Orders tab. */
+let initialAttention = '';
+export function openOrdersWith(attention: 'refunds' | 'returns') {
+  initialAttention = attention;
+}
+
 interface ListResponse { orders: AdminOrder[]; total: number; page: number; pageSize: number }
 
 export default function TabOrders({ onChanged }: { onChanged: () => void }) {
   const { can } = useAdmin();
   const [status, setStatus] = useState('');
   const [payment, setPayment] = useState('');
+  const [attention, setAttention] = useState(() => {
+    const a = initialAttention;
+    initialAttention = '';
+    return a;
+  });
   const [q, setQ] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -31,6 +42,7 @@ export default function TabOrders({ onChanged }: { onChanged: () => void }) {
       const qs = new URLSearchParams({ page: String(page), pageSize: '25' });
       if (status) qs.set('status', status);
       if (payment) qs.set('payment', payment);
+      if (attention) qs.set('attention', attention);
       if (search) qs.set('q', search);
       setData(await adminFetch<ListResponse>(`/api/admin/orders?${qs}`));
     } catch (err) {
@@ -38,7 +50,7 @@ export default function TabOrders({ onChanged }: { onChanged: () => void }) {
     } finally {
       setLoading(false);
     }
-  }, [page, status, payment, search]);
+  }, [page, status, payment, attention, search]);
 
   useEffect(() => {
     load();
@@ -61,7 +73,7 @@ export default function TabOrders({ onChanged }: { onChanged: () => void }) {
         }
       >
         <form
-          className="grid grid-cols-1 sm:grid-cols-4 gap-2 mb-4"
+          className="grid grid-cols-1 sm:grid-cols-5 gap-2 mb-4"
           onSubmit={(e) => {
             e.preventDefault();
             setPage(1);
@@ -76,6 +88,11 @@ export default function TabOrders({ onChanged }: { onChanged: () => void }) {
           <Select value={payment} onChange={(e) => { setPayment(e.target.value); setPage(1); }}>
             <option value="">All payments</option>
             {Object.entries(PAYMENT_STATUS_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+          </Select>
+          <Select value={attention} onChange={(e) => { setAttention(e.target.value); setPage(1); }}>
+            <option value="">No extra filter</option>
+            <option value="refunds">Refund due</option>
+            <option value="returns">Open return requests</option>
           </Select>
         </form>
 

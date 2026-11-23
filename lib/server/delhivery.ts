@@ -204,13 +204,25 @@ export async function delhiveryLabel(waybill: string): Promise<string> {
   return link;
 }
 
-export async function delhiveryTrack(waybill: string): Promise<{ status: string; statusType: string; when: string | null } | null> {
-  const res = await dlFetch<{ ShipmentData?: { Shipment?: { Status?: { Status?: string; StatusType?: string; StatusDateTime?: string } } }[] }>(
-    `/api/v1/packages/json/?waybill=${encodeURIComponent(waybill)}`
-  );
-  const st = res?.ShipmentData?.[0]?.Shipment?.Status;
+export async function delhiveryTrack(waybill: string): Promise<{
+  status: string; statusType: string; when: string | null; etd: string | null;
+  activities: { date: string; activity: string; location: string }[];
+} | null> {
+  const res = await dlFetch<{ ShipmentData?: { Shipment?: Row }[] }>(`/api/v1/packages/json/?waybill=${encodeURIComponent(waybill)}`);
+  const sh = res?.ShipmentData?.[0]?.Shipment;
+  const st = sh?.Status;
   if (!st?.Status) return null;
-  return { status: st.Status, statusType: st.StatusType || '', when: st.StatusDateTime || null };
+  const scans = (Array.isArray(sh?.Scans) ? sh!.Scans : []) as { ScanDetail?: Row }[];
+  const activities = scans
+    .map((x) => x.ScanDetail || {})
+    .map((d) => ({ date: String(d.ScanDateTime || d.StatusDateTime || ''), activity: String(d.Instructions || d.Scan || ''), location: String(d.ScannedLocation || '') }))
+    .filter((a) => a.activity)
+    .reverse()
+    .slice(0, 40);
+  return {
+    status: st.Status, statusType: st.StatusType || '', when: st.StatusDateTime || null,
+    etd: sh?.ExpectedDeliveryDate || sh?.PromisedDeliveryDate || null, activities
+  };
 }
 
 export async function delhiveryCancel(waybill: string): Promise<void> {

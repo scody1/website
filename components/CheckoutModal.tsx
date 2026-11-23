@@ -5,7 +5,7 @@ import { Banknote, Check, CheckCircle2, CreditCard, Loader2, QrCode, Send, Shiel
 import { useStore } from '@/lib/storeContext';
 import { apiFetch, errorMessage } from '@/lib/api';
 import { formatINR, formatWhatsAppUrl } from '@/lib/shared/format';
-import type { PaymentMethod, Quote } from '@/lib/shared/types';
+import type { PaymentMethod, PincodeResult, Quote } from '@/lib/shared/types';
 
 interface RazorpayInfo { keyId: string; orderId: string; amount: number; currency: string }
 interface CreatedOrder {
@@ -36,6 +36,25 @@ function loadRazorpayScript(): Promise<boolean> {
 }
 
 const emptyCustomer = { name: '', phone: '', email: '', addressLine1: '', addressLine2: '', city: '', state: '', pincode: '' };
+const SAVED_DETAILS_KEY = 'rps_checkout_details_v1';
+function readSavedDetails(): typeof emptyCustomer | null {
+  try {
+    const raw = window.localStorage.getItem(SAVED_DETAILS_KEY);
+    if (!raw) return null;
+    const v = JSON.parse(raw);
+    return { ...emptyCustomer, ...Object.fromEntries(Object.entries(v).filter(([k, x]) => k in emptyCustomer && typeof x === 'string')) };
+  } catch {
+    return null;
+  }
+}
+function writeSavedDetails(v: typeof emptyCustomer | null) {
+  try {
+    if (v) window.localStorage.setItem(SAVED_DETAILS_KEY, JSON.stringify(v));
+    else window.localStorage.removeItem(SAVED_DETAILS_KEY);
+  } catch {
+    /* private mode — ignore */
+  }
+}
 const inputCls = 'w-full border border-stone-300 rounded-xl px-3 py-2.5 text-espresso focus:border-maroon-700 focus:outline-none';
 
 export default function CheckoutModal() {
@@ -49,7 +68,8 @@ export default function CheckoutModal() {
     clearCart,
     showToast,
     customer: loggedInCustomer,
-    openAuthModal
+    openAuthModal,
+    refreshCustomer
   } = useStore();
   const pay = state.paymentShipping;
 
@@ -60,10 +80,12 @@ export default function CheckoutModal() {
   ];
 
   const [customer, setCustomer] = useState(emptyCustomer);
+  const [rememberDetails, setRememberDetails] = useState(true);
   const [method, setMethod] = useState<PaymentMethod | null>(null);
   const [utr, setUtr] = useState('');
   const [quote, setQuote] = useState<Quote | null>(null);
   const [problems, setProblems] = useState<string[]>([]);
+  const [delivery, setDelivery] = useState<PincodeResult | null>(null);
   const [quoting, setQuoting] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -76,6 +98,13 @@ export default function CheckoutModal() {
     if (!method || !availableMethods.includes(method)) setMethod(availableMethods[0] ?? null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pay.enableCod, pay.enableRazorpay, pay.enableUpi]);
+
+  // Guests: fill in the details saved on this device last time.
+  useEffect(() => {
+    if (!isCheckoutOpen || loggedInCustomer) return;
+    const saved = readSavedDetails();
+    if (saved) setCustomer((prev) => (prev.name || prev.phone || prev.addressLine1 ? prev : saved));
+  }, [isCheckoutOpen, loggedInCustomer]);
 
   // Auto-fill logged-in customer's details and saved delivery address
   useEffect(() => {
@@ -100,20 +129,31 @@ export default function CheckoutModal() {
     const seq = ++quoteSeq.current;
     setQuoting(true);
     try {
-      const res = await apiFetch<{ quote: Quote; problems: string[] }>('/api/checkout/quote', {
+      const res = await apiFetch<{ quote: Quote; problems: string[]; delivery?: PincodeResult | null }>('/api/checkout/quote', {
         method: 'POST',
-        json: { items: cart.map((c) => ({ productId: c.productId, quantity: c.quantity })), couponCode: activeCoupon?.code ?? null, paymentMethod: method }
+        json: {
+          items: cart.map((c) => ({ productId: c.productId, quantity: c.quantity })),
+          couponCode: activeCoupon?.code ?? null,
+          paymentMethod: method,
+          pincode: /^[1-9][0-9]{5}$/.test(customer.pincode) ? customer.pincode : null
+        }
       });
       if (seq !== quoteSeq.current) return;
       setQuote(res.quote);
       setProblems(res.problems);
+      setDelivery(res.delivery ?? null);
+      // Courier says no COD here → switch away from COD automatically.
+      if (method === 'COD' && !res.quote.codAllowed) {
+        const alt = availableMethods.find((m) => m !== 'COD');
+        if (alt) setMethod(alt);
+      }
     } catch (err) {
       if (seq === quoteSeq.current) setFormError(errorMessage(err));
     } finally {
       if (seq === quoteSeq.current) setQuoting(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cartKey, activeCoupon?.code, method]);
+  }, [cartKey, activeCoupon?.code, method, customer.pincode]);
 
   useEffect(() => {
     if (isCheckoutOpen && !completed) refreshQuote();
@@ -151,6 +191,8 @@ export default function CheckoutModal() {
     setPaymentPending(null);
     setCompleted(order);
     clearCart();
+    if (loggedInCustomer) refreshCustomer(); // the server saved this address on the account
+    else writeSavedDetails(rememberDetails ? customer : null);
   };
 
   const openRazorpay = async (order: CreatedOrder) => {
@@ -384,6 +426,14 @@ export default function CheckoutModal() {
                       <input required autoComplete="address-level1" value={customer.state} onChange={(e) => set('state', e.target.value)} className={inputCls} />
                     </label>
                   </div>
+                  {loggedInCustomer ? (
+                    <p className="text-[11px] text-stone-500 mt-2">This address will be saved to your account for next time.</p>
+                  ) : (
+                    <label className="flex items-center gap-2 text-[11px] text-stone-600 mt-2">
+                      <input type="checkbox" checked={rememberDetails} onChange={(e) => setRememberDetails(e.target.checked)} />
+                      Remember my details on this device
+                    </label>
+                  )}
                 </div>
 
                 <div>
@@ -449,6 +499,12 @@ export default function CheckoutModal() {
                         <div className="flex justify-between text-emerald-700"><span>Coupon {quote.couponCode}</span><span className="font-semibold">−{formatINR(quote.discount)}</span></div>
                       )}
                       {quote.couponError && <p className="text-amber-700">{quote.couponError}</p>}
+                      {delivery?.isServiceable && delivery.source !== 'estimate' && (
+                        <p className="text-emerald-700">
+                          ✓ Delivery to {delivery.pincode} confirmed{delivery.source === 'shiprocket' ? ' by Shiprocket' : ''} — expected by {delivery.estimatedDeliveryDate}.
+                          {!quote.codAllowed && pay.enableCod && ' Cash on Delivery is not available for this pincode.'}
+                        </p>
+                      )}
                       <div className="flex justify-between"><span>Shipping</span><span className="font-semibold">{quote.shippingFee === 0 ? 'FREE' : formatINR(quote.shippingFee)}</span></div>
                       {quote.codFee > 0 && <div className="flex justify-between text-saffron-700"><span>COD fee</span><span className="font-semibold">+{formatINR(quote.codFee)}</span></div>}
                       <div className="flex justify-between pt-2 border-t border-stone-200 text-base font-extrabold text-maroon-700 font-serif">

@@ -3,6 +3,7 @@
 import React from 'react';
 import { CheckCircle2, Circle } from 'lucide-react';
 import { useAdmin, TabId } from './AdminApp';
+import { openOrdersWith } from './TabOrders';
 import { Card } from './ui';
 
 export default function TabDashboard() {
@@ -37,9 +38,11 @@ export default function TabDashboard() {
           { label: 'New orders', value: status?.counts.newOrders ?? '—', tab: 'orders' as TabId },
           { label: 'UPI payments to verify', value: status?.counts.awaitingVerification ?? '—', tab: 'orders' as TabId },
           { label: 'Low-stock products (≤5)', value: status?.counts.lowStock ?? '—', tab: 'products' as TabId },
-          { label: 'Reviews awaiting approval', value: status?.counts.pendingReviews ?? '—', tab: 'reviews' as TabId }
+          { label: 'Reviews awaiting approval', value: status?.counts.pendingReviews ?? '—', tab: 'reviews' as TabId },
+          ...((status?.counts.refundsDue || 0) > 0 && can('payments.refund') ? [{ label: 'Refunds due (cancelled & paid)', value: status!.counts.refundsDue, tab: 'orders' as TabId, attention: 'refunds' as const }] : []),
+          ...((status?.counts.openReturns || 0) > 0 && can('orders.status') ? [{ label: 'Open return requests', value: status!.counts.openReturns, tab: 'orders' as TabId, attention: 'returns' as const }] : [])
         ].filter((k) => canOpen(k.tab)).map((k) => (
-          <button key={k.label} onClick={() => goTo(k.tab)} className="bg-white p-4 rounded-2xl border border-gold-500/40 text-left hover:shadow-md transition">
+          <button key={k.label} onClick={() => { if ('attention' in k && k.attention) openOrdersWith(k.attention); goTo(k.tab); }} className="bg-white p-4 rounded-2xl border border-gold-500/40 text-left hover:shadow-md transition">
             <p className="text-[11px] text-stone-500 font-semibold">{k.label}</p>
             <p className="text-2xl font-serif font-extrabold text-maroon-700 mt-1">{k.value}</p>
           </button>

@@ -6,9 +6,8 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export const POST = route(async (req: NextRequest) => {
-  const token = req.cookies.get(CUSTOMER_COOKIE)?.value;
-  await logoutCustomer(token);
+  await logoutCustomer(req.cookies.get(CUSTOMER_COOKIE)?.value);
   const res = json({ ok: true });
-  clearCustomerCookie(res);
+  clearCustomerCookie(req, res);
   return res;
 });

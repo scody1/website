@@ -8,6 +8,6 @@ export const runtime = 'nodejs';
 export const POST = route(async (req: NextRequest) => {
   await revokeSession(req.cookies.get(ADMIN_COOKIE)?.value);
   const res = json({ ok: true });
-  clearSessionCookie(res);
+  clearSessionCookie(req, res);
   return res;
 });

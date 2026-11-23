@@ -18,7 +18,9 @@ export const GET = route(async (req: NextRequest) => {
       (SELECT COUNT(*)::int FROM reviews WHERE NOT is_approved) AS pending_reviews,
       (SELECT COUNT(*)::int FROM products WHERE is_active AND stock <= 5) AS low_stock,
       (SELECT order_number FROM orders WHERE status <> 'PENDING_PAYMENT' ORDER BY updated_at DESC LIMIT 1) AS latest_active,
-      (SELECT COUNT(*)::int FROM orders WHERE status <> 'PENDING_PAYMENT') AS placed_total
+      (SELECT COUNT(*)::int FROM orders WHERE status <> 'PENDING_PAYMENT') AS placed_total,
+      (SELECT COUNT(*)::int FROM orders WHERE status IN ('CANCELLED','RTO') AND payment_status = 'PAID' AND COALESCE(refund_amount,0) < total) AS refunds_due,
+      (SELECT COUNT(*)::int FROM return_requests WHERE status = 'OPEN') AS open_returns
   `;
   const i = await integrationStatus();
   return json({
@@ -39,7 +41,9 @@ export const GET = route(async (req: NextRequest) => {
       awaitingVerification: c.awaiting_verification,
       pendingReviews: c.pending_reviews,
       lowStock: c.low_stock,
-      placedTotal: c.placed_total
+      placedTotal: c.placed_total,
+      refundsDue: c.refunds_due,
+      openReturns: c.open_returns
     },
     latestOrder: c.latest_active || null
   });

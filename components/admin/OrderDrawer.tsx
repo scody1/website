@@ -88,15 +88,34 @@ export default function OrderDrawer({ orderId, onClose, onChanged }: { orderId: 
   const canShipDl = dlConnected && shippable && !s.srShipmentId && (s.provider === null || s.provider === 'DELHIVERY') && !(s.awbCode && s.pickupScheduledFor);
   const srDone = Boolean(s.awbCode && s.pickupScheduledFor);
 
-  const changeStatus = () =>
-    nextStatus &&
+  const changeStatus = (target: OrderStatus | '' = nextStatus) =>
+    target &&
     run('status', async () => {
-      if (nextStatus === 'CANCELLED' && !confirm('Cancel this order? Stock will be returned to inventory.')) return null;
-      const res = await adminFetch<{ order: AdminOrder; warning: string | null }>(`/api/admin/orders/${o.id}/status`, { method: 'POST', json: { status: nextStatus, note: statusNote } });
+      const nextStatus = target;
+      const paidOnline = o.paymentStatus === 'PAID' && o.paymentMethod === 'RAZORPAY' && o.razorpayPaymentId;
+      if (nextStatus === 'CANCELLED' && !confirm(
+        `Cancel this order? Stock will be returned to inventory${s.awbCode ? ' and the courier shipment cancelled' : ''}.`
+        + (paidOnline && refundable > 0 ? `\n\n${formatINR(refundable)} will be refunded to the customer through Razorpay automatically.` : '')
+        + (o.paymentStatus === 'PAID' && !paidOnline && refundable > 0 ? `\n\nThe customer paid ${formatINR(refundable)} — you must pay it back yourself and record it in the Refund panel.` : '')
+      )) return null;
+      const res = await adminFetch<{ order: AdminOrder; warning: string | null; refund?: string; refundAmount?: number }>(`/api/admin/orders/${o.id}/status`, { method: 'POST', json: { status: nextStatus, note: statusNote } });
       apply(res.order);
-      if (res.warning) showToast('Check Shiprocket', res.warning, 'warn');
+      if (res.refund === 'razorpay') showToast('Refund sent', `${formatINR(res.refundAmount || 0)} refunded through Razorpay.`, 'success');
+      if (res.refund === 'manual_due') showToast('Refund due', `Pay ${formatINR(res.refundAmount || 0)} back to the customer and record it in the Refund panel.`, 'warn');
+      if (res.warning) showToast('Needs attention', res.warning, 'warn');
+      onChanged();
       return res;
-    }, `Status changed to ${ORDER_STATUS_LABEL[nextStatus]}.`);
+    }, `Status changed to ${ORDER_STATUS_LABEL[target]}.`);
+
+  const decideReturn = (rid: string, status: 'APPROVED' | 'REJECTED' | 'COMPLETED') =>
+    run(`ret-${rid}`, async () => {
+      const note = status === 'APPROVED' ? '' : prompt(status === 'REJECTED' ? 'Reason for declining the return (the customer sees this):' : 'Note (optional), e.g. parcel received back:') ?? null;
+      if (note === null) return null;
+      const res = await adminFetch<{ order: AdminOrder }>(`/api/admin/orders/${o.id}/returns/${rid}`, { method: 'POST', json: { status, note } });
+      apply(res.order);
+      onChanged();
+      return res;
+    }, `Return request ${status.toLowerCase()}.`);
 
   const verify = (approve: boolean) =>
     run('verify', async () => {
@@ -339,15 +358,53 @@ export default function OrderDrawer({ orderId, onClose, onChanged }: { orderId: 
                 </Select>
                 <Textarea rows={2} placeholder={nextStatus === 'CANCELLED' ? 'Cancellation reason' : nextStatus === 'REFUNDED' ? 'Refund details (amount, reference)' : 'Note (optional)'}
                   value={statusNote} onChange={(e) => setStatusNote(e.target.value)} />
-                <Button disabled={!nextStatus} loading={busy === 'status'} onClick={changeStatus}>Update</Button>
+                <Button disabled={!nextStatus} loading={busy === 'status'} onClick={() => changeStatus()}>Update</Button>
+                {next.includes('CANCELLED') && (
+                  <Button variant="danger" className="w-full" loading={busy === 'status'} onClick={() => changeStatus('CANCELLED')}>
+                    {o.paymentStatus === 'PAID' && refundable > 0
+                      ? o.paymentMethod === 'RAZORPAY' && o.razorpayPaymentId ? `Cancel order & refund ${formatINR(refundable)} (Razorpay)` : 'Cancel order (refund due — pay back manually)'
+                      : 'Cancel order'}
+                  </Button>
+                )}
 
               </>
             )}
           </div>
 
+          {(o.returnRequests?.length ?? 0) > 0 && (
+            <div className="bg-white rounded-2xl border border-sky-300 p-4 space-y-3">
+              <p className="font-bold text-maroon-700">Return requests</p>
+              {o.returnRequests!.map((r) => (
+                <div key={r.id} className="text-xs space-y-1 border-t first:border-t-0 pt-2 first:pt-0">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-stone-500">{formatDateTime(r.createdAt)}</span>
+                    <Badge className={r.status === 'OPEN' ? 'bg-sky-100 text-sky-800' : r.status === 'REJECTED' ? 'bg-red-100 text-red-800' : 'bg-emerald-100 text-emerald-800'}>{r.status}</Badge>
+                  </div>
+                  <p><strong>Reason:</strong> {r.reason}</p>
+                  {r.refundUpi && <p><strong>Refund UPI:</strong> <span className="font-mono">{r.refundUpi}</span></p>}
+                  {r.adminNote && <p className="text-stone-600"><strong>Note:</strong> {r.adminNote}{r.resolvedBy ? ` — ${r.resolvedBy}` : ''}</p>}
+                  {can('orders.status') && (r.status === 'OPEN' || r.status === 'APPROVED') && (
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {r.status === 'OPEN' && <Button loading={busy === `ret-${r.id}`} onClick={() => decideReturn(r.id, 'APPROVED')}>Approve</Button>}
+                      <Button variant="secondary" loading={busy === `ret-${r.id}`} onClick={() => decideReturn(r.id, 'COMPLETED')}>Mark completed</Button>
+                      {r.status === 'OPEN' && <Button variant="danger" loading={busy === `ret-${r.id}`} onClick={() => decideReturn(r.id, 'REJECTED')}>Reject</Button>}
+                    </div>
+                  )}
+                </div>
+              ))}
+              <p className="text-[10px] text-stone-500">Approve, arrange the pickup (or ask the customer to ship it back), then issue the refund in the Refund panel. A full refund closes the request automatically.</p>
+            </div>
+          )}
+
           {can('payments.refund') && (o.paymentStatus === 'PAID' || (o.refundAmount ?? 0) > 0) && (
             <div className="bg-white rounded-2xl border p-4 space-y-2">
               <p className="font-bold text-maroon-700">Refund</p>
+              {o.refundDue > 0 && (
+                <p className="text-xs bg-amber-50 border border-amber-300 text-amber-900 rounded-lg p-2">
+                  This order is {ORDER_STATUS_LABEL[o.status].toLowerCase()} but {formatINR(o.refundDue)} has not been refunded yet.
+                  {o.refundNotes ? ` ${o.refundNotes}` : ''}
+                </p>
+              )}
               {(o.refundAmount ?? 0) > 0 && (
                 <p className="text-xs">Refunded so far: <strong>{formatINR(o.refundAmount ?? 0)}</strong>{o.razorpayRefundId ? ` (Razorpay ${o.razorpayRefundId})` : ''}</p>
               )}

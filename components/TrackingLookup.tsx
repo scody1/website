@@ -15,6 +15,8 @@ export default function TrackingLookup({ compact = false }: { compact?: boolean 
   const { trackingQuery, setTrackingQuery } = useStore();
   const [orderNumber, setOrderNumber] = useState(trackingQuery || '');
   const [phone, setPhone] = useState('');
+  const [mode, setMode] = useState<'order' | 'awb'>('order');
+  const [awb, setAwb] = useState('');
   const [result, setResult] = useState<PublicTracking | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -27,18 +29,18 @@ export default function TrackingLookup({ compact = false }: { compact?: boolean 
     e.preventDefault();
     setError(null);
     setResult(null);
-    if (!orderNumber.trim() || phone.replace(/\D/g, '').length < 10) {
-      setError('Enter your order number and the 10-digit mobile number used at checkout.');
+    if (mode === 'awb' ? awb.trim().length < 6 : !orderNumber.trim() || phone.replace(/\D/g, '').length < 10) {
+      setError(mode === 'awb' ? 'Enter the courier AWB / tracking number.' : 'Enter your order number and the 10-digit mobile number used at checkout.');
       return;
     }
     setLoading(true);
     try {
       const { tracking } = await apiFetch<{ tracking: PublicTracking }>('/api/track', {
         method: 'POST',
-        json: { orderNumber: orderNumber.trim(), phone }
+        json: mode === 'awb' ? { awb: awb.trim() } : { orderNumber: orderNumber.trim(), phone }
       });
       setResult(tracking);
-      setTrackingQuery(orderNumber.trim());
+      if (mode === 'order') setTrackingQuery(orderNumber.trim());
     } catch (err) {
       setError(errorMessage(err));
     } finally {
@@ -50,6 +52,29 @@ export default function TrackingLookup({ compact = false }: { compact?: boolean 
 
   return (
     <div>
+      <div className={`flex gap-2 text-[11px] font-bold ${compact ? 'mb-2' : 'max-w-2xl mx-auto mt-6 mb-2'}`}>
+        {(['order', 'awb'] as const).map((m) => (
+          <button key={m} type="button" onClick={() => { setMode(m); setError(null); setResult(null); }}
+            className={`px-3 py-1.5 rounded-full border ${mode === m ? 'bg-gold-500 text-stone-950 border-gold-300' : 'border-stone-600 text-stone-300 hover:border-gold-400'}`}>
+            {m === 'order' ? 'Order number + mobile' : 'Courier AWB number'}
+          </button>
+        ))}
+      </div>
+      {mode === 'awb' ? (
+        <form onSubmit={handleSearch} className={`grid gap-2 ${compact ? 'grid-cols-1 sm:grid-cols-[1fr_auto]' : 'max-w-2xl mx-auto grid-cols-1 sm:grid-cols-[1fr_auto]'}`}>
+          <input
+            type="text"
+            value={awb}
+            onChange={(e) => setAwb(e.target.value.toUpperCase())}
+            placeholder="AWB / tracking number from your shipping message"
+            aria-label="AWB number"
+            className="bg-stone-800/90 border border-gold-500/50 focus:border-gold-400 rounded-xl px-4 py-3 text-xs sm:text-sm text-parchment-100 placeholder:text-stone-400 focus:outline-none"
+          />
+          <button type="submit" disabled={loading} className="bg-saffron-500 hover:bg-saffron-600 disabled:opacity-60 text-white font-bold px-5 py-3 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1.5">
+            <Search className="w-4 h-4" /><span>{loading ? 'Searching…' : 'Track'}</span>
+          </button>
+        </form>
+      ) : (
       <form onSubmit={handleSearch} className={`grid gap-2 ${compact ? 'grid-cols-1 sm:grid-cols-[1fr_1fr_auto]' : 'max-w-2xl mx-auto mt-6 grid-cols-1 sm:grid-cols-[1fr_1fr_auto]'}`}>
         <input
           type="text"
@@ -77,6 +102,7 @@ export default function TrackingLookup({ compact = false }: { compact?: boolean 
           <span>{loading ? 'Searching…' : 'Track'}</span>
         </button>
       </form>
+      )}
 
       {error && (
         <div className="mt-5 text-center py-4 bg-stone-800/60 rounded-2xl border border-stone-700 text-sm text-gold-300 font-semibold">
@@ -91,16 +117,21 @@ export default function TrackingLookup({ compact = false }: { compact?: boolean 
               <span className="text-[10px] text-stone-400 uppercase font-bold tracking-wider">Order</span>
               <h3 className="font-serif text-lg font-bold text-gold-300">#{result.orderNumber}</h3>
               <p className="text-xs text-stone-300 mt-0.5">
-                {result.firstName} • {result.city} ({result.pincode}) • placed {formatDateTime(result.createdAt)}
+                {result.firstName ? `${result.firstName} • ${result.city} (${result.pincode}) • ` : ''}placed {formatDateTime(result.createdAt)}
               </p>
             </div>
             <div className="text-right">
               <span className="inline-block bg-saffron-500/20 border border-saffron-400 text-saffron-300 px-3 py-1 rounded-full text-xs font-bold">
                 {ORDER_STATUS_LABEL[result.status]}
               </span>
-              <p className="text-[11px] text-stone-400 mt-1">
-                {result.paymentMethod} • {formatINR(result.total)}
-              </p>
+              {result.total > 0 && (
+                <p className="text-[11px] text-stone-400 mt-1">
+                  {result.paymentMethod} • {formatINR(result.total)}
+                </p>
+              )}
+              {result.etd && result.status !== 'DELIVERED' && (
+                <p className="text-[11px] text-emerald-300 font-bold mt-1">Expected delivery: {result.etd}</p>
+              )}
             </div>
           </div>
 
@@ -161,6 +192,23 @@ export default function TrackingLookup({ compact = false }: { compact?: boolean 
                 <p className="text-stone-400 mt-0.5">The courier tracking number will appear here once the parcel is handed to the courier.</p>
               </div>
             )
+          )}
+
+          {result.activities.length > 0 && (
+            <div className="bg-stone-800/70 border border-gold-500/30 rounded-xl p-4">
+              <p className="text-xs font-bold text-gold-300 mb-2">
+                Live courier updates{result.courierName ? ` — ${result.courierName}` : ''}
+                {result.lastSynced && <span className="font-normal text-stone-500"> · updated {formatDateTime(result.lastSynced)}</span>}
+              </p>
+              <ol className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                {result.activities.map((a, i) => (
+                  <li key={i} className={`border-l-2 pl-3 text-xs ${i === 0 ? 'border-saffron-400 text-parchment-100' : 'border-stone-600 text-stone-300'}`}>
+                    <p className={i === 0 ? 'font-bold' : ''}>{a.activity}</p>
+                    <p className="text-[10px] text-stone-500">{a.date}{a.location ? ` · ${a.location}` : ''}</p>
+                  </li>
+                ))}
+              </ol>
+            </div>
           )}
 
           {result.events.length > 0 && (

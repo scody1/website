@@ -2,8 +2,9 @@ import { z } from 'zod';
 import { db, iso, isoOrNull, num, numOrNull, Sql, Tx } from './db';
 import { ApiError } from './http';
 import { getSettingsSection } from './settings';
-import { createRazorpayOrder, razorpayConfigured, razorpayKeyId, refundRazorpayPayment } from './razorpay';
+import { createRazorpayOrder, fetchRazorpayPayment, razorpayConfigured, razorpayKeyId, refundRazorpayPayment } from './razorpay';
 import { sendNewOrderEmails, sendShippedEmail, sendStatusEmail } from './email';
+import { checkPincode } from './pincode';
 import { computeQuote } from '../shared/pricing';
 import { allowedNextStatuses, ORDER_STATUS_LABEL } from '../shared/orderStatus';
 import { normalisePhone } from '../shared/format';
@@ -26,11 +27,11 @@ const itemsSchema = z.array(z.object({
 export const quoteSchema = z.object({
   items: itemsSchema,
   couponCode: z.string().trim().toUpperCase().max(30).nullish(),
-  paymentMethod: z.enum(['COD', 'UPI', 'RAZORPAY']).nullish()
+  paymentMethod: z.enum(['COD', 'UPI', 'RAZORPAY']).nullish(),
+  pincode: z.string().trim().regex(/^[0-9]{6}$/).nullish()
 });
 
 export const checkoutSchema = z.object({
-  customerId: z.string().uuid().nullish(),
   items: itemsSchema,
   couponCode: z.string().trim().toUpperCase().max(30).nullish(),
   paymentMethod: z.enum(['COD', 'UPI', 'RAZORPAY']),
@@ -151,10 +152,24 @@ async function priceCart(
   return { lines, quote, coupon: quote.couponCode ? coupon : null, problems };
 }
 
+/** Live courier serviceability for the delivery pincode (Shiprocket / Delhivery when connected). */
+async function deliveryCheck(pincode: string | null | undefined) {
+  if (!pincode) return null;
+  try {
+    return await checkPincode(pincode);
+  } catch {
+    return null; // a courier API problem must never block checkout
+  }
+}
+
 export async function quoteCart(input: z.infer<typeof quoteSchema>) {
-  const payments = await getSettingsSection('payments');
+  const base = await getSettingsSection('payments');
+  const delivery = await deliveryCheck(input.pincode);
+  // COD is offered only where the courier confirms COD for this pincode.
+  const payments = delivery?.live && !delivery.codAvailable ? { ...base, enableCod: false } : base;
   const { quote, problems } = await priceCart(db(), input.items, input.couponCode, input.paymentMethod, false, payments);
-  return { quote, problems };
+  if (delivery?.live && !delivery.isServiceable) problems.push(delivery.message);
+  return { quote, problems, delivery };
 }
 
 export async function restoreStockTx(tx: Tx, orderId: string) {
@@ -209,12 +224,24 @@ export interface CreatedOrder {
   razorpay?: { keyId: string; orderId: string; amount: number; currency: string };
 }
 
-export async function createOrder(input: CheckoutInput): Promise<CreatedOrder> {
+/**
+ * Places an order. `customerId` comes ONLY from the signed-in customer's session
+ * (never from the request body), so nobody can attach orders to another account.
+ */
+export async function createOrder(input: CheckoutInput, opts: { customerId?: string | null } = {}): Promise<CreatedOrder> {
   const sql = db();
   await expireStalePayments().catch((e) => console.warn('[orders] expiry sweep failed', e));
 
   const payments = await getSettingsSection('payments');
   const method = input.paymentMethod;
+
+  const delivery = await deliveryCheck(input.customer.pincode);
+  if (delivery?.live && !delivery.isServiceable) {
+    throw new ApiError(400, 'Sorry, our courier partners do not deliver to this pincode yet. Please use a different address or contact us on WhatsApp.');
+  }
+  if (delivery?.live && method === 'COD' && !delivery.codAvailable) {
+    throw new ApiError(400, 'Cash on Delivery is not available for this pincode. Please choose online payment.');
+  }
   let utr: string | null = null;
 
   if (method === 'COD' && !payments.enableCod) throw new ApiError(400, 'Cash on Delivery is not available right now.');
@@ -241,23 +268,26 @@ export async function createOrder(input: CheckoutInput): Promise<CreatedOrder> {
     const paymentStatus: PaymentStatus = method === 'UPI' ? 'AWAITING_VERIFICATION' : 'PENDING';
     const c = input.customer;
 
-    let customerId = input.customerId || null;
-    if (!customerId) {
-      const [matched] = await tx`SELECT id FROM customers WHERE phone = ${c.phone} AND is_active LIMIT 1`;
-      if (matched) customerId = matched.id;
-    }
-
     const [order] = await tx`
       INSERT INTO orders (
         customer_id, customer_name, customer_phone, customer_email, address_line1, address_line2, city, state, pincode,
         subtotal, discount, coupon_code, shipping_fee, cod_fee, total,
         payment_method, payment_status, status, utr_number
       ) VALUES (
-        ${customerId}, ${c.name}, ${c.phone}, ${c.email}, ${c.addressLine1}, ${c.addressLine2}, ${c.city}, ${c.state}, ${c.pincode},
+        ${opts.customerId ?? null}, ${c.name}, ${c.phone}, ${c.email}, ${c.addressLine1}, ${c.addressLine2}, ${c.city}, ${c.state}, ${c.pincode},
         ${q.subtotal}, ${q.discount}, ${q.couponCode}, ${q.shippingFee}, ${q.codFee}, ${q.total},
         ${method}, ${paymentStatus}, ${status}, ${utr}
       ) RETURNING id, order_number
     `;
+
+    if (opts.customerId) {
+      // Remember the latest delivery address on the account so it is pre-filled next time.
+      await tx`
+        UPDATE customers SET address_line1 = ${c.addressLine1}, address_line2 = ${c.addressLine2}, city = ${c.city},
+          state = ${c.state}, pincode = ${c.pincode}, updated_at = now()
+        WHERE id = ${opts.customerId}
+      `;
+    }
 
     for (const l of priced.lines) {
       await tx`
@@ -334,6 +364,14 @@ export async function getPendingRazorpay(orderNumber: string, phone: string) {
 export async function markRazorpayPaid(razorpayOrderId: string, paymentId: string, amountPaise: number, actor: string) {
   const result = await markRazorpayPaidTx(razorpayOrderId, paymentId, amountPaise, actor);
   if (result.newlyPaid) await sendNewOrderEmails(result.orderId);
+  if (result.lateOnClosedOrder) {
+    // Money arrived for an order that was already cancelled/expired: give it back automatically.
+    try {
+      await refundOrder(result.orderId, { amount: amountPaise / 100, note: 'Automatic refund: payment received after the order was cancelled', method: 'razorpay' }, 'system');
+    } catch (err) {
+      await addEvent(db(), result.orderId, 'WARNING', `Automatic refund of the late payment failed: ${(err as Error).message}. Refund it from the order page.`, 'system');
+    }
+  }
   return { orderNumber: result.orderNumber, status: result.status };
 }
 
@@ -341,7 +379,7 @@ async function markRazorpayPaidTx(razorpayOrderId: string, paymentId: string, am
   return db().begin(async (tx) => {
     const [o] = await tx`SELECT * FROM orders WHERE razorpay_order_id = ${razorpayOrderId} FOR UPDATE`;
     if (!o) throw new ApiError(404, 'Order for this payment was not found.');
-    if (o.payment_status === 'PAID') return { orderId: o.id as string, orderNumber: o.order_number as string, status: o.status as OrderStatus, newlyPaid: false };
+    if (o.payment_status === 'PAID') return { orderId: o.id as string, orderNumber: o.order_number as string, status: o.status as OrderStatus, newlyPaid: false, lateOnClosedOrder: false };
 
     if (amountPaise !== o.total * 100) {
       await addEvent(tx, o.id, 'WARNING', `Payment ${paymentId} amount ₹${amountPaise / 100} does not match order total ₹${o.total}. Not marked as paid — check Razorpay dashboard.`, actor);
@@ -354,13 +392,13 @@ async function markRazorpayPaidTx(razorpayOrderId: string, paymentId: string, am
           paid_at = now(), updated_at = now() WHERE id = ${o.id}
       `;
       await addEvent(tx, o.id, 'PAYMENT', `Payment received via Razorpay (${paymentId}).`, actor);
-      return { orderId: o.id as string, orderNumber: o.order_number as string, status: 'NEW' as OrderStatus, newlyPaid: true };
+      return { orderId: o.id as string, orderNumber: o.order_number as string, status: 'NEW' as OrderStatus, newlyPaid: true, lateOnClosedOrder: false };
     }
 
     // Paid after the order had already been auto-cancelled.
     await tx`UPDATE orders SET payment_status = 'PAID', razorpay_payment_id = ${paymentId}, paid_at = now(), updated_at = now() WHERE id = ${o.id}`;
-    await addEvent(tx, o.id, 'WARNING', `Payment ${paymentId} arrived after the order was ${ORDER_STATUS_LABEL[o.status as OrderStatus]}. Refund the customer from Razorpay or re-create the order.`, actor);
-    return { orderId: o.id as string, orderNumber: o.order_number as string, status: o.status as OrderStatus, newlyPaid: false };
+    await addEvent(tx, o.id, 'WARNING', `Payment ${paymentId} arrived after the order was ${ORDER_STATUS_LABEL[o.status as OrderStatus]}. It is being refunded automatically.`, actor);
+    return { orderId: o.id as string, orderNumber: o.order_number as string, status: o.status as OrderStatus, newlyPaid: false, lateOnClosedOrder: true };
   });
 }
 
@@ -413,6 +451,8 @@ function mapOrder(r: Row, items: Row[] = [], events?: Row[]): AdminOrder {
     refundAmount: r.refund_amount ?? null,
     razorpayRefundId: r.razorpay_refund_id ?? null,
     refundedAt: isoOrNull(r.refunded_at),
+    refundDue: ['CANCELLED', 'RTO'].includes(r.status) && r.payment_status === 'PAID' ? Math.max(0, r.total - (r.refund_amount || 0)) : 0,
+    customerAccount: Boolean(r.customer_id),
     shipping: {
       provider: r.courier_provider,
       srOrderId: numOrNull(r.sr_order_id),
@@ -443,7 +483,13 @@ export async function getOrder(id: string): Promise<AdminOrder> {
   const o = await getOrderRow(sql, id);
   const items = await sql`SELECT * FROM order_items WHERE order_id = ${id} ORDER BY name`;
   const events = await sql`SELECT * FROM order_events WHERE order_id = ${id} ORDER BY created_at DESC, id DESC`;
-  return mapOrder(o, items, events);
+  const returns = await sql`SELECT * FROM return_requests WHERE order_id = ${id} ORDER BY created_at DESC`;
+  const order = mapOrder(o, items, events);
+  order.returnRequests = returns.map((r) => ({
+    id: r.id, reason: r.reason, refundUpi: r.refund_upi, status: r.status, adminNote: r.admin_note,
+    resolvedBy: r.resolved_by, createdAt: iso(r.created_at), resolvedAt: isoOrNull(r.resolved_at)
+  }));
+  return order;
 }
 
 export async function getOrderItemsRaw(id: string) {
@@ -453,6 +499,8 @@ export async function getOrderItemsRaw(id: string) {
 export interface OrderListFilters {
   status?: string;
   payment?: string;
+  /** 'refunds' = cancelled/RTO and paid but not fully refunded; 'returns' = open return request */
+  attention?: string;
   q?: string;
   page?: number;
   pageSize?: number;
@@ -468,6 +516,9 @@ export async function listOrders(f: OrderListFilters) {
   const where = sql`
     WHERE (${f.status || null}::text IS NULL OR status = ${f.status || null})
       AND (${f.payment || null}::text IS NULL OR payment_status = ${f.payment || null})
+      AND (${f.attention || null}::text IS NULL
+           OR (${f.attention || null} = 'refunds' AND status IN ('CANCELLED','RTO') AND payment_status = 'PAID' AND COALESCE(refund_amount,0) < total)
+           OR (${f.attention || null} = 'returns' AND EXISTS (SELECT 1 FROM return_requests rr WHERE rr.order_id = orders.id AND rr.status = 'OPEN')))
       AND (${search}::text IS NULL OR order_number ILIKE ${search} OR customer_name ILIKE ${search}
            OR customer_phone ILIKE ${search} OR COALESCE(awb_code,'') ILIKE ${search} OR COALESCE(utr_number,'') ILIKE ${search})
   `;
@@ -599,77 +650,177 @@ export const refundSchema = z.object({
 });
 
 /**
- * Refunds a paid order. Razorpay payments are refunded through the Razorpay API
- * (money goes back automatically). COD / UPI refunds are paid by the store (bank/UPI)
- * and only recorded here, with the transfer reference in the note.
+ * Refunds a paid order (full or partial).
+ *  - Razorpay payments are refunded through the Razorpay API (money returns automatically).
+ *  - COD / UPI refunds are paid by the store (bank/UPI) and recorded here with a reference.
+ * A per-order lock stops two refunds running at the same time, and for Razorpay the
+ * amount already refunded is reconciled with Razorpay's own record first, so a refund
+ * can never exceed what was paid even if an earlier save failed.
  */
 export async function refundOrder(id: string, input: z.infer<typeof refundSchema>, by: string) {
   const sql = db();
-  const o = await getOrderRow(sql, id);
-  if (o.payment_status !== 'PAID') throw new ApiError(400, 'Only paid orders can be refunded.');
-  const already = Number(o.refund_amount || 0);
-  const refundable = o.total - already;
-  if (input.amount > refundable) throw new ApiError(400, `You can refund at most ₹${refundable} for this order.`);
-
-  let refundId: string | null = null;
-  if (input.method === 'razorpay') {
-    if (o.payment_method !== 'RAZORPAY' || !o.razorpay_payment_id) throw new ApiError(400, 'This order was not paid through Razorpay. Use a manual refund.');
-    const refund = await refundRazorpayPayment(o.razorpay_payment_id, input.amount, { order_number: o.order_number, by });
-    refundId = refund.id;
-  } else if (!input.note) {
-    throw new ApiError(400, 'For a manual refund, note how it was paid (e.g. UPI reference number).');
+  const locked = await sql`
+    UPDATE orders SET refund_locked_at = now()
+    WHERE id = ${id} AND (refund_locked_at IS NULL OR refund_locked_at < now() - interval '2 minutes')
+    RETURNING id
+  `;
+  if (locked.length === 0) {
+    await getOrderRow(sql, id); // 404 if the order does not exist
+    throw new ApiError(409, 'Another refund for this order is being processed. Please wait a moment and try again.');
   }
 
-  const full = already + input.amount >= o.total;
-  await sql.begin(async (tx) => {
-    const cur = await getOrderRow(tx, id, true);
-    const nextStatus = full && ['DELIVERED', 'RTO'].includes(cur.status) ? 'REFUNDED' : cur.status;
-    await tx`
-      UPDATE orders SET refund_amount = ${already + input.amount},
-        razorpay_refund_id = COALESCE(${refundId}, razorpay_refund_id),
-        payment_status = ${full ? 'REFUNDED' : cur.payment_status}, status = ${nextStatus},
-        refund_notes = ${[cur.refund_notes, input.note].filter(Boolean).join(' | ')},
-        refunded_at = CASE WHEN ${full} THEN now() ELSE refunded_at END, updated_at = now()
-      WHERE id = ${id}
-    `;
-    await addEvent(tx, id, 'PAYMENT',
-      `${full ? 'Full' : 'Partial'} refund of ₹${input.amount} ${input.method === 'razorpay' ? `via Razorpay (${refundId})` : 'recorded (paid manually)'}${input.note ? ` — ${input.note}` : ''}.`, by);
-  });
+  let full = false;
+  try {
+    const o = await getOrderRow(sql, id);
+    if (o.payment_status !== 'PAID') throw new ApiError(400, 'Only paid orders can be refunded.');
+    let already = Number(o.refund_amount || 0);
+
+    if (input.method === 'razorpay') {
+      if (o.payment_method !== 'RAZORPAY' || !o.razorpay_payment_id) {
+        throw new ApiError(400, 'This order was not paid through Razorpay. Use a manual refund.');
+      }
+      const payment = await fetchRazorpayPayment(o.razorpay_payment_id);
+      const gatewayRefunded = Math.round(Number(payment.amount_refunded || 0) / 100);
+      if (gatewayRefunded > already) {
+        await addEvent(sql, id, 'WARNING', `Razorpay shows ₹${gatewayRefunded} already refunded (store record said ₹${already}). Record corrected.`, 'system');
+        already = gatewayRefunded;
+      }
+    } else if (!input.note) {
+      throw new ApiError(400, 'For a manual refund, note how it was paid (e.g. UPI reference number).');
+    }
+
+    const refundable = o.total - already;
+    if (refundable <= 0) throw new ApiError(400, 'This order has already been fully refunded.');
+    if (input.amount > refundable) throw new ApiError(400, `You can refund at most ₹${refundable} for this order.`);
+    full = already + input.amount >= o.total;
+    const activeStatuses = ['NEW', 'PROCESSING', 'PACKED', 'READY_TO_SHIP', 'PICKUP_SCHEDULED', 'SHIPPED', 'IN_TRANSIT', 'OUT_FOR_DELIVERY'];
+    if (full && activeStatuses.includes(o.status)) {
+      throw new ApiError(400, 'Cancel the order first — a full refund happens automatically on cancellation. Partial refunds are allowed while the order is active.');
+    }
+
+    let refundId: string | null = null;
+    if (input.method === 'razorpay') {
+      const refund = await refundRazorpayPayment(o.razorpay_payment_id, input.amount, { order_number: o.order_number, by });
+      refundId = refund.id;
+    }
+
+    await sql.begin(async (tx) => {
+      const cur = await getOrderRow(tx, id, true);
+      const nextStatus = full && ['DELIVERED', 'RTO'].includes(cur.status) ? 'REFUNDED' : cur.status;
+      await tx`
+        UPDATE orders SET refund_amount = ${already + input.amount},
+          razorpay_refund_id = COALESCE(${refundId}, razorpay_refund_id),
+          payment_status = ${full ? 'REFUNDED' : cur.payment_status}, status = ${nextStatus},
+          refund_notes = ${[cur.refund_notes, input.note].filter(Boolean).join(' | ')},
+          refunded_at = CASE WHEN ${full} THEN now() ELSE refunded_at END, updated_at = now()
+        WHERE id = ${id}
+      `;
+      await addEvent(tx, id, 'PAYMENT',
+        `${full ? 'Full' : 'Partial'} refund of ₹${input.amount} ${input.method === 'razorpay' ? `via Razorpay (${refundId})` : 'recorded (paid manually)'}${input.note ? ` — ${input.note}` : ''}.`, by);
+      if (full) {
+        await tx`UPDATE return_requests SET status = 'COMPLETED', resolved_at = now(), resolved_by = ${by} WHERE order_id = ${id} AND status IN ('OPEN','APPROVED')`;
+      }
+    });
+  } finally {
+    await sql`UPDATE orders SET refund_locked_at = NULL WHERE id = ${id}`;
+  }
   if (full) await sendStatusEmail(id, 'REFUNDED');
   return getOrder(id);
 }
 
+// ---------------------------------------------------------------- return requests
+
+export const returnDecisionSchema = z.object({
+  status: z.enum(['APPROVED', 'REJECTED', 'COMPLETED']),
+  note: z.string().trim().max(500).default('')
+});
+
+/** Admin decision on a customer's return request. Refunds are then issued from the Refund panel. */
+export async function resolveReturnRequest(orderId: string, requestId: string, input: z.infer<typeof returnDecisionSchema>, by: string) {
+  const sql = db();
+  const [r] = await sql`SELECT * FROM return_requests WHERE id = ${requestId} AND order_id = ${orderId}`;
+  if (!r) throw new ApiError(404, 'Return request not found.');
+  if (r.status === 'COMPLETED' || r.status === 'REJECTED') throw new ApiError(400, 'This return request is already closed.');
+  if (input.status === 'REJECTED' && !input.note) throw new ApiError(400, 'Tell the customer why the return was declined.');
+  await sql`
+    UPDATE return_requests SET status = ${input.status}, admin_note = ${input.note}, resolved_by = ${by},
+      resolved_at = CASE WHEN ${input.status} IN ('REJECTED','COMPLETED') THEN now() ELSE resolved_at END
+    WHERE id = ${requestId}
+  `;
+  await addEvent(sql, orderId, 'NOTE', `Return request ${input.status.toLowerCase()}${input.note ? ` — ${input.note}` : ''}.`, by);
+  return getOrder(orderId);
+}
+
 // ---------------------------------------------------------------- customer tracking
 
-export async function trackOrder(orderNumber: string, phone: string): Promise<PublicTracking | null> {
-  const sql = db();
-  const ref = orderNumber.trim().toUpperCase().replace(/^#/, '');
-  const normalized = /^[0-9]+$/.test(ref) ? `RPS-${ref}` : ref;
-  const [o] = await sql`SELECT * FROM orders WHERE order_number = ${normalized} AND customer_phone = ${normalisePhone(phone)}`;
-  if (!o) return null;
-  const items = await sql`SELECT name, quantity FROM order_items WHERE order_id = ${o.id}`;
-  const events = await sql`
-    SELECT message, created_at FROM order_events
-    WHERE order_id = ${o.id} AND kind IN ('STATUS','SHIPPING') AND actor IN ('system','customer','courier','razorpay')
-    ORDER BY created_at DESC LIMIT 20
-  `;
+const TRACKING_REFRESH_MINUTES = 15;
+
+/** Refreshes courier tracking for an order if it is stale (Shiprocket / Delhivery live API). */
+async function refreshCourierTracking(o: Row): Promise<Row> {
+  const live = o.awb_code && ['SHIPROCKET', 'DELHIVERY'].includes(o.courier_provider)
+    && !['CANCELLED', 'REFUNDED', 'DELIVERED'].includes(o.status);
+  const stale = !o.last_tracking_sync || Date.now() - new Date(o.last_tracking_sync).getTime() > TRACKING_REFRESH_MINUTES * 60_000;
+  if (!live || !stale) return o;
+  try {
+    const { syncTracking } = await import('./shipping'); // lazy import avoids a module cycle
+    await syncTracking(o.id);
+    return await getOrderRow(db(), o.id);
+  } catch (err) {
+    console.warn('[track] live courier refresh failed:', (err as Error).message);
+    return o;
+  }
+}
+
+function publicTracking(o: Row, items: Row[], events: Row[], withPersonal: boolean): PublicTracking {
   return {
     orderNumber: o.order_number,
     createdAt: iso(o.created_at),
     status: o.status,
     paymentMethod: o.payment_method,
     paymentStatus: o.payment_status,
-    total: o.total,
-    firstName: String(o.customer_name).split(' ')[0],
-    city: o.city,
-    pincode: o.pincode,
-    items: items.map((i) => ({ name: i.name, quantity: i.quantity })),
+    total: withPersonal ? o.total : 0,
+    firstName: withPersonal ? String(o.customer_name).split(' ')[0] : '',
+    city: withPersonal ? o.city : '',
+    pincode: withPersonal ? o.pincode : '',
+    items: withPersonal ? items.map((i) => ({ name: i.name, quantity: i.quantity })) : [],
     courierName: o.courier_name,
     awbCode: o.awb_code,
     trackingUrl: o.tracking_url,
     shippingStatus: o.shipping_status,
-    events: events.map((e) => ({ message: e.message, createdAt: iso(e.created_at) }))
+    etd: o.tracking_etd || null,
+    activities: Array.isArray(o.tracking_activities) ? o.tracking_activities : [],
+    lastSynced: isoOrNull(o.last_tracking_sync),
+    events: withPersonal ? events.map((e) => ({ message: e.message, createdAt: iso(e.created_at) })) : []
   };
+}
+
+async function publicEvents(orderId: string) {
+  return db()`
+    SELECT message, created_at FROM order_events
+    WHERE order_id = ${orderId} AND kind IN ('STATUS','SHIPPING') AND actor IN ('system','customer','courier','razorpay')
+    ORDER BY created_at DESC LIMIT 20
+  `;
+}
+
+/** Tracking by order number + phone: full (but address-free) view with live courier scans. */
+export async function trackOrder(orderNumber: string, phone: string): Promise<PublicTracking | null> {
+  const sql = db();
+  const ref = orderNumber.trim().toUpperCase().replace(/^#/, '');
+  const normalized = /^[0-9]+$/.test(ref) ? `RPS-${ref}` : ref;
+  let [o] = await sql`SELECT * FROM orders WHERE order_number = ${normalized} AND customer_phone = ${normalisePhone(phone)}`;
+  if (!o) return null;
+  o = await refreshCourierTracking(o);
+  const items = await sql`SELECT name, quantity FROM order_items WHERE order_id = ${o.id}`;
+  return publicTracking(o, items, await publicEvents(o.id), true);
+}
+
+/** Tracking by courier AWB only: shipment status and scans, no personal details. */
+export async function trackByAwb(awbRaw: string): Promise<PublicTracking | null> {
+  const awb = awbRaw.trim().toUpperCase();
+  let [o] = await db()`SELECT * FROM orders WHERE upper(awb_code) = ${awb}`;
+  if (!o) return null;
+  o = await refreshCourierTracking(o);
+  return publicTracking(o, [], [], false);
 }
 
 // ---------------------------------------------------------------- analytics

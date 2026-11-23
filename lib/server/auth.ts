@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import { db, iso, isoOrNull } from './db';
-import { ApiError, clientIp } from './http';
+import { ApiError, assertSameOrigin, clientIp, isHttps } from './http';
 import { rateLimit, resetRateLimit } from './rateLimit';
 import { dummyPasswordHash, hashPassword, passwordProblem, verifyPassword } from './crypto';
 import { ALL_PERMISSIONS, isPermission, SUPER_ADMIN_ROLE, type AdminUser, type Permission } from '../shared/roles';
@@ -170,19 +170,7 @@ export async function currentAdmin(): Promise<AdminUser | null> {
  * Permissions are read from the database on every request, so role edits apply instantly.
  */
 export async function requireAdmin(req: NextRequest, permission?: Permission | Permission[]): Promise<AdminUser> {
-  if (req.method !== 'GET' && req.method !== 'HEAD') {
-    const origin = req.headers.get('origin');
-    const host = req.headers.get('x-forwarded-host') || req.headers.get('host');
-    if (origin && host) {
-      let originHost = '';
-      try {
-        originHost = new URL(origin).host;
-      } catch {
-        /* ignore */
-      }
-      if (originHost !== host) throw new ApiError(403, 'Cross-site request blocked.');
-    }
-  }
+  assertSameOrigin(req);
   const user = await userFromToken(req.cookies.get(ADMIN_COOKIE)?.value);
   if (!user) throw new ApiError(401, 'Your admin session has expired. Please sign in again.');
   // Temporary passwords must be replaced before anything else (only /api/admin/me and logout stay open).
@@ -197,20 +185,20 @@ export async function requireAdmin(req: NextRequest, permission?: Permission | P
   return user;
 }
 
-export function setSessionCookie(res: NextResponse, token: string) {
+export function setSessionCookie(req: NextRequest, res: NextResponse, token: string) {
   res.cookies.set({
     name: ADMIN_COOKIE,
     value: token,
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: isHttps(req),
     sameSite: 'strict',
     path: '/',
     maxAge: SESSION_HOURS * 60 * 60
   });
 }
 
-export function clearSessionCookie(res: NextResponse) {
-  res.cookies.set({ name: ADMIN_COOKIE, value: '', httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/', maxAge: 0 });
+export function clearSessionCookie(req: NextRequest, res: NextResponse) {
+  res.cookies.set({ name: ADMIN_COOKIE, value: '', httpOnly: true, secure: isHttps(req), sameSite: 'strict', path: '/', maxAge: 0 });
 }
 
 // ---------------------------------------------------------------- user management
