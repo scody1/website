@@ -88,13 +88,19 @@ export default function AdminApp() {
   const load = useCallback(async () => {
     setLoadError(null);
     try {
-      const [me, { settings }, st] = await Promise.all([
-        adminFetch<{ user: AdminUser; permissions: Permission[] }>('/api/admin/me'),
+      const me = await adminFetch<{ user: AdminUser; permissions: Permission[] }>('/api/admin/me');
+      setUser(me.user);
+      setPerms(me.permissions);
+
+      // If signed in with a temporary password, other endpoints are locked until the user sets their own password.
+      if (me.user.mustChangePassword) {
+        return;
+      }
+
+      const [{ settings }, st] = await Promise.all([
         adminFetch<{ settings: AllSettings }>('/api/admin/settings'),
         adminFetch<AdminStatus>('/api/admin/status')
       ]);
-      setUser(me.user);
-      setPerms(me.permissions);
       setSettings(settings);
       setStatus(st);
       lastPlaced.current = st.counts.placedTotal;
@@ -188,7 +194,24 @@ export default function AdminApp() {
   };
 
   if (loadError) return <div className="p-6 max-w-xl mx-auto"><ErrorBox message={loadError} onRetry={load} /></div>;
-  if (!settings || !user) return <Spinner label="Loading admin…" />;
+  if (!user) return <Spinner label="Loading admin…" />;
+
+  if (user.mustChangePassword) {
+    return (
+      <div className="min-h-screen bg-stone-100 flex items-center justify-center p-4">
+        <ChangePasswordModal
+          forced={true}
+          onClose={() => undefined}
+          onLogout={logout}
+          onDone={() => {
+            load();
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (!settings) return <Spinner label="Loading admin…" />;
 
   const visibleTabs = TABS.filter((t) => allowed(t.need));
   const active = visibleTabs.some((t) => t.id === tab) ? tab : 'dashboard';
@@ -287,14 +310,14 @@ export default function AdminApp() {
         </div>
       </div>
 
-      {(showPassword || user.mustChangePassword) && (
-        <ChangePasswordModal forced={user.mustChangePassword} onClose={() => setShowPassword(false)} onDone={() => { setShowPassword(false); load(); }} />
+      {showPassword && (
+        <ChangePasswordModal forced={false} onClose={() => setShowPassword(false)} onDone={() => { setShowPassword(false); load(); }} />
       )}
     </Ctx.Provider>
   );
 }
 
-function ChangePasswordModal({ forced, onClose, onDone }: { forced: boolean; onClose: () => void; onDone: () => void }) {
+function ChangePasswordModal({ forced, onClose, onDone, onLogout }: { forced: boolean; onClose: () => void; onDone: () => void; onLogout?: () => void }) {
   const { showToast } = useToast();
   const [f, setF] = useState({ current: '', next: '', confirm: '' });
   const [busy, setBusy] = useState(false);
@@ -307,7 +330,7 @@ function ChangePasswordModal({ forced, onClose, onDone }: { forced: boolean; onC
     setError(null);
     try {
       await adminFetch('/api/admin/me', { method: 'PUT', json: { currentPassword: f.current, newPassword: f.next } });
-      showToast('Password changed', 'Your other devices have been signed out.');
+      showToast('Password changed', 'Your new password has been set.');
       onDone();
     } catch (err) {
       setError(errorMessage(err));
@@ -319,13 +342,17 @@ function ChangePasswordModal({ forced, onClose, onDone }: { forced: boolean; onC
   return (
     <Modal title={forced ? 'Set your own password' : 'Change password'} onClose={forced ? () => undefined : onClose}>
       <form onSubmit={submit} className="space-y-3">
-        {forced && <p className="text-xs text-stone-600">You signed in with a temporary password. Please choose your own before continuing.</p>}
-        <Field label="Current password"><Input type="password" autoComplete="current-password" required value={f.current} onChange={(e) => setF({ ...f, current: e.target.value })} /></Field>
+        {forced && <p className="text-xs text-stone-600">You signed in with a temporary password. Please choose your own password before continuing.</p>}
+        <Field label="Current temporary password"><Input type="password" autoComplete="current-password" required value={f.current} onChange={(e) => setF({ ...f, current: e.target.value })} /></Field>
         <Field label="New password" hint="At least 10 characters, with letters and numbers."><Input type="password" autoComplete="new-password" required value={f.next} onChange={(e) => setF({ ...f, next: e.target.value })} /></Field>
         <Field label="Repeat new password"><Input type="password" autoComplete="new-password" required value={f.confirm} onChange={(e) => setF({ ...f, confirm: e.target.value })} /></Field>
         {error && <p className="text-xs text-red-600 font-bold">{error}</p>}
-        <div className="flex justify-end gap-2">
-          {!forced && <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>}
+        <div className="flex justify-end gap-2 pt-2">
+          {forced && onLogout ? (
+            <Button type="button" variant="ghost" onClick={onLogout}>Sign out</Button>
+          ) : !forced ? (
+            <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
+          ) : null}
           <Button type="submit" loading={busy}>Save password</Button>
         </div>
       </form>
