@@ -1,12 +1,14 @@
 'use client';
 
+import type { ToastType } from '@/lib/toast';
+
 /**
  * Shares a product using Web Share API (mobile native share) or falls back
  * to clipboard copy with a toast notification.
  */
 export async function shareProduct(
   product: { name: string; slug?: string; id: string },
-  showToast?: (title: string, message?: string, variant?: 'success' | 'error' | 'info') => void
+  showToast?: (title: string, message: string, type?: ToastType) => void
 ) {
   const url = typeof window !== 'undefined'
     ? `${window.location.origin}/product/${product.slug || product.id}`
