@@ -22,12 +22,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!isDbConfigured()) return { title: 'Setup required' };
   const product = await getPublicProductBySlug(params.slug).catch(() => null);
   if (!product) return { title: 'Product not found' };
-  const description = (product.description || product.spiritualBenefits.join('. ')).slice(0, 160);
+  const description = (product.description || (product.spiritualBenefits || []).join('. ')).slice(0, 160);
   return {
     title: product.name,
     description,
     alternates: { canonical: `/product/${product.slug}` },
-    openGraph: { title: product.name, description, type: 'website', images: product.images[0] ? [absolute(product.images[0]) as string] : undefined }
+    openGraph: { title: product.name, description, type: 'website', images: product.images?.[0] ? [absolute(product.images[0]) as string] : undefined }
   };
 }
 
@@ -43,7 +43,7 @@ export default async function ProductRoute({ params }: Props) {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.name,
-    image: product.images.map(absolute),
+    image: (product.images || []).map(absolute),
     description: product.description,
     sku: product.sku,
     category: product.category,
