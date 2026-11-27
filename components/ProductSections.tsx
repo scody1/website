@@ -1,18 +1,29 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore } from '@/lib/storeContext';
+import { useToast } from '@/lib/toast';
+import { shareProduct } from '@/lib/share';
 import { Product, HomepageSection } from '@/lib/shared/types';
-import { Star, Heart, Eye, ShoppingBag, Check } from 'lucide-react';
+import { Star, Heart, Eye, ShoppingBag, Check, Share2, X } from 'lucide-react';
 
 interface ProductSectionsProps {
   activeCategoryFilter: string;
+  onResetCategory?: () => void;
 }
 
-export default function ProductSections({ activeCategoryFilter }: ProductSectionsProps) {
+export default function ProductSections({ activeCategoryFilter, onResetCategory }: ProductSectionsProps) {
   const { state, addToCart, setSelectedProductForQuickView, isWishlisted, toggleWishlist } = useStore();
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<HomepageSection>('ALL');
   const [addedAnimationId, setAddedAnimationId] = useState<string | null>(null);
+
+  // When a category filter is selected from the circular carousel, reset the section tab to 'ALL'
+  useEffect(() => {
+    if (activeCategoryFilter !== 'ALL') {
+      setActiveTab('ALL');
+    }
+  }, [activeCategoryFilter]);
 
   const handleAdd = (product: Product, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -21,11 +32,23 @@ export default function ProductSections({ activeCategoryFilter }: ProductSection
     setTimeout(() => setAddedAnimationId(null), 1200);
   };
 
+  const handleShare = (product: Product, e: React.MouseEvent) => {
+    e.stopPropagation();
+    shareProduct(product, showToast);
+  };
+
   // Filter products by selected category and active section tab
   const filteredProducts = state.products.filter((p) => {
-    // 1. Category filter
-    if (activeCategoryFilter !== 'ALL' && p.category !== activeCategoryFilter) {
-      return false;
+    // 1. Category filter (case-insensitive & robust matching)
+    if (activeCategoryFilter !== 'ALL') {
+      const filterLower = activeCategoryFilter.trim().toLowerCase();
+      const productCatLower = (p.category || '').trim().toLowerCase();
+      const matchesCategory =
+        productCatLower === filterLower ||
+        p.categoryId === activeCategoryFilter ||
+        (productCatLower.length > 0 && filterLower.includes(productCatLower)) ||
+        (filterLower.length > 0 && productCatLower.includes(filterLower));
+      if (!matchesCategory) return false;
     }
     // 2. Section Tab filter
     if (activeTab === 'ALL') return true;
@@ -55,6 +78,25 @@ export default function ProductSections({ activeCategoryFilter }: ProductSection
             Handcrafted Devotional Collections
           </h2>
           <div className="w-16 h-0.5 bg-gradient-to-r from-maroon-700 to-gold-500 mt-2" />
+
+          {/* Active Category Filter Indicator */}
+          {activeCategoryFilter !== 'ALL' && (
+            <div className="flex items-center gap-2 mt-3">
+              <span className="inline-flex items-center gap-2 bg-saffron-50 text-maroon-800 border border-gold-400 text-xs font-bold px-3 py-1 rounded-full shadow-sm">
+                <span>Category: <strong>{activeCategoryFilter}</strong></span>
+                {onResetCategory && (
+                  <button
+                    onClick={onResetCategory}
+                    className="p-0.5 rounded-full hover:bg-gold-200 text-maroon-700 transition-colors"
+                    title="Clear filter"
+                    aria-label="Clear filter"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Count pill */}
@@ -84,14 +126,25 @@ export default function ProductSections({ activeCategoryFilter }: ProductSection
 
       {/* Product Grid */}
       {filteredProducts.length === 0 ? (
-        <div className="bg-parchment-100 border border-gold-400/50 rounded-3xl p-12 text-center my-8">
-          <p className="font-serif text-lg font-bold text-maroon-700">No sacred items match the selected filter.</p>
-          <p className="text-xs text-espresso-muted mt-1">Try switching categories or view All Essentials.</p>
+        <div className="bg-parchment-100 border border-gold-400/50 rounded-3xl p-10 sm:p-14 text-center my-8">
+          <p className="font-serif text-xl font-bold text-maroon-700">
+            {activeCategoryFilter !== 'ALL'
+              ? `No products listed in "${activeCategoryFilter}" yet.`
+              : 'No sacred items match the selected filter.'}
+          </p>
+          <p className="text-xs text-espresso-muted mt-2 max-w-md mx-auto">
+            {activeCategoryFilter !== 'ALL'
+              ? 'New items for this collection are being consecrated and added to the store. You can add products to this category in Admin → Products & Stock, or explore all items below.'
+              : 'Try selecting another collection or view all sacred essentials.'}
+          </p>
           <button
-            onClick={() => setActiveTab('ALL')}
-            className="mt-4 bg-maroon-700 text-parchment-100 px-5 py-2 rounded-xl text-xs font-bold"
+            onClick={() => {
+              setActiveTab('ALL');
+              if (onResetCategory) onResetCategory();
+            }}
+            className="mt-5 bg-maroon-700 hover:bg-maroon-800 text-parchment-100 px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-md transition-all active:scale-95"
           >
-            Reset Filters
+            View All Essentials
           </button>
         </div>
       ) : (
@@ -137,7 +190,7 @@ export default function ProductSections({ activeCategoryFilter }: ProductSection
                     </div>
                   )}
 
-                  {/* Action Icons: Wishlist & Quick View */}
+                  {/* Action Icons: Wishlist, Quick View, Share */}
                   <div className="absolute top-2.5 right-2.5 flex flex-col gap-1.5 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={(e) => { e.stopPropagation(); toggleWishlist(product); }}
@@ -159,6 +212,15 @@ export default function ProductSections({ activeCategoryFilter }: ProductSection
                       title="Quick View"
                     >
                       <Eye className="w-4 h-4" />
+                    </button>
+
+                    <button
+                      onClick={(e) => handleShare(product, e)}
+                      className="w-8 h-8 rounded-full bg-white/90 hover:bg-gold-100 text-stone-600 hover:text-maroon-700 flex items-center justify-center backdrop-blur-md transition-colors shadow-md"
+                      title="Share Product"
+                      aria-label="Share Product"
+                    >
+                      <Share2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>

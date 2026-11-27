@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { CheckCircle2, ChevronLeft, Heart, Minus, Plus, ShieldCheck, ShoppingBag, Star, Truck } from 'lucide-react';
+import { CheckCircle2, ChevronLeft, Heart, Minus, Plus, ShieldCheck, ShoppingBag, Star, Truck, Share2 } from 'lucide-react';
 import { useStore } from '@/lib/storeContext';
+import { useToast } from '@/lib/toast';
+import { shareProduct } from '@/lib/share';
 import { formatINR, formatWhatsAppUrl } from '@/lib/shared/format';
 import type { Product, Review } from '@/lib/shared/types';
 import Header from './Header';
@@ -21,6 +23,7 @@ import AccountDrawer from './AccountDrawer';
 /** Full product page at /product/<slug> (own URL for sharing and Google). */
 export default function ProductPage({ product, reviews }: { product: Product; reviews: Review[] }) {
   const { addToCart, setIsCartOpen, setIsCheckoutOpen, setIsReviewModalOpen, state, cart, isWishlisted, toggleWishlist } = useStore();
+  const { showToast } = useToast();
   const saved = isWishlisted(product.id);
   const [qty, setQty] = useState(1);
   const [image, setImage] = useState(0);
@@ -103,8 +106,12 @@ export default function ProductPage({ product, reviews }: { product: Product; re
                   <ShoppingBag className="w-4 h-4" /> Add to cart
                 </button>
                 <button type="button" onClick={() => toggleWishlist(product)} aria-pressed={saved} aria-label={saved ? 'Remove from wishlist' : 'Save to wishlist'}
-                  className={`px-4 py-3 rounded-xl border font-bold flex items-center justify-center ${saved ? 'bg-rose-50 border-rose-400 text-rose-600' : 'border-gold-500/60 text-maroon-700 hover:bg-parchment-200'}`}>
+                  className={`px-4 py-3 rounded-xl border font-bold flex items-center justify-center transition-colors ${saved ? 'bg-rose-50 border-rose-400 text-rose-600' : 'border-gold-500/60 text-maroon-700 hover:bg-parchment-200'}`}>
                   <Heart className={`w-4 h-4 ${saved ? 'fill-rose-500' : ''}`} />
+                </button>
+                <button type="button" onClick={() => shareProduct(product, showToast)} aria-label="Share product" title="Share product"
+                  className="px-4 py-3 rounded-xl border border-gold-500/60 text-maroon-700 hover:bg-gold-100 font-bold flex items-center justify-center transition-colors">
+                  <Share2 className="w-4 h-4 text-saffron-600" />
                 </button>
                 <button onClick={buyNow} className="flex-1 min-w-[140px] bg-saffron-500 hover:bg-saffron-600 text-white font-bold py-3 rounded-xl">
                   Buy now

@@ -2,7 +2,9 @@
 
 import React, { useState } from 'react';
 import { useStore } from '@/lib/storeContext';
-import { X, Star, CheckCircle, ShoppingBag, Zap, Shield, Sparkles } from 'lucide-react';
+import { useToast } from '@/lib/toast';
+import { shareProduct } from '@/lib/share';
+import { X, Star, CheckCircle, ShoppingBag, Zap, Shield, Sparkles, Share2 } from 'lucide-react';
 
 export default function ProductQuickViewModal() {
   const {
@@ -11,6 +13,7 @@ export default function ProductQuickViewModal() {
     addToCart,
     setIsCheckoutOpen
   } = useStore();
+  const { showToast } = useToast();
 
   const [quantity, setQuantity] = useState(1);
   const [selectedImgIndex, setSelectedImgIndex] = useState(0);
@@ -192,6 +195,15 @@ export default function ProductQuickViewModal() {
                     <span>Buy Now</span>
                   </button>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => shareProduct(prod, showToast)}
+                  className="w-full py-2.5 px-3 border border-stone-300 hover:border-gold-500 rounded-xl text-xs font-bold text-stone-700 hover:text-maroon-700 flex items-center justify-center gap-2 transition-colors bg-stone-50 hover:bg-gold-50/50"
+                >
+                  <Share2 className="w-3.5 h-3.5 text-saffron-600" />
+                  <span>Share Product with Friends & Family</span>
+                </button>
 
               </div>
 

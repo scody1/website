@@ -2,10 +2,13 @@
 
 import React from 'react';
 import { useStore } from '@/lib/storeContext';
-import { Star, CheckCircle, ShoppingBag, Zap, Sparkles } from 'lucide-react';
+import { useToast } from '@/lib/toast';
+import { shareProduct } from '@/lib/share';
+import { Star, CheckCircle, ShoppingBag, Zap, Sparkles, Share2 } from 'lucide-react';
 
 export default function BestsellerSpotlight() {
   const { state, addToCart, setIsCheckoutOpen } = useStore();
+  const { showToast } = useToast();
 
   // Find the designated bestseller product (or fallback to prod-1)
   const bestseller = state.products.find((p) => p.section === 'BESTSELLER' || p.isBestseller) || state.products[0];
@@ -126,7 +129,7 @@ export default function BestsellerSpotlight() {
               Inclusive of all taxes • Ready for immediate courier dispatch
             </p>
 
-            {/* Action Buttons: Add to Cart + 1-Click Buy Now */}
+            {/* Action Buttons: Add to Cart + 1-Click Buy Now + Share */}
             <div className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <button
                 onClick={() => addToCart(bestseller, 1)}
@@ -142,6 +145,17 @@ export default function BestsellerSpotlight() {
               >
                 <Zap className="w-5 h-5 text-gold-300" />
                 <span>1-Click Buy Now</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => shareProduct(bestseller, showToast)}
+                className="px-4 py-3.5 border-2 border-gold-500/60 hover:bg-gold-100 rounded-2xl text-maroon-800 font-bold flex items-center justify-center gap-2 transition-colors shadow-md bg-white/80"
+                title="Share Bestseller"
+                aria-label="Share Bestseller"
+              >
+                <Share2 className="w-5 h-5 text-saffron-600" />
+                <span className="text-xs sm:hidden">Share</span>
               </button>
             </div>
 

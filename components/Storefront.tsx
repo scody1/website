@@ -35,7 +35,7 @@ export default function Storefront() {
         <CategoryCarousel selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
         <SpiritualBento />
         <BestsellerSpotlight />
-        <ProductSections activeCategoryFilter={selectedCategory} />
+        <ProductSections activeCategoryFilter={selectedCategory} onResetCategory={() => setSelectedCategory('ALL')} />
         <DevotionalBanner />
         <ReviewsSection />
         <OrderTrackerSection />
